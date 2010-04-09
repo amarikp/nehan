@@ -1700,7 +1700,7 @@ if(!Nehan.Env){
 	filter : "direction",
 	noBR : false, // nomally, new line is <br>, but sometimes it's \n(when <pre> is used).
 	charImgRoot : "/img/char",
-	fontFamily : "IPA明朝, ＭＳ明朝, Hiragino Mincho Pro",
+	fontFamily : "IPA明朝, ＭＳ 明朝, Hiragino Mincho Pro",
 	onSeek : function(groupName, percent){}, // seek each group
 	onComplete : function(groupName){}, // complete each group
 	onCompleteAll : function(){} // complete all group
