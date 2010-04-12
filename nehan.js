@@ -56,6 +56,10 @@ if(!Nehan.Env){
   Nehan.Env = {};
 }
 
+if(!Nehan.ParserHook){
+  Nehan.ParserHook = {};
+}
+
 (function(){
 
   var Filename = {
@@ -275,6 +279,19 @@ if(!Nehan.Env){
       return s;
     } else {
       throw "RubyBufferEnd";
+    }
+  };
+
+  var ParserHook = {
+    tagHook : {},
+    enableTagHook : function(tagName){
+      return (typeof this.tagHook[tagName] != "undefined");
+    },
+    addTagHook : function(tagName, action){
+      this.tagHook[tagName] = action;
+    },
+    getTagHook : function(tagName){
+      return this.tagHook[tagName];
     }
   };
 
@@ -1236,13 +1253,19 @@ if(!Nehan.Env){
     this.blockIndentCount = 0;
   };
 
+  StreamParser.prototype.parseTagHook = function(pageNo, isV, tagStr, tagAttr, tagName, isStart){
+    if(ParserHook.enableTagHook(tagName)){
+      ParserHook.getTagHook(tagName).apply(this, [pageNo, isV, tagStr, tagAttr, tagName]);
+    }
+  };
+
   StreamParser.prototype.parseTag = function(pageNo, isV){
     
     var tagStr = this.textStream.getTag();
     var tagInner = tagStr.replace("<","").replace(">","").replace("/>","");
     var tagAttr = this.parseAttr(tagInner);
     var tagName = tagInner.split(/[\s\t]+/)[0].toLowerCase();
-
+    
     this.activateTag(tagName.replace("/",""), tagName.substring(0,1) != "/");
     
     switch (tagName) {
@@ -1306,7 +1329,9 @@ if(!Nehan.Env){
         this.parseBlockquoteEnd(pageNo, isV, tagStr, tagAttr, tagName);
         break;
       
-      default: break;
+      default:
+        this.parseTagHook(pageNo, isV, tagStr, tagAttr, tagName);
+        break;
     }
   }; // parseTag
 
@@ -1772,6 +1797,7 @@ if(!Nehan.Env){
   Nehan.TextStream = TextStream;
   Nehan.StreamParser = StreamParser;
   Nehan.LayoutMapper = LayoutMapper;
+  Nehan.ParserHook = ParserHook;
 
 })();
 
