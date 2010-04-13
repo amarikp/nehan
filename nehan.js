@@ -485,10 +485,11 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.parseAttr = function(html){
     var tmp = html.split(/[\s\t　]+/);
     var ret = {};
+    var self = this;
     for(var i = 0; i < tmp.length; i++)(function (v,i){
       if(v.match(/([^=]+)=(.+)/)){
 	var name = RegExp.$1;
-	var value = RegExp.$2;
+	var value = self.cutQuote(RegExp.$2);
 	ret[name] = value;
       }
     })(tmp[i],i);
@@ -987,10 +988,10 @@ if(!Nehan.ParserHook){
 	throw "OverflowPage";
       }
     }
-    var src = this.unscript(this.cutQuote(tagAttr.src));
-    var imgW  = (typeof tagAttr.width != "undefined")?  parseInt(this.cutQuote(tagAttr.width)) : 200;
-    var imgH = (typeof tagAttr.height != "undefined")? parseInt(this.cutQuote(tagAttr.height)) : 300;
-    var imgAlign = (typeof tagAttr.align != "undefined")? this.cutQuote(tagAttr.align) : "none";
+    var src = this.unscript(tagAttr.src);
+    var imgW  = (typeof tagAttr.width != "undefined")?  parseInt(tagAttr.width) : 200;
+    var imgH = (typeof tagAttr.height != "undefined")? parseInt(tagAttr.height) : 300;
+    var imgAlign = (typeof tagAttr.align != "undefined")? tagAttr.align : "none";
     var adjSize = this.adjustSize(imgW, imgH, this.layout.width - this.seekWidth, this.layout.height - this.seekHeight);
     var imgW2 = adjSize.width;
     var imgH2 = adjSize.height;
@@ -1106,10 +1107,10 @@ if(!Nehan.ParserHook){
   }; // parseImg
 
   StreamParser.prototype.parseLinkStart = function(pageNo, isV, tagStr, tagAttr, tagName){
-    var href = this.unscript(this.cutQuote(tagAttr.href));
+    var href = this.unscript(tagAttr.href);
     
     if(typeof tagAttr.target != "undefined"){
-      var blank = (this.cutQuote(tagAttr.target) == "_blank");
+      var blank = (tagAttr.target == "_blank");
     } else if (tagName == "a2"){
       var blank = true;
     } else {
@@ -1160,7 +1161,7 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.parseFontStart = function(pageNo, isV, tagStr, tagAttr, tagName){
     var css = {};
 
-    this.fontScale = (typeof tagAttr.scale != "undefined")? parseFloat(this.cutQuote(tagAttr.scale)) : 1;
+    this.fontScale = (typeof tagAttr.scale != "undefined")? parseFloat(tagAttr.scale) : 1;
     if (this.fontScale < 1 || this.fontScale > 1 ){
       css["font-size"] = this.fontScale + "em";
       if (isV){
@@ -1174,14 +1175,14 @@ if(!Nehan.ParserHook){
     }
     
     if (typeof tagAttr.color != "undefined"){
-      css["color"] = this.cutQuote(tagAttr.color);
+      css["color"] = tagAttr.color;
     }
     
     if (typeof tagAttr.fontfamily != "undefined"){
-      css["font-family"] = this.cutQuote(tagAttr.fontfamily);
+      css["font-family"] = tagAttr.fontfamily;
     }
     
-    this.bgColor = (typeof tagAttr.bgcolor != "undefined")? this.cutQuote(tagAttr.bgcolor) : "";
+    this.bgColor = (typeof tagAttr.bgcolor != "undefined")? tagAttr.bgcolor : "";
     if (this.bgColor != ""){
       this.lineBuff += this.startBgColor();
     }
@@ -1254,7 +1255,7 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.parseBlockquoteStart = function(pageNo, isV, tagStr, tagAttr, tagName){
-    this.blockIndentCount = (typeof tagAttr.indent != "undefined")? parseInt(this.cutQuote(tagAttr.indent)) : 2;
+    this.blockIndentCount = (typeof tagAttr.indent != "undefined")? parseInt(tagAttr.indent) : 2;
     this.indentCount += this.blockIndentCount;
     if(this.lineCount <= this.indentCount * 2){
       this.activateTag("blockquote", false);
