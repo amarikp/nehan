@@ -4,6 +4,7 @@ var SimpleReader = {
       opt = {};
     }
     var defopt = {
+      direction: "vertical",
       width: 640,
       height: 480,
       fontSize: 16,
@@ -17,6 +18,7 @@ var SimpleReader = {
     this.pageNo = 0;
     this.writing = false;
     this.parser = new Nehan.StreamParser(new Nehan.Layout({
+      direction: this.direction,
       width: this.width,
       height: this.height,
       fontSize: this.fontSize,

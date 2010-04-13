@@ -103,7 +103,9 @@ if(!Nehan.ParserHook){
   };
 
   Layout.prototype.initialize = function(){
-    var isV = (this.direction == "vertical");
+    this.direction = this.direction.toLowerCase();
+    this.directionH = (this.direction == "horizontal" || this.direction == "vertical-lr")? "lr" : "rl";
+    this.isV = (this.direction == "vertical" || this.direction == "vertical-lr" || this.direction == "vertical-rl");
     this.baseLineHeight = Math.floor(this.lineHeightRate * this.fontSize);
     this.baseLetterSpacing = Math.floor(this.letterSpacingRate * this.fontSize);
     var minW = this.baseLineHeight;
@@ -111,11 +113,11 @@ if(!Nehan.ParserHook){
     this.width = Math.max(minW, this.width);
     this.height = Math.max(minH, this.height);
     this.yohakuHeight = this.baseLineHeight - this.fontSize;
-    this.letterHeight = (isV)? this.fontSize + this.baseLetterSpacing : 1;
-    this.wrapTag = (isV)? "table" : "div";
+    this.letterHeight = (this.isV)? this.fontSize + this.baseLetterSpacing : 1;
+    this.wrapTag = (this.isV)? "table" : "div";
     this.rubyFontSize = Math.floor(this.fontSize / 2); // half size of main text font size.
 
-    if (isV){
+    if (this.isV){
       this.lineCount = Math.floor(this.height / this.letterHeight) - this.kinsokuCharCount;
     } else {
       this.lineCount = Math.floor(this.width / this.fontSize) - this.kinsokuCharCount;
@@ -130,7 +132,7 @@ if(!Nehan.ParserHook){
     this.wrapCss += "overflow:hidden;";
     this.wrapCss += "white-space:nowrap;"; // when tail NG happend, disable auto newline even if over flow layout size.
     
-    if(isV){
+    if(this.isV){
       this.wrapCss += "border-collapse:collapse;";
     } else {
       this.wrapCss += "line-height:1.8em;";
@@ -870,7 +872,11 @@ if(!Nehan.ParserHook){
 
   StreamParser.prototype.onOverFlowPage = function(pageNo, isV){
     if(isV){
-      this.blockBuff = this.makeRestSpaceTd() + this.blockBuff;
+      if(this.layout.directionH == "rl"){
+	this.blockBuff = this.makeRestSpaceTd() + this.blockBuff;
+      } else {
+	this.blockBuff = this.blockBuff + this.makeRestSpaceTd();
+      }
     }
     var page = (isV)? "<tr>" + this.blockBuff + "</tr>" : this.blockBuff;
     this.saveSeekState(pageNo + 1,{spos:this.textStream.seekPos, cpos:this.seekCharCount});
@@ -924,10 +930,18 @@ if(!Nehan.ParserHook){
     this.rubyStream = null;
   };
 
+  StreamParser.prototype.pushLineToBlockV = function(line){
+    if(this.layout.directionH == "rl"){
+      this.blockBuff = line + this.blockBuff;
+    } else {
+      this.blockBuff += line;
+    }
+  };
+
   StreamParser.prototype.pushLine = function(pageNo, isV){
     if(this.blockBuff != "" || this.lineBuff != ""){
       if (isV){
-	this.blockBuff = this.makeLineTd() + this.blockBuff;
+	this.pushLineToBlockV(this.makeLineTd());
       } else { // horizontal
 	this.blockBuff += this.makeLineH();
       }
@@ -1371,7 +1385,7 @@ if(!Nehan.ParserHook){
       
       // add new line. and push s2 to next line head.
       if(isV){
-	this.blockBuff = this.makeLineTd() + this.blockBuff;
+	this.pushLineToBlockV(this.makeLineTd());
 	this.lineBuff = "";
 
 	// now next line head, so if indent is defined, add indent.
@@ -1455,7 +1469,7 @@ if(!Nehan.ParserHook){
 
     // push as new line.
     if(isV){
-      this.blockBuff = this.makeLineTd() + this.blockBuff;
+      this.pushLineToBlockV(this.makeLineTd());
     } else {
       this.blockBuff += this.makeLineH();
     }
@@ -1529,7 +1543,7 @@ if(!Nehan.ParserHook){
   
   StreamParser.prototype.parsePage = function(pageNo){
     
-    var isV = (this.layout.direction == "vertical");
+    var isV = this.layout.isV;
     this.lineSave = "";
 
     while(true){
@@ -1599,8 +1613,10 @@ if(!Nehan.ParserHook){
 
       for(var i=0; i< list.length; i++){
 	var klass = list[i];
-	if(klass=="lp-vertical"){
+	if(klass == "lp-vertical" || klass == "lp-vertical-rl"){
 	  ret.direction = "vertical";
+	} else if (klass == "lp-vertical-lr"){
+	  ret.direction = "vertical-lr";
 	} else if (klass == "lp-horizontal"){
 	  ret.direction = "horizontal";
 	} else if (klass.match(/span-([0-9]+)/)){ // blueprint.css
