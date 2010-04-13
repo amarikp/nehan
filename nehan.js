@@ -267,9 +267,28 @@ if(!Nehan.ParserHook){
     return this.isEOF;
   };
 
-  function RubyStream(kanji){
-    this.kanji = kanji;
+  function RubyStream(rubyStartPos){
+    this.kanji = "";
+    this.yomi = "";
     this.seekPos = 0;
+    this.rubyStartPos = rubyStartPos;
+    this.ready = false;
+  };
+
+  RubyStream.prototype.addKanji = function(s1){
+    this.kanji += s1;
+  };
+
+  RubyStream.prototype.addYomi = function(s1){
+    this.yomi += s1;
+  };
+
+  RubyStream.prototype.setReady = function(){
+    this.ready = true;
+  };
+
+  RubyStream.prototype.isReady = function(){
+    return this.ready;
   };
 
   RubyStream.prototype.getchar = function(){
@@ -313,8 +332,6 @@ if(!Nehan.ParserHook){
     this.boutenCount = 0;
     this.bouten = false;
     this.indentCount = 0;
-    this.rubyYomi = "";
-    this.rubyKanji = "";
     this.rubyStream = null;
     this.packStr = "";
     this.textStream = textStream;
@@ -330,11 +347,10 @@ if(!Nehan.ParserHook){
     this.curImgWidth = 0;
     this.imgIndentCount = 0;
     this.blockIndentCount = 0;
-    this.tagFlag = [];
   };
 
   StreamParser.prototype.activateTag = function(tag, enable){
-    var watchFlags = ["ruby", "rp", "rb", "rt", "pack", "script"];
+    var watchFlags = ["ruby", "rp", "rb", "rt", "pack", "script", "object"];
     for(var i = 0; i < watchFlags.length; i++){
       if(tag == watchFlags[i]){
 	this[tag] = enable;
@@ -905,9 +921,6 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.onRubyBufferEnd = function(pageNo, isV){
     delete this.rubyStream;
     this.rubyStream = null;
-    if(!isV){
-      this.lineBuff += "</a>";
-    }
   };
 
   StreamParser.prototype.pushLine = function(pageNo, isV){
@@ -950,6 +963,20 @@ if(!Nehan.ParserHook){
     throw "OverflowPage";
   };
 
+  StreamParser.prototype.adjustSize= function(baseW, baseH, maxW, maxH){
+    var retW = baseW;
+    var retH = baseH;
+    if(baseW > maxW){
+      retW = maxW;
+      retH -= Math.floor((baseH / baseW) * (baseW - maxW));
+    }
+    if(baseH > maxH){
+      retH = maxH;
+      retW -= Math.floor((baseW / baseH) * (baseH - maxH));
+    }
+    return {width:retW, height:retH};
+  };
+
   StreamParser.prototype.parseImg = function(pageNo, isV, tagStr, tagAttr, tagName){
 
     // if current line is not empty, push as new line before image.
@@ -964,20 +991,10 @@ if(!Nehan.ParserHook){
     var imgW  = (typeof tagAttr.width != "undefined")?  parseInt(this.cutQuote(tagAttr.width)) : 200;
     var imgH = (typeof tagAttr.height != "undefined")? parseInt(this.cutQuote(tagAttr.height)) : 300;
     var imgAlign = (typeof tagAttr.align != "undefined")? this.cutQuote(tagAttr.align) : "none";
-    var imgW2 = imgW;
-    var imgH2 = imgH;
+    var adjSize = this.adjustSize(imgW, imgH, this.layout.width - this.seekWidth, this.layout.height - this.seekHeight);
+    var imgW2 = adjSize.width;
+    var imgH2 = adjSize.height;
 
-    // adjust width.
-    if(this.seekWidth + imgW > this.layout.width){
-      imgW2 = this.layout.width - this.seekWidth;
-      imgH2 -= Math.floor((imgH / imgW) * (imgW - imgW2));
-    }
-    // adjust height.
-    if(this.seekHeight + imgH > this.layout.height){
-      imgH2 = this.layout.height - this.seekHeight;
-      imgW2 -= Math.floor((imgW / imgH) * (imgH - imgH2));
-    }
-    
     // if image size is half of screen size, we write it in next page.
     if(isV){
       if(this.layout.width > imgW && this.seekWidth > 0 && (imgW2 * 2 < imgW || imgH2 * 2 < imgH)){
@@ -1225,17 +1242,15 @@ if(!Nehan.ParserHook){
   
   StreamParser.prototype.parseRubyStart = function(pageNo, isV, tagStr, tagAttr, tagName){
     if(isV){
-      this.rubyStartPos = this.seekHeight;
+      this.rubyStream = new RubyStream(this.seekHeight);
     } else {
-      this.rubyStartPos = this.seekWidth;
+      this.rubyStream = new RubyStream(this.seekWidth);
     }
   };
 
   StreamParser.prototype.parseRubyEnd = function(pageNo, isV, tagStr, tagAttr, tagName){
-    this.rubyStream = new RubyStream(this.rubyKanji);
-    this.rubyStack.push({yomi:this.rubyYomi, startPos:this.rubyStartPos});
-    this.rubyYomi = "";
-    this.rubyKanji = "";
+    this.rubyStack.push({yomi:this.rubyStream.yomi, startPos:this.rubyStream.rubyStartPos});
+    this.rubyStream.setReady();
   };
 
   StreamParser.prototype.parseBlockquoteStart = function(pageNo, isV, tagStr, tagAttr, tagName){
@@ -1256,6 +1271,7 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.parseTagHook = function(pageNo, isV, tagStr, tagAttr, tagName, isStart){
     if(ParserHook.enableTagHook(tagName)){
       ParserHook.getTagHook(tagName).apply(this, [pageNo, isV, tagStr, tagAttr, tagName]);
+      //ParserHook.getTagHook(tagName)(this, pageNo, isV, tagStr, tagAttr, tagName);
     }
   };
 
@@ -1523,7 +1539,7 @@ if(!Nehan.ParserHook){
 	if(!this.pack && this.packStr != ""){
 	  var s1 = this.packStr;
 	  this.packStr = "";
-	} else if(this.rubyStream){
+	} else if(this.rubyStream && this.rubyStream.isReady()){
 	  var s1 = this.rubyStream.getchar();
 	} else {
 	  var s1 = this.textStream.getchar();
@@ -1544,9 +1560,9 @@ if(!Nehan.ParserHook){
 	  this.packStr += s1;
 	} else if (this.isActiveTag("ruby")){
 	  if(this.isActiveTag("rt")){ // yomi
-	    this.rubyYomi += s1;
+	    this.rubyStream.addYomi(s1);
 	  } else if(this.isActiveTag("rb")){ // kanji
-	    this.rubyKanji += s1;
+	    this.rubyStream.addKanji(s1);
 	  }
 	} else if (this.isActiveTag("script")){ // script tag is ignored.
 	} else {

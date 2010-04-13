@@ -1,14 +1,26 @@
 var SimpleReader = {
-  start : function(){
+  start : function(opt){
+    if(typeof opt == "undefined"){
+      opt = {};
+    }
+    var defopt = {
+      width: 640,
+      height: 480,
+      fontSize: 16,
+      fontFamily: "IPA明朝, ＭＳ 明朝, Hiragino Mincho Pro"
+    };
+    for(var prop in defopt){
+      this[prop] = (opt[prop])? opt[prop] : defopt[prop];
+    }
     var self = this;
     var text = document.getElementById("source-text").innerHTML.replace(/<br \/>/gi, "\n").replace(/<br>/gi, "\n");
     this.pageNo = 0;
     this.writing = false;
     this.parser = new Nehan.StreamParser(new Nehan.Layout({
-      width: 500,
-      height: 400,
-      fontSize: 16,
-      fontFamily: "ＭＳ 明朝"
+      width: this.width,
+      height: this.height,
+      fontSize: this.fontSize,
+      fontFamily: this.fontFamily
     }), new Nehan.TextStream(text, text.length, true));
 
     document.getElementById("pager-next").onclick = function(){ self.next(); return false; };
