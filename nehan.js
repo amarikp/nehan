@@ -136,12 +136,12 @@ if(!Nehan.ParserHook){
       this.wrapCss += "line-height:1.8em;";
       this.wrapCss += "letter-spacing:0;";
     }
-    if (typeof this.fontFamily != "undefined"){
-      if(this.fontFamily != ""){
-	this.wrapCss += "font-family:" + this.fontFamily + ", monospace;";
-      } else {
-	this.wrapCss += "font-family:monospace;";
-      }
+    if (typeof this.fontFamily == "undefined"){
+      this.wrapCss += "font-family:monospace;";
+    } else if (this.fontFamily == ""){
+      this.wrapCss += "font-family:monospace;";
+    } else {
+      this.wrapCss += "font-family:" + this.fontFamily + ", monospace;";
     }
   };
 
