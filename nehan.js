@@ -77,12 +77,19 @@ if(!Nehan.ParserHook){
 	    && navigator.userAgent.toLowerCase().indexOf("opera") == -1)
   };
 
+  var Option = {
+    read : function(dst, defopt, opt){
+      for(prop in defopt){
+	dst[prop] = (typeof opt[prop] == "undefined")? defopt[prop] : opt[prop];
+      }
+    }
+  };
+
   function Layout(option){
-    var stdFontSize = 16;
-    var defopt = {
+    Option.read(this, {
       width : 700,
       height: 480,
-      fontSize : stdFontSize,
+      fontSize : 16,
       lineHeightRate: 1.8,
       letterSpacingRate: 0.1,
       direction : "vertical",
@@ -91,10 +98,8 @@ if(!Nehan.ParserHook){
       charImgMap:[],
       charImgColor:"black",
       kinsokuCharCount:2
-    };
-    for (var p in defopt){
-      this[p] = (typeof option[p] == "undefined")? defopt[p] : option[p];
-    }
+    }, option);
+    
     if (typeof option.fontFamily != "undefined"){
       this.fontFamily = option.fontFamily;
     }
@@ -992,27 +997,46 @@ if(!Nehan.ParserHook){
     return {width:retW, height:retH};
   };
 
-  /*
-  StreamParser.prototype.pushFigure = function(figure){
-    // if current line is not empty, push as new line before this figure.
-    if(this.lineBuff != ""){
-      this.pushLine(pageNo, isV);
-      if(this.checkOverflow(isV)){
-	this.textStream.seekPos = this.resumePos;
-	throw "OverflowPage";
-      }
-    }
+  StreamParser.prototype.parseObjectStart = function(pageNo, isV, tagStr, tagAttr, tagName){
+    var width = parseInt(tagAttr.width);
+    var height = parseInt(tagAttr.height);
+    var align = (typeof tagAttr.align != "undefined")? tagAttr.align : "none";
+    this.objFigure = {
+      src:tagStr,
+      align: align,
+      width: width,
+      height: height,
+      drawWidth: width,
+      drawHeight: height
+    };
   };
 
-  StreamParser.prototype.parseObjectStart = function(pageNo, isV, tagStr, tagAttr, tagName){
-    var width = (tagAttr.width)? parseInt(tagAttr.width) : 200;
-    var height = (tagAttr.height)? parseInt(tagAttr.heigth) : 300;
-    
-    this.figure = new Figure({width:width, height:height});
-  };*/
+  StreamParser.prototype.parseObjectEnd = function(pageNo, isV, tagStr, tagAttr, tagName){
+    this.objFigure.src += tagStr;
+    this.pushFigure(pageNo, isV, "object", this.objFigure);
+  };
 
   StreamParser.prototype.parseImg = function(pageNo, isV, tagStr, tagAttr, tagName){
+    var src = this.unscript(tagAttr.src);
+    var width  = (typeof tagAttr.width != "undefined")?  parseInt(tagAttr.width) : 200;
+    var height = (typeof tagAttr.height != "undefined")? parseInt(tagAttr.height) : 300;
+    var align = (typeof tagAttr.align != "undefined")? tagAttr.align : "none";
+    var restWidth = this.layout.width - this.seekWidth;
+    var restHeight = this.layout.height - this.seekHeight;
+    var drawSize = this.adjustSize(width, height, restWidth, restHeight);
+    
+    this.pushFigure(pageNo, isV, "img", {
+      src:src,
+      align:align,
+      width:width,
+      height:height,
+      drawWidth:drawSize.width,
+      drawHeight:drawSize.height
+    });
+  }; // parseImg
 
+  StreamParser.prototype.pushFigure = function(pageNo, isV, tagName, fig){
+    
     // if current line is not empty, push as new line before image.
     if(this.lineBuff != ""){
       this.pushLine(pageNo, isV);
@@ -1030,49 +1054,50 @@ if(!Nehan.ParserHook){
       this.textStream.seekPos = this.resumePos;
       throw "OverflowPage";
     }
-    var src = this.unscript(tagAttr.src);
-    var imgW  = (typeof tagAttr.width != "undefined")?  parseInt(tagAttr.width) : 200;
-    var imgH = (typeof tagAttr.height != "undefined")? parseInt(tagAttr.height) : 300;
-    var imgAlign = (typeof tagAttr.align != "undefined")? tagAttr.align : "none";
-    var adjSize = this.adjustSize(imgW, imgH, this.layout.width - this.seekWidth, this.layout.height - this.seekHeight);
-    var imgW2 = adjSize.width;
-    var imgH2 = adjSize.height;
 
-    // if image size is half of screen size, we write it in next page.
-    if(isV){
-      if(this.layout.width > imgW && this.seekWidth > 0 && (imgW2 * 2 < imgW || imgH2 * 2 < imgH)){
-	this.textStream.seekPos = this.resumePos;
-	throw "OverflowPage";
-      }
-    } else {
-      if(this.layout.height > imgH && this.seekHeight > 0 && (imgH2 * 2 < imgH || imgW2 * 2 < imgW)){
-	this.textStream.seekPos = this.resumePos;
-	throw "OverflowPage";
-      }
+    // if figure is larger than layout size, just ignore it.
+    if((isV && fig.width > this.layout.width) || (!isV && fig.height > this.layout.height)){
+      return;
+    }
+    
+    // if figure is resized and smaller than half size of original, write it in next page.
+    if((fig.drawWidth != fig.width || fig.drawHeight != fig.height) &&
+       (fig.drawWidth * 2 < fig.width || fig.drawHeight * 2 < fig.height)){
+      this.textStream.seekPos = this.resumePos;
+      throw "OverflowPage";
     }
 
+    // white space size
     if(isV){
+      var restSize = this.layout.height - fig.drawHeight - this.layout.fontSize;
+    } else {
+      var restSize = this.layout.width - fig.drawWidth - this.layout.fontSize;
+    }
+    var inlinePage = "";
 
-      // white space height.
-      var restH = this.layout.height - imgH2 - this.layout.fontSize;
-      var inlinePage = "";
-
-      // conditions
-      // 1: streaming text already end.
-      // 2: image aling is defined.
-      // 3: white space size is over half of layout height.
-      if( this.textStream.isEOF && imgAlign != "none" && restH > 0 && restH * 2 >= this.layout.height){
-	if(imgAlign == "top" || imgAlign == "left"){
-	  var imgStyle = "margin-bottom:" + this.layout.fontSize + "px;";
-	} else {
-	  var imgStyle = "margin-top:0;";
+    if(isV){
+      if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.height){
+	if(tagName == "img"){
+	  var figTag = this.tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
+	} else if(tagName == "object"){
+	  var figTag = fig.src;
 	}
-	var imgTag = this.tagStart("img", {"src":src, "width":imgW2, "height":imgH2, "style":imgStyle}, true);
+      } else {
+	if(fig.align == "top" || fig.align == "left"){
+	  var style = "padding:0; margin-bottom:" + this.layout.fontSize + "px;";
+	} else {
+	  var style = "padding:0; margin-top:0;";
+	}
+	if(tagName == "img"){
+	  var figTag = this.tagStart("img", {src:fig.src, width:fig.drawWidth, height:fig.drawHeight, style:style}, true);
+	} else if(tagName == "object"){
+	  var figTag = this.tagStart("div", {style:style}, false) + fig.src + "</div>";
+	}
 
 	// recursive output for white space(textStream is shared).
 	var parserTmp = new StreamParser(new Layout({
-	  width: imgW2,
-	  height: restH,
+	  width: fig.drawWidth,
+	  height: restSize,
 	  fontSize: this.layout.fontSize,
 	  direction: this.layout.direction,
 	  charImgRoot: this.layout.charImgRoot,
@@ -1087,34 +1112,34 @@ if(!Nehan.ParserHook){
 	  parserTmp.layout.fontFamily = this.layout.fontFamily;
 	  parserTmp.layout.initialize();
 	}
-	
-	var inlinePage = parserTmp.parsePage(0);
+	inlinePage = parserTmp.parsePage(0);
 	delete parserTmp;
-      } else {
-	var imgTag = this.tagStart("img", {"src":src, "width":imgW2, "height":imgH2}, true);
       }
       var tdCss = { "vertical-align":"top", "padding-right":this.layout.yohakuHeight + "px"};
-      var tdBody = (imgAlign == "top" || imgAlign == "left")? imgTag + "<br />" + inlinePage : inlinePage + imgTag;
+      var tdBody = (fig.align == "top" || fig.align == "left")? figTag + inlinePage : inlinePage + figTag;
       this.blockBuff = this.tagStart("td", {"style":this.inlineCss(tdCss)}, false) + tdBody + "</td>" + this.blockBuff;
-      this.seekWidth += imgW2 + this.layout.yohakuHeight;
+      this.seekWidth += fig.drawWidth + this.layout.yohakuHeight;
       
     } else { // horizontal
-
-      // white space width.
-      var restW = this.layout.width - imgW2 - this.layout.fontSize;
-      var inlinePage = "";
-
-      // conditions
-      // 1: streaming text already end.
-      // 2: image aling is defined.
-      // 3: white space size is over half of layout width.
-      if( this.textStream.isEOF && imgAlign != "none" && restW > 0 && restW * 2 >= this.layout.width){
-	var imgTag = this.tagStart("img", {"src":src, "width":imgW2, "height":imgH2}, true);
+      if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.width){
+	if(tagName == "img"){
+	  var figTag = this.tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
+	} else if(tagName == "object"){
+	  var figTag = fig.src;
+	}
+	this.blockBuff += figTag + "<br />";
+	this.seekHeight += fig.drawHeight + this.layout.yohakuHeight;
+      } else {
+	if(tagName == "img"){
+	  var figTag = this.tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
+	} else if(tagName == "object"){
+	  var figTag = fig.src;
+	}
 
 	// recursive output for white space(textStream is shared).
 	var parserTmp = new StreamParser(new Layout({
-	  width: restW,
-	  height: imgH2,
+	  width: restSize,
+	  height: fig.drawHeight,
 	  fontSize: this.layout.fontSize,
 	  direction:"horizontal",
 	  charImgRoot: this.layout.charImgRoot,
@@ -1122,34 +1147,32 @@ if(!Nehan.ParserHook){
 	  charImgColor: this.layout.charImgColor
 	}), this.textStream);
 
+	// set recursive flag. it makes this parser force turn page when it meets resursive image while recursive parsing.
+	parserTmp.recursiveParser = true;
+
 	if(this.layout.fontFamily){
 	  parserTmp.layout.fontFamily = this.layout.fontFamily;
 	  parserTmp.layout.initialize();
 	}
 	
-	var inlinePage = parserTmp.parsePage(0);
+	inlinePage = parserTmp.parsePage(0);
 	delete parserTmp;
 
-	if(imgAlign == "top" || imgAlign == "left"){
-	  var leftBlock  = "<div style='float:left; width:" + (imgW2 + this.layout.fontSize) + "px;'>" + imgTag + "</div>";
-	  var rightBlock = "<div style='float:left; width:" + restW + "px;'>" + inlinePage + "</div>";
+	if(fig.align == "top" || fig.align == "left"){
+	  var leftBlock  = "<div style='float:left; width:" + (fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
+	  var rightBlock = "<div style='float:left; width:" + restSize + "px;'>" + inlinePage + "</div>";
 	} else {
-	  var leftBlock  = "<div style='float:left; width:" + restW + "px;'>" + inlinePage + "</div>";
-	  var rightBlock = "<div style='float:left; width:" + (imgW2 + this.layout.fontSize) + "px;'>" + imgTag + "</div>";
+	  var leftBlock  = "<div style='float:left; width:" + restSize + "px;'>" + inlinePage + "</div>";
+	  var rightBlock = "<div style='float:left; width:" + (fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
 	}
 	this.blockBuff += ("<div style='width:" + this.layout.width + "px;'>" +
 			   leftBlock + rightBlock +
 			   "<div style='clear:left;line-height:0px;font-size:0px;'></div>" +
 			   "</div>");
-	this.seekHeight += imgH2 + this.layout.yohakuHeight;
-
-      } else {
-	var imgTag = this.tagStart("img", {"src":src, "width":imgW2, "height":imgH2}, true);
-	this.blockBuff += imgTag + "<br />";
-	this.seekHeight += imgH2 + this.layout.yohakuHeight;
+	this.seekHeight += fig.drawHeight + this.layout.yohakuHeight;
       }
     }
-  }; // parseImg
+  }; // pushFigure
 
   StreamParser.prototype.parseLinkStart = function(pageNo, isV, tagStr, tagAttr, tagName){
     var href = this.unscript(tagAttr.href);
@@ -1389,6 +1412,20 @@ if(!Nehan.ParserHook){
 
       case "/blockquote":
         this.parseBlockquoteEnd(pageNo, isV, tagStr, tagAttr, tagName);
+        break;
+
+      case "object":
+        this.parseObjectStart(pageNo, isV, tagStr, tagAttr, tagName);
+        break;
+
+      case "/object":
+        this.parseObjectEnd(pageNo, isV, tagStr, tagAttr, tagName);
+        break;
+
+      case "embed" : case "/embed" : case "param": case "/param":
+        if(this.objFigure){
+	  this.objFigure.src += tagStr;
+	}
         break;
       
       default:
