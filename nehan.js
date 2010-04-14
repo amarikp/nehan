@@ -992,6 +992,25 @@ if(!Nehan.ParserHook){
     return {width:retW, height:retH};
   };
 
+  /*
+  StreamParser.prototype.pushFigure = function(figure){
+    // if current line is not empty, push as new line before this figure.
+    if(this.lineBuff != ""){
+      this.pushLine(pageNo, isV);
+      if(this.checkOverflow(isV)){
+	this.textStream.seekPos = this.resumePos;
+	throw "OverflowPage";
+      }
+    }
+  };
+
+  StreamParser.prototype.parseObjectStart = function(pageNo, isV, tagStr, tagAttr, tagName){
+    var width = (tagAttr.width)? parseInt(tagAttr.width) : 200;
+    var height = (tagAttr.height)? parseInt(tagAttr.heigth) : 300;
+    
+    this.figure = new Figure({width:width, height:height});
+  };*/
+
   StreamParser.prototype.parseImg = function(pageNo, isV, tagStr, tagAttr, tagName){
 
     // if current line is not empty, push as new line before image.
@@ -1001,6 +1020,15 @@ if(!Nehan.ParserHook){
 	this.textStream.seekPos = this.resumePos;
 	throw "OverflowPage";
       }
+    }
+
+    // when parsing document while recursive parsing... force overflow, and process this img at the next new page.
+    if(this.recursiveParser){
+      if(this.lineBuff != ""){
+	this.pushLine(pageNo, isV);
+      }
+      this.textStream.seekPos = this.resumePos;
+      throw "OverflowPage";
     }
     var src = this.unscript(tagAttr.src);
     var imgW  = (typeof tagAttr.width != "undefined")?  parseInt(tagAttr.width) : 200;
@@ -1051,6 +1079,9 @@ if(!Nehan.ParserHook){
 	  charImgMap: this.layout.charImgMap,
 	  charImgColor: this.layout.charImgColor
 	}), this.textStream);
+
+	// set recursive flag. it makes this parser force turn page when it meets resursive image while recursive parsing.
+	parserTmp.recursiveParser = true;
 
 	if(this.layout.fontFamily){
 	  parserTmp.layout.fontFamily = this.layout.fontFamily;
