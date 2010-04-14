@@ -1011,6 +1011,12 @@ if(!Nehan.ParserHook){
     };
   };
 
+  StreamParser.prototype.parseObjectBody = function(pageNo, isV, tagStr, tagAttr, tagName){
+    if(this.objFigure){
+      this.objFigure.src += tagStr;
+    }
+  };
+
   StreamParser.prototype.parseObjectEnd = function(pageNo, isV, tagStr, tagAttr, tagName){
     this.objFigure.src += tagStr;
     this.pushFigure(pageNo, isV, "object", this.objFigure);
@@ -1423,9 +1429,7 @@ if(!Nehan.ParserHook){
         break;
 
       case "embed" : case "/embed" : case "param": case "/param":
-        if(this.objFigure){
-	  this.objFigure.src += tagStr;
-	}
+        this.parseObjectBody(pageNo, isV, tagStr, tagAttr, tagName);
         break;
       
       default:
