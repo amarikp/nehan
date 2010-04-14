@@ -1091,7 +1091,7 @@ if(!Nehan.ParserHook){
       } else {
 	if(fig.align == "top" || fig.align == "left"){
 	  var style = "padding:0; margin-bottom:" + this.layout.fontSize + "px;";
-	} else {
+	} else if(fig.align == "bottom" || fig.align == "right"){
 	  var style = "padding:0; margin-top:0;";
 	}
 	if(tagName == "img"){
@@ -1167,7 +1167,7 @@ if(!Nehan.ParserHook){
 	if(fig.align == "top" || fig.align == "left"){
 	  var leftBlock  = "<div style='float:left; width:" + (fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
 	  var rightBlock = "<div style='float:left; width:" + restSize + "px;'>" + inlinePage + "</div>";
-	} else {
+	} else if(fig.align == "bottom" || fig.align == "right"){
 	  var leftBlock  = "<div style='float:left; width:" + restSize + "px;'>" + inlinePage + "</div>";
 	  var rightBlock = "<div style='float:left; width:" + (fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
 	}
