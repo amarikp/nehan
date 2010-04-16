@@ -1509,7 +1509,7 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.outputHalfWord = function(){
     if(this.halfBuff.lenght == 1){
       var ret = this.applyTagStack(this.halfBuff, true);
-    } else if(this.halfBuff.length <= 2 && !this.halfWordBreak && this.halfBuff.match(/\d+/)){
+    } else if(this.halfBuff.length <= 2 && !this.halfWordBreak && this.halfBuff.match(/\d+/) || this.halfBuff.match(/[!\?]+/)){
       var ret = this.applyTagStack(this.halfBuff, true);
     } else if (Env.isIE){
       var css = this.inlineCss({
