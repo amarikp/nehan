@@ -345,7 +345,6 @@ if(!Nehan.ParserHook){
     this.bouten = false;
     this.indentCount = 0;
     this.rubyStream = null;
-    this.halfStream = null;
     this.packStr = "";
     this.textStream = textStream;
     this.isResuming = false;
