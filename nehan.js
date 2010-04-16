@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.0.4
+ version : 1.0.5
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -127,7 +127,8 @@ if(!Nehan.ParserHook){
     } else {
       this.lineCount = Math.floor(this.width / this.fontSize) - this.kinsokuCharCount;
     }
-
+    // if not Opera, maybe OK?
+    this.canTransform = (navigator.userAgent.toLowerCase().indexOf("opera") == -1);
     this.wrapCss = "";
     this.wrapCss += "text-align:left;";
     this.wrapCss += "padding:0;";
@@ -214,15 +215,17 @@ if(!Nehan.ParserHook){
     }
   };
 
-  TextStream.prototype.checkNextChar = function(checker){
+  TextStream.prototype.lookNextChar = function(){
     if (this.seekPos < this.buffer.length){
-      var s = this.buffer.substring(this.seekPos,this.seekPos+1);
-      if (checker(s)){
-	this.seekPos++;
-	return s;
-      }
+      return this.buffer.substring(this.seekPos,this.seekPos+1);
     }
     return "";
+  };
+
+  TextStream.prototype.stepSeekPos = function(){
+    if (this.seekPos < this.buffer.length){
+      this.seekPos++;
+    }
   };
 
   TextStream.prototype.getTag = function(){
@@ -239,12 +242,14 @@ if(!Nehan.ParserHook){
 
   TextStream.prototype.skipCRLF = function(){
     var mark = this.seekPos;
-    var nc1 = this.checkNextChar(function(s){ return (s=="\r" || s=="\n"); });
+    var nc1 = this.lookNextChar();
     if(nc1 == "\n"){
+      this.seekPos++;
       return this.seekPos;
     } else if (nc1 == "\r"){
-      var nc2 = this.checkNextChar(function(s){ return (s=="\n"); });
+      var nc2 = this.lookNextChar();
       if (nc2 == "\n"){
+	this.seekPos++;
 	return this.seekPos;
       }
     }
@@ -340,6 +345,7 @@ if(!Nehan.ParserHook){
     this.bouten = false;
     this.indentCount = 0;
     this.rubyStream = null;
+    this.halfStream = null;
     this.packStr = "";
     this.textStream = textStream;
     this.isResuming = false;
@@ -354,6 +360,7 @@ if(!Nehan.ParserHook){
     this.curImgWidth = 0;
     this.imgIndentCount = 0;
     this.blockIndentCount = 0;
+    this.halfWordBreak = false;
   };
 
   StreamParser.prototype.activateTag = function(tag, enable){
@@ -512,7 +519,7 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.startBgColor = function(){
-    if(this.layout.direction == "vertical"){
+    if(this.layout.isV){
       var yohaku = Math.floor(this.layout.yohakuHeight * this.lineScale);
       var pTB = Math.floor(yohaku / 3);
       var width = Math.floor(this.layout.baseLineHeight * this.lineScale);
@@ -525,7 +532,7 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.endBgColor = function(){
-    if (this.layout.direction == "vertical"){
+    if (this.layout.isV){
       return "</div>";
     }
     return "</span>";
@@ -720,8 +727,8 @@ if(!Nehan.ParserHook){
     return false;
   };
 
-  StreamParser.prototype.applyTagStack = function(str){
-    var ret = this.normalIndent(str);
+  StreamParser.prototype.applyTagStack = function(str,isIndent){
+    var ret = isIndent? this.normalIndent(str) : str;
     for(i = this.tagStack.length - 1; i >= 0 ; i--){
       var f = this.tagStack[i];
       ret = f(ret);
@@ -827,17 +834,19 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.getLetterCount = function(c){
-    if(this.layout.direction == "vertical"){
-      return 1;
-    } else if(escape(c).charAt(1) == "u"){
+    if(escape(c).charAt(1) == "u"){
       return 1;
     } else {
-      return 0.5;
+      if(!this.layout.isV){
+	return 0.5;
+      } else {
+	return (c == " ")? 1 : this.layout.canTransform? 0.5 : 1;
+      }
     }
   };
 
   StreamParser.prototype.addIndent = function(count){
-    var space = (this.layout.direction == "vertical")? "　<br />" : "　";
+    var space = (this.layout.isV)? "　<br />" : "　";
     for(var i = 0; i < count; i++){
       this.lineBuff += space;
     }
@@ -946,7 +955,13 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.pushLine = function(pageNo, isV){
     if(this.blockBuff != "" || this.lineBuff != ""){
       if (isV){
-	this.pushLineToBlockV(this.makeLineTd());
+	if(this.halfBuff){
+	  this.lineBuff += this.outputHalfWord();
+	  if(this.getLetterCount(this.textStream.lookNextChar()) < 1){
+	    this.halfWordBreak = true;
+	  }
+	}
+    	this.pushLineToBlockV(this.makeLineTd());
       } else { // horizontal
 	this.blockBuff += this.makeLineH();
       }
@@ -1300,6 +1315,9 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.parseBoutenStart = function(pageNo, isV, tagStr, tagAttr, tagName){
     this.bouten = true;
     this.boutenStartPos = this.seekHeight;
+    if(Env.isIE){
+      this.boutenStartPos += Math.floor(this.layout.baseLetterSpacing * this.fontScale);
+    }
     this.boutenStr = this.getBoutenStr(tagName);
   };
 
@@ -1356,9 +1374,10 @@ if(!Nehan.ParserHook){
     var tagInner = tagStr.replace("<","").replace(">","").replace("/>","");
     var tagAttr = this.parseAttr(tagInner);
     var tagName = tagInner.split(/[\s\t]+/)[0].toLowerCase();
+    var isEnd = (tagName.substring(0,1) == "/");
     
-    this.activateTag(tagName.replace("/",""), tagName.substring(0,1) != "/");
-    
+    this.activateTag(tagName.replace("/",""), !isEnd);
+
     switch (tagName) {
       case "end-page":
         this.parseEndPage(pageNo, isV, tagStr, tagAttr, tagName);
@@ -1438,74 +1457,26 @@ if(!Nehan.ParserHook){
     }
   }; // parseTag
 
-  StreamParser.prototype.pushSemiLastChar = function(pageNo, isV){
+  StreamParser.prototype.checkTailNg = function(pageNo, isV){
 
     // nomally, s2 is tail charactor of curent line.
-    var s2 = this.textStream.checkNextChar(this.isTailNg);
+    var s2 = this.textStream.lookNextChar();
 
-    // TODO
-    // when s2 is "<", we can't check tail NG.
+    // [TODO] if s2 is "<", fail to check tail NG.
 
-    // if s2 is tail NG.
-    if(s2 != ""){
-      this.seekCharCount++;
-      
-      // end bg color.
-      if (this.bgColor != ""){
-	this.lineBuff += this.endBgColor();
-      }
-      
-      // add new line. and push s2 to next line head.
-      if(isV){
-	this.pushLineToBlockV(this.makeLineTd());
-	this.lineBuff = "";
-
-	// now next line head, so if indent is defined, add indent.
-	if(this.indentCount > 0){
-	  this.addIndent(this.indentCount);
-	}
-	if (this.bgColor != ""){
-	  this.lineBuff += this.startBgColor(); // continue bg color also in next line.
-	}
-	var dw = Math.floor(this.layout.baseLineHeight * this.lineScale);
-	this.lineBuff += this.applyTagStack(s2);
-	this.seekWidth += dw;
-	this.seekWidth2 += dw;
-	this.seekHeight = 0;
-	this.seekLineCharCount = this.getLetterCount(s2);
-	this.textStream.skipCRLF();
-	this.lineScale = this.fontScale;
-      } else { // hotizontal
-	this.blockBuff += this.makeLineH();
-	this.lineBuff = "";
-
-	// now next line head, so if indent is defined, add indent.
-	if(this.indentCount > 0){
-	  this.addIndent(this.indentCount);
-	}
-	if (this.fontStyle != ""){
-	  this.lineBuff += this.fontStyle;
-	}
-	if (this.bgColor != ""){
-	  this.lineBuff += this.startBgColor(); // continue bg color also in next line.
-	}
-	this.lineBuff += this.fixW(s2.str);
-	this.seekHeight += Math.floor(this.layout.baseLineHeight * this.lineScale);
-	this.seekWidth = 0;
-	this.seekLineCharCount = this.getLetterCount(s2.str);
-	this.textStream.skipCRLF();
-	this.lineScale = this.fontScale;
-      }
+    if(this.isTailNg(s2)){
+      this.pushLine(pageNo, isV);
+      this.textStream.skipCRLF();
     }
-  }; // pushSemiLastChar
+  }; // checkTailNg
 
-  StreamParser.prototype.pushLastChar = function(pageNo, isV){
+  StreamParser.prototype.checkHeadNg = function(pageNo, isV){
 
     // nomally, s2 is head charactor of next line.
-    var s2 = this.textStream.checkNextChar(this.isHeadNg);
+    var s2 = this.textStream.lookNextChar();
 
-    // if s2 is head NG...
-    if(s2 != ""){
+    if(this.isHeadNg(s2)){
+      this.textStream.stepSeekPos();
       this.seekCharCount++;
       if (this.bouten){
 	this.boutenCount++;
@@ -1513,65 +1484,73 @@ if(!Nehan.ParserHook){
 
       // add s2 to current line.
       if(isV){
-	this.lineBuff += this.applyTagStack(s2);
+	this.lineBuff += this.applyTagStack(s2, true);
       } else {
 	this.lineBuff += this.fixW(s2);
       }
 
       // check one more charactor for double tail NG. ex:  。」 or ？」
-      var s3 = this.textStream.checkNextChar(this.isHeadNg);
+      var s3 = this.textStream.lookNextChar();
 
       // double NG
-      if(s3 != ""){
+      if(this.isHeadNg(s3)){
+	this.textStream.stepSeekPos();
 	this.seekCharCount++;
 	if (this.bouten){
 	  this.boutenCount++;
 	}
-	this.lineBuff += this.applyTagStack(s3);
+	this.lineBuff += this.applyTagStack(s3, true);
       }
     }
-
-    if (this.fontStyle != ""){
-      this.lineBuff += "</span>";
-    }
-    // if bgcolor defined, end it before adding new line.
-    if (this.bgColor != ""){
-      this.lineBuff += this.endBgColor();
-    }
-
-    // push as new line.
-    if(isV){
-      this.pushLineToBlockV(this.makeLineTd());
-    } else {
-      this.blockBuff += this.makeLineH();
-    }
-
-    this.lineBuff = "";
-
-    if (this.fontStyle != ""){
-      this.lineBuff += this.fontStyle;
-    }
-    // if bgcolor defined, continue it also in next line.
-    if (this.bgColor != ""){
-      this.lineBuff += this.startBgColor();
-    }
-
-    if(isV){
-      var dw = Math.floor(this.layout.baseLineHeight * this.lineScale);
-      this.seekWidth += dw;
-      this.seekWidth2 += dw;
-      this.seekHeight = 0;
-    } else {
-      this.seekHeight += Math.floor(this.layout.baseLineHeight * this.lineScale);
-      this.seekWidth = 0;
-    }
-    
-    this.seekLineCharCount = 0;
-    this.lineScale = this.fontScale;
+    this.pushLine(pageNo, isV);
     this.textStream.skipCRLF();
-  }; // pushLastChar
+  }; // checkHeadNg
+
+  StreamParser.prototype.outputHalfWord = function(){
+    if(this.halfBuff.lenght == 1){
+      var ret = this.applyTagStack(this.halfBuff, true);
+    } else if(this.halfBuff.length <= 2 && !this.halfWordBreak && this.halfBuff.match(/\d+/)){
+      var ret = this.applyTagStack(this.halfBuff, true);
+    } else if (Env.isIE){
+      var css = this.inlineCss({
+	  "writing-mode":"tb-rl",
+	  "width": this.layout.fontSize + "px"
+      });
+      var ret = "<div style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
+    } else {
+      var min = Math.floor(this.layout.baseLetterSpacing * this.fontScale);
+      var margin = Math.floor(this.halfBuff.length * this.fontScale * this.layout.fontSize / 2) - this.layout.fontSize;
+      margin = Math.max(min, margin);
+      var css = this.inlineCss({
+	  "-webkit-transform":"rotate(90deg)",
+	  "-webkit-transform-origin":"50% 50%",
+	  "-moz-transform":"rotate(90deg)",
+	  "-moz-transform-origin":"50% 50%",
+	  "margin-bottom": margin + "px",
+	  "width": this.layout.fontSize + "px"
+      });
+      var ret = "<div style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
+    }
+    delete this.halfBuff;
+    this.halfBuff = null;
+    this.halfWordBreak = false;
+    return ret;
+  };
+
+  StreamParser.prototype.pushHalfChar = function(s1){
+    if(this.halfBuff){
+      this.halfBuff += s1;
+    } else {
+      this.halfBuff = s1;
+    }
+    var s2 = this.textStream.lookNextChar();
+    if(this.getLetterCount(s2) >= 1 || s2 == "<" || s2 == " " || s2 == "　" || s2 == "\t" || s2 == "\r" || s2 == "\n"){
+      this.lineBuff += this.outputHalfWord();
+    }
+  };
 
   StreamParser.prototype.pushChar = function(pageNo, isV, s1){
+
     var letterCount = this.getLetterCount(s1); // 0.5 or 1.0
     var scaleWeight = letterCount * this.fontScale;
 
@@ -1582,7 +1561,11 @@ if(!Nehan.ParserHook){
 
     // add one char to current line.
     if(isV){
-      this.lineBuff += this.applyTagStack(s1);
+      if(letterCount < 1 && this.layout.canTransform){
+	this.pushHalfChar(s1);
+      } else {
+	this.lineBuff += this.applyTagStack(s1, true);
+      }
 
       if(this.isImgChar){
 	this.seekHeight += Math.floor(scaleWeight * this.layout.fontSize);
@@ -1606,10 +1589,10 @@ if(!Nehan.ParserHook){
     var restCharCount = this.layout.lineCount - this.seekLineCharCount;
 
     if(1 <= restCharCount && restCharCount <= 1.5){
-      this.pushSemiLastChar(pageNo, isV);
+      this.checkTailNg(pageNo, isV);
     }
     else if(restCharCount < 1){
-      this.pushLastChar(pageNo, isV);
+      this.checkHeadNg(pageNo, isV);
     }
   }; // pushChar
   
