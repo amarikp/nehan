@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.0.5.2
+ version : 1.0.5.1
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -206,16 +206,20 @@ if(!Nehan.ParserHook){
 
       this.isIE = (browser == "explorer");
       this.isMac = (os == "Mac");
+      this.isWin = (os == "Windows");
+      this.isVistaOrWin7 = (navigator.userAgent.toLowerCase().indexOf("windows nt 6") >= 0);
 
       // check if browser can support transform method
       if (this.isMac){
-	this.canTransform = false; // monospace trouble.
-      } else if (browser == "chrome" || browser == "safari"){
+	this.canTransform = false; // for monospace trouble.
+      } else if (this.isWin && browser == "chrome"){
 	this.canTransform = true;
-      } else if (browser == "firefox" && version >= 3.5){
+      } else if (this.isWin && browser == "safari"){
 	this.canTransform = true;
-      } else if (this.isIE && version >= 6.0){
-	this.canTransform = (navigator.userAgent.toLowerCase().indexOf("windows nt 6") >= 0)? false : true;
+      } else if (this.isWin && browser == "firefox" && version >= 3.5){
+	this.canTransform = true;
+      } else if (this.isWin && this.isIE && !this.isVistaOrWin7 && version >= 6.0){
+	this.canTransform = true;
       } else {
 	this.canTransform = false;
       }
