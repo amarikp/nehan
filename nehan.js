@@ -840,6 +840,7 @@ if(!Nehan.ParserHook){
 	return 0.5;
       } else {
 	return (c == " ")? 1 : this.layout.canTransform? 0.5 : 1;
+	//return (this.layout.canTransform? 0.5 : 1);
       }
     }
   };
@@ -1517,9 +1518,8 @@ if(!Nehan.ParserHook){
       });
       var ret = "<div style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
     } else {
-      var min = Math.floor(this.layout.baseLetterSpacing * this.fontScale);
-      var margin = Math.floor(this.halfBuff.length * this.fontScale * this.layout.fontSize / 2) - this.layout.fontSize;
-      margin = Math.max(min, margin);
+      var halfSize = this.fontScale * this.layout.fontSize / 2;
+      var margin = Math.max(0, Math.floor((this.halfBuff.length - 2) * halfSize));
       var css = this.inlineCss({
 	  "-webkit-transform":"rotate(90deg)",
 	  "-webkit-transform-origin":"50% 50%",
