@@ -205,20 +205,18 @@ if(!Nehan.ParserHook){
       var os = BrowserDetect.OS;
 
       this.isIE = (browser == "explorer");
-      this.isMac = (os == "Mac");
       this.isWin = (os == "Windows");
+      this.isMac = (os == "Mac");
       this.isVistaOrWin7 = (navigator.userAgent.toLowerCase().indexOf("windows nt 6") >= 0);
 
       // check if browser can support transform method
-      if (this.isMac){
-	this.canTransform = false; // for monospace trouble.
-      } else if (this.isWin && browser == "chrome"){
+      if (browser == "chrome"){
 	this.canTransform = true;
-      } else if (this.isWin && browser == "safari"){
+      } else if (browser == "safari"){
 	this.canTransform = true;
-      } else if (this.isWin && browser == "firefox" && version >= 3.5){
+      } else if (browser == "firefox" && version >= 3.5){
 	this.canTransform = true;
-      } else if (this.isWin && this.isIE && !this.isVistaOrWin7 && version >= 6.0){
+      } else if (this.isIE && !this.isVistaOrWin7 && version >= 6.0){
 	this.canTransform = true;
       } else {
 	this.canTransform = false;
@@ -269,6 +267,11 @@ if(!Nehan.ParserHook){
       this.lineCount = Math.floor(this.height / this.letterHeight) - this.kinsokuCharCount;
     } else {
       this.lineCount = Math.floor(this.width / this.fontSize) - this.kinsokuCharCount;
+    }
+
+    // if mac and fontfamily is not defined properly, disable transform method.
+    if(Env.isMac && this.fontFamily){
+      Env.canTransform = (this.fontFamily.match(/Osaka-Mono/));
     }
 
     this.wrapCss = "";
@@ -1953,7 +1956,7 @@ if(!Nehan.ParserHook){
 	filter : "direction",
 	noBR : false, // nomally, new line is <br>, but sometimes it's \n(when <pre> is used).
 	charImgRoot : "/img/char",
-	fontFamily : "IPA明朝, ＭＳ 明朝, Hiragino Mincho Pro",
+	fontFamily : "IPA明朝, ＭＳ 明朝, Osaka-Mono, Hiragino Mincho Pro",
 	onSeek : function(groupName, percent){}, // seek each group
 	onComplete : function(groupName){}, // complete each group
 	onCompleteAll : function(){} // complete all group
