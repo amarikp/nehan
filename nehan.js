@@ -1139,6 +1139,10 @@ if(!Nehan.ParserHook){
     if(this.lineBuff != ""){
       this.pushLine(pageNo, isV);
     }
+    // if recursive parser, end-page from caller one more time.
+    if(this.recursiveParser){
+      this.textStream.seekPos = this.resumePos;
+    }
     throw "OverflowPage";
   };
 
