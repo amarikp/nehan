@@ -1230,7 +1230,7 @@ if(!Nehan.ParserHook){
       return;
     }
     
-    // if enough space is not lefted for figure size, write it in next page.
+    // if enough space not left for figure size, write it in next page.
     if ((isV && this.seekWidth + fig.drawWidth + this.layout.yohakuHeight > this.layout.width) ||
 	(!isV && this.seekHeight + fig.drawHeight + this.layout.yohakuHeight > this.layout.height)){
       this.textStream.seekPos = this.resumePos;
