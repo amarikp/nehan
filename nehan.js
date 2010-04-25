@@ -392,6 +392,7 @@ if(!Nehan.ParserHook){
       this.seekPos++;
       return this.seekPos;
     } else if (nc1 == "\r"){
+      this.seekPos++;
       var nc2 = this.lookNextChar();
       if (nc2 == "\n"){
 	this.seekPos++;
