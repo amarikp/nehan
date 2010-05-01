@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.0.5.3
+ version : 1.0.5.4
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -226,6 +226,26 @@ if(!Nehan.ParserHook){
 
   Env.init();
 
+  var inlineAttr = function(attr){
+    var ret = "";
+    for(prop in attr){
+      ret += prop + "='" + attr[prop] + "' ";
+    }
+    return ret;
+  };
+
+  var inlineCss = function(attr){
+    var ret = "";
+    for(prop in attr){
+      ret += prop + ":" + attr[prop] + ";";
+    }
+    return ret;
+  };
+
+  var tagStart = function(tag, attr, isSingle){
+    return "<" + tag + " " + inlineAttr(attr) + (isSingle? " />" : " >");
+  };
+
   function Layout(option){
     Option.read(this, {
       width : 700,
@@ -238,7 +258,8 @@ if(!Nehan.ParserHook){
       charImgRoot: "/img/char",
       charImgMap:[],
       charImgColor:"black",
-      kinsokuCharCount:2
+      kinsokuCharCount:2,
+      plusCss:{}
     }, option);
     
     if (typeof option.fontFamily != "undefined"){
@@ -296,6 +317,7 @@ if(!Nehan.ParserHook){
     } else {
       this.wrapCss += "font-family:" + this.fontFamily + ", monospace;";
     }
+    this.wrapCss += inlineCss(this.plusCss);
   };
 
   Layout.prototype.setHeight = function(height){
@@ -529,26 +551,6 @@ if(!Nehan.ParserHook){
     return this.textStream;
   };
 
-  StreamParser.prototype.tagAttr = function(attr){
-    var ret = "";
-    for(prop in attr){
-      ret += prop + "='" + attr[prop] + "' ";
-    }
-    return ret;
-  };
-
-  StreamParser.prototype.inlineCss = function(attr){
-    var ret = "";
-    for(prop in attr){
-      ret += prop + ":" + attr[prop] + ";";
-    }
-    return ret;
-  };
-
-  StreamParser.prototype.tagStart = function(tag, attr, isSingle){
-    return "<" + tag + " " + this.tagAttr(attr) + (isSingle? " />" : " >");
-  };
-
   StreamParser.prototype.charToImg = function(c){
     switch(c){
       case "「": case "｢": c = "kakko1.gif"; break;
@@ -626,9 +628,9 @@ if(!Nehan.ParserHook){
     };
     var attr = {
 	"src": imgPath,
-	"style": this.inlineCss(css)
+	"style": inlineCss(css)
     };
-    return this.tagStart("img", attr, true);
+    return tagStart("img", attr, true);
   };
 
   StreamParser.prototype.getBoutenStr = function(tagName){
@@ -669,10 +671,10 @@ if(!Nehan.ParserHook){
       var pTB = Math.floor(yohaku / 3);
       var width = Math.floor(this.layout.baseLineHeight * this.lineScale);
       var css = {"text-align":"center", "padding": pTB + "px 0", "width": width + "px", "background-color": this.bgColor};
-      return this.tagStart("div", {"style":this.inlineCss(css)}, false);
+      return tagStart("div", {"style":inlineCss(css)}, false);
     } else {
       var css = {"padding-top":"0.3em","padding-left":"0.3em","vertical-align":"middle","background-color": this.bgColor};
-      return this.tagStart("span", {"style":this.inlineCss(css)}, false);
+      return tagStart("span", {"style":inlineCss(css)}, false);
     }
   };
 
@@ -708,8 +710,8 @@ if(!Nehan.ParserHook){
 	"width":yohakuHeight + "px",
 	"vertical-align": "top"
     };
-    return (this.tagStart("td", {"style": this.inlineCss(cssBody)}, false) +  this.lineBuff + "</td>" +
-	    this.tagStart("td", {"style": this.inlineCss(cssRuby)}, false) +  this.makeRubyLine() + this.makeBoutenLine() + "</td>");
+    return (tagStart("td", {"style": inlineCss(cssBody)}, false) +  this.lineBuff + "</td>" +
+	    tagStart("td", {"style": inlineCss(cssRuby)}, false) +  this.makeRubyLine() + this.makeBoutenLine() + "</td>");
   };
 
   StreamParser.prototype.makeRubyLine = function(){
@@ -720,12 +722,12 @@ if(!Nehan.ParserHook){
 	"font-size":Math.floor(this.layout.rubyFontSize * this.lineScale) + "px",
 	"line-height":"1.14em"
     };
-    var baseStyle = this.inlineCss(css);
+    var baseStyle = inlineCss(css);
     var indentOffset = this.indentCount * this.layout.letterHeight;
     
     for (var i = 0; i < this.rubyStack.length; i++)(function (i, ruby){
       var style = baseStyle + "margin-top:" + Math.floor(indentOffset + ruby.startPos) + "px;";
-      ret += self.tagStart("div", {"style":style}, false);
+      ret += tagStart("div", {"style":style}, false);
       for (var k = 0; k < ruby.yomi.length; k++)(function (k, y){
 	ret += self.makeCharInner(y) + "<br />";
       })(k, ruby.yomi.substring(k,k+1));
@@ -764,11 +766,11 @@ if(!Nehan.ParserHook){
 	"padding": "0",
 	"line-height": rfs + "px"
     };
-    ret += this.tagStart("div", {style:this.inlineCss(css)}, false);
+    ret += tagStart("div", {style:inlineCss(css)}, false);
 
     for (var i = 0; i < this.rubyStack.length; i++)(function (i, ruby){
       var style = "position:absolute; margin-top:-0.3em; margin-left:" + Math.floor(indentOffset + ruby.startPos) + "px;";
-      ret += self.tagStart("span", {"style":style}, false);
+      ret += tagStart("span", {"style":style}, false);
       for (var k = 0; k < ruby.yomi.length; k++)(function (k, y){
 	ret += y;
       })(k, ruby.yomi.substring(k,k+1));
@@ -787,7 +789,7 @@ if(!Nehan.ParserHook){
 	"position": "absolute",
 	"margin-left": "-0.35em"
     };
-    var baseStyle = this.inlineCss(css);
+    var baseStyle = inlineCss(css);
 
     for (var i = 0; i < this.boutenStack.length; i++)(function (bouten){
       while( bouten.count > 0 ){
@@ -797,7 +799,7 @@ if(!Nehan.ParserHook){
 	  var boutenFontSize = Math.floor(self.layout.fontSize * 70 / 100);
 	}
 	var style = baseStyle + "; font-size:" + boutenFontSize + "px; margin-top:" + bouten.startPos + "px;";
-	ret += self.tagStart("div", {"style":style}, false);
+	ret += tagStart("div", {"style":style}, false);
 	ret += bouten.str;
 	ret += "</div>";
 	bouten.startPos += self.layout.letterHeight;
@@ -818,8 +820,8 @@ if(!Nehan.ParserHook){
 	    "margin-left":"0.2em",
 	    "line-height":"1em"
 	};
-	var style = this.inlineCss(css);
-	return (this.tagStart("span", {"style":style}, false) + str + "</span><br />");
+	var style = inlineCss(css);
+	return (tagStart("span", {"style":style}, false) + str + "</span><br />");
       }
     }
     return this.makeCharInner(str) + "<br />";
@@ -1255,7 +1257,7 @@ if(!Nehan.ParserHook){
     if(isV){
       if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.height){
 	if(tagName == "img"){
-	  var figTag = this.tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
+	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
 	} else if(tagName == "object"){
 	  var figTag = fig.src;
 	}
@@ -1266,9 +1268,9 @@ if(!Nehan.ParserHook){
 	  var style = "padding:0; margin-top:0;";
 	}
 	if(tagName == "img"){
-	  var figTag = this.tagStart("img", {src:fig.src, width:fig.drawWidth, height:fig.drawHeight, style:style}, true);
+	  var figTag = tagStart("img", {src:fig.src, width:fig.drawWidth, height:fig.drawHeight, style:style}, true);
 	} else if(tagName == "object"){
-	  var figTag = this.tagStart("div", {style:style}, false) + fig.src + "</div>";
+	  var figTag = tagStart("div", {style:style}, false) + fig.src + "</div>";
 	}
 
 	// recursive output for white space(textStream is shared).
@@ -1294,13 +1296,13 @@ if(!Nehan.ParserHook){
       }
       var tdCss = { "vertical-align":"top", "padding-right":this.layout.yohakuHeight + "px"};
       var tdBody = (fig.align == "top" || fig.align == "left")? figTag + inlinePage : inlinePage + figTag;
-      this.blockBuff = this.tagStart("td", {"style":this.inlineCss(tdCss)}, false) + tdBody + "</td>" + this.blockBuff;
+      this.blockBuff = tagStart("td", {"style":inlineCss(tdCss)}, false) + tdBody + "</td>" + this.blockBuff;
       this.seekWidth += fig.drawWidth + this.layout.yohakuHeight;
       
     } else { // horizontal
       if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.width){
 	if(tagName == "img"){
-	  var figTag = this.tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
+	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
 	} else if(tagName == "object"){
 	  var figTag = fig.src;
 	}
@@ -1308,7 +1310,7 @@ if(!Nehan.ParserHook){
 	this.seekHeight += fig.drawHeight + this.layout.yohakuHeight;
       } else {
 	if(tagName == "img"){
-	  var figTag = this.tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
+	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
 	} else if(tagName == "object"){
 	  var figTag = fig.src;
 	}
@@ -1432,13 +1434,13 @@ if(!Nehan.ParserHook){
       this.lineBuff += this.startBgColor();
     }
     
-    var style = this.inlineCss(css);
+    var style = inlineCss(css);
     if (style != ""){
       style += "vertical-align:baseline;";
       if(isV){
 	this.tagStack.push(this.toStyle(style));
       } else {
-	this.fontStyle = this.tagStart("span", {"style":style}, false);
+	this.fontStyle = tagStart("span", {"style":style}, false);
 	this.lineBuff += this.fontStyle;
       }
     }
@@ -1668,7 +1670,7 @@ if(!Nehan.ParserHook){
     } else if(this.halfBuff.length == 2 && !this.halfWordBreak && (this.halfBuff.match(/\d+/) || this.halfBuff.match(/[!\?]+/))){
       var ret = this.applyTagStack(this.halfBuff, true);
     } else if (Env.isIE){
-      var css = this.inlineCss({
+      var css = inlineCss({
 	  "writing-mode":"tb-rl",
 	  "width": this.layout.fontSize + "px"
       });
@@ -1676,7 +1678,7 @@ if(!Nehan.ParserHook){
     } else {
       var halfSize = this.fontScale * this.layout.fontSize / 2;
       var margin = Math.max(0, Math.floor((this.halfBuff.length - 2) * halfSize));
-      var css = this.inlineCss({
+      var css = inlineCss({
 	  "-webkit-transform":"rotate(90deg)",
 	  "-webkit-transform-origin":"50% 50%",
 	  "-moz-transform":"rotate(90deg)",
