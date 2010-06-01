@@ -1208,7 +1208,7 @@ if(!Nehan.ParserHook){
   }; // parseImg
 
   StreamParser.prototype.pushFigure = function(pageNo, isV, tagName, fig){
-    
+
     // if current line is not empty, push as new line before image.
     if(this.lineBuff != ""){
       this.pushLine(pageNo, isV);
@@ -1258,7 +1258,7 @@ if(!Nehan.ParserHook){
       if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.height){
 	if(tagName == "img"){
 	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
-	} else if(tagName == "object"){
+	} else {
 	  var figTag = fig.src;
 	}
       } else {
@@ -1269,7 +1269,7 @@ if(!Nehan.ParserHook){
 	}
 	if(tagName == "img"){
 	  var figTag = tagStart("img", {src:fig.src, width:fig.drawWidth, height:fig.drawHeight, style:style}, true);
-	} else if(tagName == "object"){
+	} else {
 	  var figTag = tagStart("div", {style:style}, false) + fig.src + "</div>";
 	}
 
@@ -1303,7 +1303,7 @@ if(!Nehan.ParserHook){
       if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.width){
 	if(tagName == "img"){
 	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
-	} else if(tagName == "object"){
+	} else {
 	  var figTag = fig.src;
 	}
 	this.blockBuff += figTag + "<br />";
@@ -1311,7 +1311,7 @@ if(!Nehan.ParserHook){
       } else {
 	if(tagName == "img"){
 	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
-	} else if(tagName == "object"){
+	} else {
 	  var figTag = fig.src;
 	}
 
@@ -1674,7 +1674,7 @@ if(!Nehan.ParserHook){
 	  "writing-mode":"tb-rl",
 	  "width": this.layout.fontSize + "px"
       });
-      var ret = "<div style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
+      var ret = "<div class='hw-tbrl' style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
     } else {
       var halfSize = this.fontScale * this.layout.fontSize / 2;
       var margin = Math.max(0, Math.floor((this.halfBuff.length - 2) * halfSize));
@@ -1686,7 +1686,7 @@ if(!Nehan.ParserHook){
 	  "margin-bottom": margin + "px",
 	  "width": this.layout.fontSize + "px"
       });
-      var ret = "<div style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
+      var ret = "<div class='hw-trans' style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
     }
     delete this.halfBuff;
     this.halfBuff = null;
