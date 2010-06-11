@@ -265,7 +265,6 @@ if(!Nehan.ParserHook){
     if (typeof option.fontFamily != "undefined"){
       this.fontFamily = option.fontFamily;
     }
-
     this.initialize();
   };
 
