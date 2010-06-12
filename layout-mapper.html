@@ -15,13 +15,22 @@
       window.onload = function(){
         Nehan.LayoutMapper.start("div", {
           charImgRoot:"./img",
-          fontFamily:"IPA明朝, ＭＳ 明朝, Hiragino Mincho Pro"
+          fontFamily:"IPA明朝, ＭＳ 明朝, Hiragino Mincho Pro",
+          onComplete: function(groupName, percent){
+            document.getElementById("progress").innerHTML = percent + "% 完了";
+          },
+          onCompleteAll : function(){
+            document.getElementById("progress").style.display = "none";
+          }
         });
       };
     </script>
   </head>
   <body>
     <div class="container">
+
+      <h1 id="progress"></h1>
+      
       <h2>vertical, width 700, height 450, font-size 20 </h2>
 
       <hr class="space" />
