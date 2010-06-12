@@ -1940,8 +1940,9 @@ if(!Nehan.ParserHook){
     }
 
     if(!this.parser.hasNextPage()){
-      this.onComplete(this.groupName);
       LayoutMapper.setFinish(this.groupName);
+      this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
+      LayoutMapper.checkFinish();
     } else if(!this.head.isSinglePaging){
       var self = this;
       setTimeout(function(){ self.render(gridIndex+1);}, 0);
@@ -1950,19 +1951,15 @@ if(!Nehan.ParserHook){
   
   var LayoutMapper = {
     setFinish : function(groupName){
-      this.finishFlag[groupName] = true;
-
-      if(this.checkCompleteAll()){
+      this.gridMappedCount++;
+    },
+    getSeekPercent : function(){
+      return Math.floor(100 * this.gridMappedCount / this.gridCount);
+    },
+    checkFinish : function(){
+      if(this.gridMappedCount >= this.gridCount){
 	this.onCompleteAll();
       }
-    },
-    checkCompleteAll : function(){
-      for(var prop in this.finishFlag){
-	if(!this.finishFlag[prop]){
-	  return false;
-	}
-      }
-      return true;
     },
     start : function(tagGroup, option){
       var defopt = {
@@ -1971,7 +1968,7 @@ if(!Nehan.ParserHook){
 	charImgRoot : "/img/char",
 	fontFamily : "IPA明朝, ＭＳ 明朝, Osaka-Mono, Hiragino Mincho Pro",
 	onSeek : function(groupName, percent){}, // seek each group
-	onComplete : function(groupName){}, // complete each group
+	onComplete : function(groupName, percent){}, // complete each group
 	onCompleteAll : function(){} // complete all group
       };
       if(typeof option == "undefined"){
@@ -1993,7 +1990,8 @@ if(!Nehan.ParserHook){
       };
 
       var grids = {};
-      this.finishFlag = {};
+      this.gridCount = 0;
+      this.gridMappedCount = 0;
 
       // gather layout by filter type
       for(var i=0; i < nodes.length; i++){
@@ -2016,11 +2014,11 @@ if(!Nehan.ParserHook){
 	}
 
 	if(matched){
+	  this.gridCount++;
 	  var gridParam = node.className;
 	  var gridInfo = createGridInfo(node, groupName, gridParam);
 
 	  if(typeof grids[groupName] == "undefined"){
-	    this.finishFlag[groupName] = false;
 	    grids[groupName] = [gridInfo];
 	  } else {
 	    grids[groupName].push(gridInfo);
