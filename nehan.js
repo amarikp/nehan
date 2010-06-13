@@ -216,7 +216,7 @@ if(!Nehan.ParserHook){
 	this.canTransform = true;
       } else if (browser == "firefox" && version >= 3.5){
 	this.canTransform = true;
-      } else if (this.isIE && !this.isVistaOrWin7 && version >= 6.0){
+      } else if (this.isIE && version >= 6.0){
 	this.canTransform = true;
       } else {
 	this.canTransform = false;
