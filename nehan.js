@@ -815,12 +815,7 @@ if(!Nehan.ParserHook){
     if (this.lineScale <= 1){
       if (str.match(/[a-z0-9]/i)){
 	this.isHankaku = true;
-	var css = {
-	    "margin-left":"0.2em",
-	    "line-height":"1em"
-	};
-	var style = inlineCss(css);
-	return (tagStart("span", {"style":style}, false) + str + "</span><br />");
+	return (tagStart("span", {"style":"line-height:1em"}, false) + str + "</span><br />");
       }
     }
     return this.makeCharInner(str) + "<br />";
