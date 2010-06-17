@@ -1,6 +1,6 @@
 /*
  source : dangumi-reader.js
- version : 1.0
+ version : 1.1
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -84,15 +84,21 @@ var DangumiReader = {
   },
   write : function(pageNo){
     this.writing = true;
-    var html = "";
+    var pages = [];
     for(var i = 0; i < this.danCount; i++){
       if(pageNo + i >= this.pageCount){
 	break;
       }
-      html += this.parser.outputPage(pageNo+i);
+      var klass = "text-layer-wrap";
+      if(i == 0){
+	klass += " text-layer-wrap-header";
+      } else if(i == this.danCount - 1){
+	klass += " text-layer-wrap-footer";
+      }
+      pages.push("<div class='" + klass + "'>" + this.parser.outputPage(pageNo+i) + "</div>");
     }
-    if(html != ""){
-      document.getElementById("result").innerHTML = html;
+    if(pages.length > 0){
+      document.getElementById("result").innerHTML = pages.join("<div style='clear:both;'>");
     }
     this.writing = false;
 
