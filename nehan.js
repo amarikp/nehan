@@ -1280,7 +1280,8 @@ if(!Nehan.ParserHook){
 	  direction: this.layout.direction,
 	  charImgRoot: this.layout.charImgRoot,
 	  charImgMap: this.layout.charImgMap,
-	  charImgColor: this.layout.charImgColor
+	  charImgColor: this.layout.charImgColor,
+	  kinsokuCharCount: 1
 	}), this.textStream);
 
 	// set recursive flag. it makes this parser force turn page when it meets resursive image while recursive parsing.
@@ -1322,7 +1323,8 @@ if(!Nehan.ParserHook){
 	  direction:"horizontal",
 	  charImgRoot: this.layout.charImgRoot,
 	  charImgMap: this.layout.charImgMap,
-	  charImgColor: this.layout.charImgColor
+	  charImgColor: this.layout.charImgColor,
+	  kinsokuCharCount: 1
 	}), this.textStream);
 
 	// set recursive flag. it makes this parser force turn page when it meets resursive image while recursive parsing.
