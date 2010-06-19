@@ -1661,7 +1661,7 @@ if(!Nehan.ParserHook){
   }; // checkHeadNg
 
   StreamParser.prototype.outputHalfWord = function(){
-    if(this.halfBuff.lenght == 1){
+    if(this.halfBuff.length == 1){
       var ret = this.applyTagStack(this.halfBuff, true);
     } else if(this.halfBuff.length == 2 && !this.halfWordBreak && (this.halfBuff.match(/\d+/) || this.halfBuff.match(/[!\?]+/))){
       var ret = this.applyTagStack(this.halfBuff, true);
@@ -1927,10 +1927,21 @@ if(!Nehan.ParserHook){
     this.onSeek(this.groupName, this.parser.getSeekPercent(gridIndex));
 
     if(output != ""){
+      var klass = "text-layer-wrapper";
+      if(gridIndex == 0){
+	klass += " text-layer-header";
+      } else if(gridIndex == this.grids.length - 1){
+	klass += " text-layer-footer";
+      }
       if(gridIndex < this.grids.length || this.head.isSinglePaging){
-	grid.node.innerHTML = output;
+	var style = "width:" + grid.width + "px; height:" + grid.height + "px;";
+	grid.node.innerHTML = "<div class='" + klass + "' style='" + style + "'>" + output + "</div>";
+	grid.node.innerHTML = "<div class='" + klass + "''>" + output + "</div>";
       } else {
 	var node = document.createElement("div");
+	node.className = klass;
+	node.style.width = grid.width + "px";
+	node.style.height = grid.height + "px";
 	node.innerHTML = output;
 	grid.node.appendChild(node);
       }
