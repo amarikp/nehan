@@ -1923,6 +1923,7 @@ if(!Nehan.ParserHook){
     this.setGridLayout(grid);
 
     var output = this.parser.outputPage(gridIndex);
+    var isEndPage = !this.parser.hasNextPage();
 
     this.onSeek(this.groupName, this.parser.getSeekPercent(gridIndex));
 
@@ -1930,7 +1931,8 @@ if(!Nehan.ParserHook){
       var klass = "text-layer-wrapper";
       if(gridIndex == 0){
 	klass += " text-layer-header";
-      } else if(gridIndex == this.grids.length - 1){
+      }
+      if(isEndPage){
 	klass += " text-layer-footer";
       }
       if(gridIndex < this.grids.length || this.head.isSinglePaging){
@@ -1947,7 +1949,7 @@ if(!Nehan.ParserHook){
       }
     }
 
-    if(!this.parser.hasNextPage()){
+    if(isEndPage){
       LayoutMapper.setFinish(this.groupName);
       this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
       LayoutMapper.checkFinish();
