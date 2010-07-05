@@ -813,9 +813,10 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.normalIndent = function(str){
     this.isHankaku = false;
     if (this.lineScale <= 1){
-      if (str.match(/[a-z0-9]/i)){
+      if (str.match(/[a-z0-9]+/i)){
 	this.isHankaku = true;
-	return (tagStart("span", {"style":"line-height:1em"}, false) + str + "</span><br />");
+	var style = (str.length > 1)? "line-height:1em" : "line-height:1em; margin-left:0.25em";
+	return (tagStart("span", {"style":style}, false) + str + "</span><br />");
       }
     }
     return this.makeCharInner(str) + "<br />";
