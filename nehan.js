@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.0.5.4
+ version : 1.0.5.5
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -812,12 +812,17 @@ if(!Nehan.ParserHook){
 
   StreamParser.prototype.normalIndent = function(str){
     this.isHankaku = false;
+    this.isSmall = false;
     if (this.lineScale <= 1){
       if (str.match(/[a-z0-9]+/i)){
 	this.isHankaku = true;
 	var style = (str.length > 1)? "line-height:1em" : "line-height:1em; margin-left:0.25em";
-	return (tagStart("span", {"style":style}, false) + str + "</span><br />");
+	return tagStart("span", {"style":style}, false) + str + "</span><br />";
       }
+    }
+    if (str.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
+      this.isSmall = true;
+      return tagStart("span", {"style":"position:relative;top:-0.15em;right:-0.08em;line-height:1em;"}, false) + str + "</span><br />";
     }
     return this.makeCharInner(str) + "<br />";
   };
@@ -1723,7 +1728,7 @@ if(!Nehan.ParserHook){
 
       if(this.isImgChar){
 	this.seekHeight += Math.floor(scaleWeight * this.layout.fontSize);
-      } else if(this.isHankaku){
+      } else if(this.isHankaku || this.isSmall){
 	this.seekHeight += Math.floor(scaleWeight * this.layout.fontSize);
       } else {
 	this.seekHeight += Math.floor(scaleWeight * this.layout.letterHeight);
