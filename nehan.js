@@ -820,9 +820,10 @@ if(!Nehan.ParserHook){
 	return tagStart("span", {"style":style}, false) + str + "</span><br />";
       }
     }
-    if (!Env.isIE && str.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
+    if (str.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
       this.isSmall = true;
-      return tagStart("span", {"style":"position:relative;top:-0.15em;right:-0.08em;line-height:1em;"}, false) + str + "</span><br />";
+      var style = "overflow:visible;position:relative;top:-0.15em;right:-0.08em;line-height:1em;";
+      return tagStart("span", {"style":style}, false) + str + "</span><br />";
     }
     return this.makeCharInner(str) + "<br />";
   };
