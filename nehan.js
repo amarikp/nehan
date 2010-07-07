@@ -820,7 +820,7 @@ if(!Nehan.ParserHook){
 	return tagStart("span", {"style":style}, false) + str + "</span><br />";
       }
     }
-    if (str.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
+    if (!Env.isIE && str.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
       this.isSmall = true;
       return tagStart("span", {"style":"position:relative;top:-0.15em;right:-0.08em;line-height:1em;"}, false) + str + "</span><br />";
     }
