@@ -660,10 +660,6 @@ if(!Nehan.ParserHook){
     return src.replace(/\"/g, "").replace(/\'/g, "");
   };
 
-  StreamParser.prototype.unscript = function(src){
-    return src.replace(/script\:/gi,"");
-  };
-
   StreamParser.prototype.startBgColor = function(){
     if(this.layout.isV){
       var yohaku = Math.floor(this.layout.yohakuHeight * this.lineScale);
@@ -1190,7 +1186,7 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.parseImg = function(pageNo, isV, tagStr, tagAttr, tagName){
-    var src = this.unscript(tagAttr.src);
+    var src = tagAttr.src;
     var width  = (typeof tagAttr.width != "undefined")?  parseInt(tagAttr.width) : 200;
     var height = (typeof tagAttr.height != "undefined")? parseInt(tagAttr.height) : 300;
     var align = (typeof tagAttr.align != "undefined")? tagAttr.align : "none";
@@ -1357,8 +1353,6 @@ if(!Nehan.ParserHook){
   }; // pushFigure
 
   StreamParser.prototype.parseLinkStart = function(pageNo, isV, tagStr, tagAttr, tagName){
-    var href = this.unscript(tagAttr.href);
-    
     if(typeof tagAttr.target != "undefined"){
       var blank = (tagAttr.target == "_blank");
     } else if (tagName == "a2"){
@@ -1369,15 +1363,15 @@ if(!Nehan.ParserHook){
     
     if (isV){
       if(blank){
-	this.tagStack.push(this.toLink2(href));
+	this.tagStack.push(this.toLink2(tagAttr.href));
       } else {
-	this.tagStack.push(this.toLink(href));
+	this.tagStack.push(this.toLink(tagAttr.href));
       }
     } else {
       if (tagName == "a"){
 	this.lineBuff += tagStr;
       } else {
-	this.lineBuff += "<a target='_blank' href='" + href + "'>";
+	this.lineBuff += "<a target='_blank' href='" + tagAttr.href + "'>";
       }
     }
   };
