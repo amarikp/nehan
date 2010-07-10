@@ -423,6 +423,10 @@ if(!Nehan.ParserHook){
     return mark;
   };
 
+  TextStream.prototype.getBuffer = function(){
+    return this.buffer;
+  };
+
   TextStream.prototype.setBuffer = function(buff, length){
     this.buffer = buff;
     this.length = (typeof length != "undefined")? length : buff.length;
@@ -921,6 +925,18 @@ if(!Nehan.ParserHook){
     return "";
   };
 
+  StreamParser.prototype.getPageNoFromSeekPos = function(seekPos){
+    for(var i = 0; i < this.seekTable.length - 1; i++){
+      if(this.seekTable[i].spos <= seekPos && seekPos < this.seekTable[i+1].spos){
+	return i;
+      }
+    }
+    if(this.seekTable[i].spos <= seekPos && seekPos <= this.textStream.buffer.length){
+      return i;
+    }
+    return -1;
+  };
+
   StreamParser.prototype.makeRestSpaceTd = function(){
     var restWidth = this.layout.width - this.seekWidth;
     var restTd = "";
@@ -965,6 +981,10 @@ if(!Nehan.ParserHook){
 
   StreamParser.prototype.addCache = function(page, pageHtml){
     this.pageCache[page] = pageHtml;
+  };
+
+  StreamParser.prototype.getCache = function(page){
+    return this.pageCache[page];
   };
 
   StreamParser.prototype.clearCache = function(){
