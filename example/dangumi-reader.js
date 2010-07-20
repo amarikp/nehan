@@ -1,6 +1,6 @@
 /*
  source : dangumi-reader.js
- version : 1.1
+ version : 1.2
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -29,7 +29,7 @@
  OTHER DEALINGS IN THE SOFTWARE.
 */
 var DangumiReader = {
-  start : function(opt){
+  start : function(id, opt){
     if(typeof opt == "undefined"){
       opt = {};
     }
@@ -48,7 +48,7 @@ var DangumiReader = {
     for(var prop in defopt){
       this[prop] = (opt[prop])? opt[prop] : defopt[prop];
     }
-    var text = document.getElementById("source-text").innerHTML.replace(/<br \/>/gi, "\n").replace(/<br>/gi, "\n");
+    var text = document.getElementById(id).innerHTML.replace(/<br \/>/gi, "\n").replace(/<br>/gi, "\n");
     this.parser = new Nehan.StreamParser(new Nehan.Layout({
       direction: this.direction,
       width: this.width,
