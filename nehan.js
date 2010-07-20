@@ -229,7 +229,9 @@ if(!Nehan.ParserHook){
   var inlineAttr = function(attr){
     var ret = "";
     for(prop in attr){
-      ret += prop + "='" + attr[prop] + "' ";
+      if(attr[prop] != ""){
+	ret += prop + "='" + attr[prop] + "' ";
+      }
     }
     return ret;
   };
