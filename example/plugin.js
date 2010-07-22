@@ -1,6 +1,6 @@
 if(Nehan){
   Nehan.ParserHook.addTagHook("h2", function(pageNo, isV, tagStr, tagAttr, tagName){
-    this.parseFontStart(pageNo, isV, "<font scale='1.4' fontweight='bold'>", {scale:1.4, fontweight:"bold"}, "font");
+    this.parseFontStart(pageNo, isV, "<font scale='1.4' weight='bold'>", {scale:1.4, weight:"bold"}, "font");
   });
   Nehan.ParserHook.addTagHook("/h2", function(pageNo, isV, tagStr, tagAttr, tagName){
     this.parseFontEnd(pageNo, isV, "</font>", tagAttr, "/font");
