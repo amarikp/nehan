@@ -1425,11 +1425,11 @@ if(!Nehan.ParserHook){
       css["color"] = tagAttr.color;
     }
     
-    if (typeof tagAttr.fontfamily != "undefined"){
+    if (typeof tagAttr.family != "undefined"){
       css["font-family"] = tagAttr.fontfamily;
     }
 
-    if (typeof tagAttr.fontweight != "undefined"){
+    if (typeof tagAttr.weight != "undefined"){
       css["font-weight"] = tagAttr.fontweight;
     }
     
