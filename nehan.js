@@ -1415,6 +1415,10 @@ if(!Nehan.ParserHook){
 	css["line-height"] = "1.1em";
       }
     }
+
+    for(var prop in tagAttr){
+      console.log(prop + " is " + tagAttr[prop]);
+    }
     
     // line scale follows max font scale.
     if (this.fontScale > this.lineScale){
@@ -1427,6 +1431,10 @@ if(!Nehan.ParserHook){
     
     if (typeof tagAttr.fontfamily != "undefined"){
       css["font-family"] = tagAttr.fontfamily;
+    }
+
+    if (typeof tagAttr.fontweight != "undefined"){
+      css["font-weight"] = tagAttr.fontweight;
     }
     
     this.bgColor = (typeof tagAttr.bgcolor != "undefined")? tagAttr.bgcolor : "";
