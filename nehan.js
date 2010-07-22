@@ -1416,10 +1416,6 @@ if(!Nehan.ParserHook){
       }
     }
 
-    for(var prop in tagAttr){
-      console.log(prop + " is " + tagAttr[prop]);
-    }
-    
     // line scale follows max font scale.
     if (this.fontScale > this.lineScale){
       this.lineScale = this.fontScale;
