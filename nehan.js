@@ -1426,11 +1426,11 @@ if(!Nehan.ParserHook){
     }
     
     if (typeof tagAttr.family != "undefined"){
-      css["font-family"] = tagAttr.fontfamily;
+      css["font-family"] = tagAttr.family;
     }
 
     if (typeof tagAttr.weight != "undefined"){
-      css["font-weight"] = tagAttr.fontweight;
+      css["font-weight"] = tagAttr.weight;
     }
     
     this.bgColor = (typeof tagAttr.bgcolor != "undefined")? tagAttr.bgcolor : "";
