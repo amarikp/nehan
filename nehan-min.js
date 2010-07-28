@@ -4,7 +4,7 @@
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
- Copyright (c) 2010, Watanabe Masaki <lambda.watanabe@gmail.com>
+ Copyright (c) 2010, Watanabe Masaki <lambda.watanabe[at]gmail.com>
  licenced under MIT licence.
 
  Permission is hereby granted, free of charge, to any person
