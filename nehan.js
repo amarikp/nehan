@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.0.8
+ version : 1.0.8.1
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -727,7 +727,7 @@ if(!Nehan.ParserHook){
     var baseStyle = inlineCss(css);
     var indentOffset = this.indentCount * this.layout.letterHeight;
     var nextStack = [];
-    var maxRubyH = this.layout.height - Math.floor(this.fontScale * this.layout.fontSize * 2);
+    var maxRubyH = this.layout.height - Math.floor(this.fontScale * this.layout.letterHeight * 2);
     
     for (var i = 0; i < this.rubyStack.length; i++){
       var ruby = this.rubyStack[i];
