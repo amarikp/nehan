@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.0.7
+ version : 1.0.8
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -718,24 +718,36 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.makeRubyLine = function(){
     var ret = "";
     var self = this;
+    var rubyFontSize = Math.floor(this.layout.rubyFontSize * this.lineScale);
     var css = {
 	"position": "absolute",
-	"font-size":Math.floor(this.layout.rubyFontSize * this.lineScale) + "px",
+	"font-size":rubyFontSize + "px",
 	"line-height":"1.14em"
     };
     var baseStyle = inlineCss(css);
     var indentOffset = this.indentCount * this.layout.letterHeight;
+    var nextStack = [];
+    var maxRubyH = this.layout.height - Math.floor(this.fontScale * this.layout.fontSize * 2);
     
-    for (var i = 0; i < this.rubyStack.length; i++)(function (i, ruby){
-      var style = baseStyle + "margin-top:" + Math.floor(indentOffset + ruby.startPos) + "px;";
+    for (var i = 0; i < this.rubyStack.length; i++){
+      var ruby = this.rubyStack[i];
+      var mtop = Math.floor(indentOffset + ruby.startPos);
+      var style = baseStyle + "margin-top:" + mtop + "px;";
+      var h = mtop;
       ret += tagStart("div", {"style":style}, false);
-      for (var k = 0; k < ruby.yomi.length; k++)(function (k, y){
+      for (var k = 0; k < ruby.yomi.length; k++){
+	var y = ruby.yomi.substring(k,k+1);
 	ret += self.makeCharInner(y) + "<br />";
-      })(k, ruby.yomi.substring(k,k+1));
+	h += rubyFontSize;
+	if(h >= maxRubyH){
+	  nextStack.push({yomi:ruby.yomi.slice(k+1), startPos:0});
+	  break;
+	}
+      }
       ret += "</div>";
-    })(i, this.rubyStack[i]);
+    }
 
-    this.rubyStack = [];
+    this.rubyStack = nextStack;
     return ret;
   };
 
