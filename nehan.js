@@ -1928,7 +1928,7 @@ if(!Nehan.ParserHook){
 
       var seekBar = document.createElement("div");
       var s2 = seekBar.style;
-      seekBar.className = "seek-bar";
+      seekBar.className = "nehan-seek-bar";
       s2.width = "0%";
       s2["float"] = "right";
       s2["text-align"] = "right";
