@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.0.9
+ version : 1.1
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1871,6 +1871,7 @@ if(!Nehan.ParserHook){
     if(Env.isIE || !option.noBR){
       text = text.replace(/<br \/>/gi, "\n").replace(/<br>/gi,"\n");
     }
+    this.head.node.innerHTML = "";
     this.fontFamily = option.fontFamily;
     this.onSeek = option.onSeek;
     this.onComplete = option.onComplete;
@@ -1890,28 +1891,51 @@ if(!Nehan.ParserHook){
     }), new TextStream(text, text.length, true));
 
     if(this.head.isSinglePaging){
-      if(document.getElementById(groupName + "-pager")){
-	var target = document.getElementById(groupName + "-pager");
-	var links = target.getElementsByTagName("a");
-	var self = this;
-	for(var i=0; i < links.length; i++)(function(a){
-	  if(a.className.match(/next/)){
-	    a.onclick = function(){
-	      if(self.parser.hasNextPage()){
-		self.gridIndex++;
-		self.render(self.gridIndex);
-	      }
-	    }
-	  } else if(a.className.match(/prev/)){
-	    a.onclick = function(){
-	      if(self.gridIndex > 0){
-		self.gridIndex--;
-		self.render(self.gridIndex);
-	      }
-	    }
-	  }
-	})(links[i]);
-      }
+      var self = this;
+      this.pager = document.createElement("div");
+      var nextLink = document.createElement("a");
+      var prevLink = document.createElement("a");
+      this.pager.className = "nehan-pager";
+      nextLink.innerHTML = "&lt; NEXT";
+      nextLink.href = "/next";
+      nextLink.className = "nehan-pager-link";
+      prevLink.innerHTML = "PREV &gt;";
+      prevLink.href = "/prev";
+      prevLink.className = "nehan-pager-link";
+      nextLink.onclick = function(){
+	if(self.parser.hasNextPage()){
+	  self.gridIndex++;
+	  self.render(self.gridIndex);
+	}
+	return false;
+      };
+      prevLink.onclick = function(){
+	if(self.gridIndex > 0){
+	  self.gridIndex--;
+	  self.render(self.gridIndex);
+	}
+	return false;
+      };
+      this.pager.appendChild(nextLink);
+      this.pager.appendChild(prevLink);
+
+      this.footer = document.createElement("div");
+      this.footer.className = "nehan-footer";
+      var s1 = this.footer.style;
+      s1.width = this.head.width + "px";
+      s1.height = "12px";
+      s1.lineHeight = "12px";
+
+      var seekBar = document.createElement("div");
+      var s2 = seekBar.style;
+      seekBar.className = "seek-bar";
+      s2.width = "0%";
+      s2["float"] = "right";
+      s2["text-align"] = "right";
+      s2["font-size"] = "10px";
+      seekBar.innerHTML = "0%";
+
+      this.footer.appendChild(seekBar);
     }
   };
 
@@ -1939,8 +1963,18 @@ if(!Nehan.ParserHook){
 
     var output = this.parser.outputPage(gridIndex);
     var isEndPage = !this.parser.hasNextPage();
+    var percent = this.parser.getSeekPercent(gridIndex);
 
-    this.onSeek(this.groupName, this.parser.getSeekPercent(gridIndex));
+    this.onSeek(this.groupName, percent);
+
+    var dom = function(){
+      var div = document.createElement("div");
+      div.className = klass;
+      div.style.width = grid.width + "px";
+      div.style.height = grid.height + "px";
+      div.innerHTML = output;
+      return div;
+    };
 
     if(output != ""){
       var klass = "text-layer-wrapper";
@@ -1950,17 +1984,22 @@ if(!Nehan.ParserHook){
       if(isEndPage){
 	klass += " text-layer-footer";
       }
-      if(gridIndex < this.grids.length || this.head.isSinglePaging){
+      if(this.head.isSinglePaging){
+	if(typeof this.pagerInit == "undefined"){
+	  this.pagerInit = true;
+	  grid.node.appendChild(this.pager);
+	  grid.node.appendChild(dom());
+	  grid.node.appendChild(this.footer);
+	} else {
+	  grid.node.firstChild.nextSibling.innerHTML = output;
+	}
+	this.footer.firstChild.style.width = Math.max(20, Math.floor(percent)) + "%";
+	this.footer.firstChild.innerHTML = percent + "%";
+      } else if(gridIndex < this.grids.length){
 	var style = "width:" + grid.width + "px; height:" + grid.height + "px;";
 	grid.node.innerHTML = "<div class='" + klass + "' style='" + style + "'>" + output + "</div>";
-	grid.node.innerHTML = "<div class='" + klass + "''>" + output + "</div>";
       } else {
-	var node = document.createElement("div");
-	node.className = klass;
-	node.style.width = grid.width + "px";
-	node.style.height = grid.height + "px";
-	node.innerHTML = output;
-	grid.node.appendChild(node);
+	grid.node.appendChild(dom());
       }
     }
 
