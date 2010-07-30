@@ -291,11 +291,6 @@ if(!Nehan.ParserHook){
       this.lineCount = Math.floor(this.width / this.fontSize) - this.kinsokuCharCount;
     }
 
-    // if mac and fontfamily is not defined properly, disable transform method.
-    if(Env.isMac && this.fontFamily){
-      Env.canTransform = (this.fontFamily.match(/Osaka-Mono/));
-    }
-
     this.wrapCss = "";
     this.wrapCss += "text-align:left;";
     this.wrapCss += "padding:0;";
