@@ -1919,23 +1919,23 @@ if(!Nehan.ParserHook){
       this.pager.appendChild(nextLink);
       this.pager.appendChild(prevLink);
 
-      this.footer = document.createElement("div");
-      this.footer.className = "nehan-footer";
-      var s1 = this.footer.style;
+      this.seekBar = document.createElement("div");
+      this.seekBar.className = "nehan-footer";
+      var s1 = this.seekBar.style;
       s1.width = this.head.width + "px";
       s1.height = "12px";
       s1.lineHeight = "12px";
 
-      var seekBar = document.createElement("div");
-      var s2 = seekBar.style;
-      seekBar.className = "nehan-seek-bar";
+      var seekBarBody = document.createElement("div");
+      var s2 = seekBarBody.style;
+      seekBarBody.className = "nehan-seek-bar";
       s2.width = "0%";
       s2["float"] = "right";
       s2["text-align"] = "right";
       s2["font-size"] = "10px";
-      seekBar.innerHTML = "0%";
+      seekBarBody.innerHTML = "0%";
 
-      this.footer.appendChild(seekBar);
+      this.seekBar.appendChild(seekBarBody);
     }
   };
 
@@ -1967,7 +1967,7 @@ if(!Nehan.ParserHook){
 
     this.onSeek(this.groupName, percent);
 
-    var dom = function(){
+    var createTextLayer = function(){
       var div = document.createElement("div");
       div.className = klass;
       div.innerHTML = output;
@@ -1985,18 +1985,21 @@ if(!Nehan.ParserHook){
       if(this.head.isSinglePaging){
 	if(typeof this.pagerInit == "undefined"){
 	  this.pagerInit = true;
+	  this.textLayer = createTextLayer();
+	  this.textLayer.style.height = this.head.height + "px";
 	  grid.node.appendChild(this.pager);
-	  grid.node.appendChild(dom());
-	  grid.node.appendChild(this.footer);
+	  grid.node.appendChild(this.textLayer);
+	  grid.node.appendChild(this.seekBar);
 	} else {
-	  grid.node.firstChild.nextSibling.innerHTML = output;
+	  this.textLayer.innerHTML = output;
 	}
-	this.footer.firstChild.style.width = Math.max(20, Math.floor(percent)) + "%";
-	this.footer.firstChild.innerHTML = percent + "%";
+	var sb = this.seekBar.firstChild;
+	sb.style.width = Math.max(20, Math.floor(percent)) + "%";
+	sb.innerHTML = percent + "%";
       } else if(gridIndex < this.grids.length){
 	grid.node.innerHTML = "<div class='" + klass + "'>" + output + "</div>";
       } else {
-	grid.node.appendChild(dom());
+	grid.node.appendChild(createTextLayer());
       }
     }
 
