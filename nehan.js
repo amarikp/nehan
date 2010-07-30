@@ -1916,9 +1916,14 @@ if(!Nehan.ParserHook){
 	}
 	return false;
       };
-      this.pager.appendChild(nextLink);
-      this.pager.appendChild(prevLink);
 
+      if(this.head.direction.match("vertical")){
+	this.pager.appendChild(nextLink);
+	this.pager.appendChild(prevLink);
+      } else {
+	this.pager.appendChild(prevLink);
+	this.pager.appendChild(nextLink);
+      }
       this.seekBar = document.createElement("div");
       this.seekBar.className = "nehan-footer";
       var s1 = this.seekBar.style;
