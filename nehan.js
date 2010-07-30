@@ -1970,8 +1970,6 @@ if(!Nehan.ParserHook){
     var dom = function(){
       var div = document.createElement("div");
       div.className = klass;
-      //div.style.width = grid.width + "px";
-      //div.style.height = grid.height + "px";
       div.innerHTML = output;
       return div;
     };
@@ -1996,8 +1994,6 @@ if(!Nehan.ParserHook){
 	this.footer.firstChild.style.width = Math.max(20, Math.floor(percent)) + "%";
 	this.footer.firstChild.innerHTML = percent + "%";
       } else if(gridIndex < this.grids.length){
-	//var style = "width:" + grid.width + "px; height:" + grid.height + "px;";
-	//grid.node.innerHTML = "<div class='" + klass + "' style='" + style + "'>" + output + "</div>";
 	grid.node.innerHTML = "<div class='" + klass + "'>" + output + "</div>";
       } else {
 	grid.node.appendChild(dom());
