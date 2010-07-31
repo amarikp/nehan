@@ -1896,7 +1896,6 @@ if(!Nehan.ParserHook){
       var nextLink = document.createElement("a");
       var prevLink = document.createElement("a");
       this.pager.className = "nehan-pager";
-      nextLink.innerHTML = "&lt; NEXT";
       nextLink.href = "/next";
       nextLink.className = "nehan-pager-link";
       prevLink.innerHTML = "PREV &gt;";
@@ -1918,9 +1917,13 @@ if(!Nehan.ParserHook){
       };
 
       if(this.head.direction.match("vertical")){
+	nextLink.innerHTML = "&lt; NEXT";
+	prevLink.innerHTML = "PREV &gt;";
 	this.pager.appendChild(nextLink);
 	this.pager.appendChild(prevLink);
       } else {
+	nextLink.innerHTML = "NEXT &gt;";
+	prevLink.innerHTML = "&lt; PREV";
 	this.pager.appendChild(prevLink);
 	this.pager.appendChild(nextLink);
       }
