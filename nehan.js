@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.1
+ version : 1.1.1
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1928,7 +1928,7 @@ if(!Nehan.ParserHook){
 	this.pager.appendChild(nextLink);
       }
       this.seekBar = document.createElement("div");
-      this.seekBar.className = "nehan-footer";
+      this.seekBar.className = "nehan-seek-bar-wrapper";
       var s1 = this.seekBar.style;
       s1.width = this.head.width + "px";
       s1.height = "12px";
