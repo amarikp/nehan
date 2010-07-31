@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.1.1
+ version : 1.1.2
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1975,7 +1975,7 @@ if(!Nehan.ParserHook){
 
     this.onSeek(this.groupName, percent);
 
-    var createTextLayer = function(){
+    var createTextLayer = function(klass){
       var div = document.createElement("div");
       div.className = klass;
       div.innerHTML = output;
@@ -1993,11 +1993,15 @@ if(!Nehan.ParserHook){
       if(this.head.isSinglePaging){
 	if(typeof this.pagerInit == "undefined"){
 	  this.pagerInit = true;
-	  this.textLayer = createTextLayer();
+	  this.textLayer = createTextLayer(klass);
 	  this.textLayer.style.height = this.head.height + "px";
 	  grid.node.appendChild(this.pager);
 	  grid.node.appendChild(this.textLayer);
 	  grid.node.appendChild(this.seekBar);
+
+	  LayoutMapper.setFinish(this.groupName);
+	  this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
+	  LayoutMapper.checkFinish();
 	} else {
 	  this.textLayer.innerHTML = output;
 	}
@@ -2007,15 +2011,13 @@ if(!Nehan.ParserHook){
       } else if(gridIndex < this.grids.length){
 	grid.node.innerHTML = "<div class='" + klass + "'>" + output + "</div>";
       } else {
-	grid.node.appendChild(createTextLayer());
+	grid.node.appendChild(createTextLayer(klass));
       }
-    }
-
-    if(isEndPage){
+    } else if(isEndPage){
       LayoutMapper.setFinish(this.groupName);
       this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
       LayoutMapper.checkFinish();
-    } else if(!this.head.isSinglePaging){
+    } else {
       var self = this;
       setTimeout(function(){ self.render(gridIndex+1);}, 0);
     }
