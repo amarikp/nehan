@@ -1993,15 +1993,12 @@ if(!Nehan.ParserHook){
       if(this.head.isSinglePaging){
 	if(typeof this.pagerInit == "undefined"){
 	  this.pagerInit = true;
+	  isEndPage = true;
 	  this.textLayer = createTextLayer(klass);
 	  this.textLayer.style.height = this.head.height + "px";
 	  grid.node.appendChild(this.pager);
 	  grid.node.appendChild(this.textLayer);
 	  grid.node.appendChild(this.seekBar);
-
-	  LayoutMapper.setFinish(this.groupName);
-	  this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
-	  LayoutMapper.checkFinish();
 	} else {
 	  this.textLayer.innerHTML = output;
 	}
@@ -2013,7 +2010,9 @@ if(!Nehan.ParserHook){
       } else {
 	grid.node.appendChild(createTextLayer(klass));
       }
-    } else if(isEndPage){
+    }
+
+    if(isEndPage){
       LayoutMapper.setFinish(this.groupName);
       this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
       LayoutMapper.checkFinish();
