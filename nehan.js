@@ -2016,7 +2016,7 @@ if(!Nehan.ParserHook){
       LayoutMapper.setFinish(this.groupName);
       this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
       LayoutMapper.checkFinish();
-    } else {
+    } else if(!this.head.isSinglePaging){
       var self = this;
       setTimeout(function(){ self.render(gridIndex+1);}, 0);
     }
