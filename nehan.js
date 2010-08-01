@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.1.2
+ version : 1.1.3
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1394,9 +1394,6 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.parseLinkEnd = function(pageNo, isV, tagStr, tagAttr, tagName){
-
-    console.log("parse link end");
-    
     if(isV){
       this.tagStack.pop();
     } else if(tagName == "/a2"){
