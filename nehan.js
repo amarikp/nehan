@@ -878,8 +878,8 @@ if(!Nehan.ParserHook){
     return false;
   };
 
-  StreamParser.prototype.applyTagStack = function(str,isIndent){
-    var ret = isIndent? this.normalIndent(str) : str;
+  StreamParser.prototype.applyTagStack = function(str, indent){
+    var ret = indent? this.normalIndent(str) : str;
     for(i = this.tagStack.length - 1; i >= 0 ; i--){
       var f = this.tagStack[i];
       ret = f(ret);
@@ -1281,6 +1281,7 @@ if(!Nehan.ParserHook){
 	} else {
 	  var figTag = fig.src;
 	}
+	figTag = this.applyTagStack(figTag, false);
       } else {
 	if(fig.align == "top" || fig.align == "left"){
 	  var style = "padding:0; margin-bottom:" + this.layout.fontSize + "px;";
@@ -1292,6 +1293,8 @@ if(!Nehan.ParserHook){
 	} else {
 	  var figTag = tagStart("div", {style:style}, false) + fig.src + "</div>";
 	}
+
+	figTag = this.applyTagStack(figTag, false);
 
 	// recursive output for white space(textStream is shared).
 	var parserTmp = new StreamParser(new Layout({
@@ -1313,6 +1316,10 @@ if(!Nehan.ParserHook){
 	  parserTmp.layout.initialize();
 	}
 	inlinePage = parserTmp.parsePage(0);
+
+	// inherit tag stack
+	this.tagStack = parserTmp.tagStack;
+	
 	delete parserTmp;
       }
       var tdCss = { "vertical-align":"top", "padding-right":this.layout.yohakuHeight + "px"};
@@ -1387,6 +1394,9 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.parseLinkEnd = function(pageNo, isV, tagStr, tagAttr, tagName){
+
+    console.log("parse link end");
+    
     if(isV){
       this.tagStack.pop();
     } else if(tagName == "/a2"){
