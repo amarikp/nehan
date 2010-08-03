@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.1.3
+ version : 1.1.4
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -261,6 +261,13 @@ if(!Nehan.ParserHook){
       charImgMap:[],
       charImgColor:"black",
       kinsokuCharCount:2,
+      headNgChars:[ "？", "】", "，", ",", "》", "。",
+		   "、", "・", "｣", "」", "』","）", "＞", "〉",
+		   "≫","]", "〕", "]","］","！","!",") ",
+		   "々", "ゝ", "ー", "－" ],
+      tailNgChars:[ "【", "《", "「", "『", "（",
+		   "［" , "[" , "〔" ,
+		   "＜", "≪", "(", "〈" ],
       plusCss:{}
     }, option);
     
@@ -854,12 +861,8 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.isHeadNg = function(s){
-    var ngChars = [ "？", "】", "，", ",", "》", "。",
-		   "、", "・", "｣", "」", "』","）", "＞", "〉",
-		   "≫","]", "〕", "]","］","！","!",") ",
-		   "々", "ゝ", "ー", "－" ];
-    for(i = 0; i < ngChars.length; i++){
-      if(s == ngChars[i]){
+    for(i = 0; i < this.layout.headNgChars.length; i++){
+      if(s == this.layout.headNgChars[i]){
 	return true;
       }
     }
@@ -867,11 +870,8 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.isTailNg = function(s){
-    var ngChars = [ "【", "《", "「", "『", "（",
-		   "［" , "[" , "〔" ,
-		   "＜", "≪", "(", "〈" ];
-    for(i = 0; i < ngChars.length; i++){
-      if(s == ngChars[i]){
+    for(i = 0; i < this.layout.tailNgChars.length; i++){
+      if(s == this.layout.tailNgChars[i]){
 	return true;
       }
     }
