@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.1.4
+ version : 1.1.5
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -535,6 +535,8 @@ if(!Nehan.ParserHook){
     this.imgIndentCount = 0;
     this.blockIndentCount = 0;
     this.halfWordBreak = false;
+    this.anchors = {};
+    this.anchorName = "";
   };
 
   StreamParser.prototype.activateTag = function(tag, enable){
@@ -1028,6 +1030,10 @@ if(!Nehan.ParserHook){
     this.layout.initialize();
   };
 
+  StreamParser.prototype.getAnchors = function(){
+    return this.anchors;
+  };
+
   StreamParser.prototype.getPageLayout = function(pageNo, body){
     var t1 = "<" + this.layout.wrapTag + " class='" + this.layout.textLayerClassName + "' style='" + this.layout.wrapCss + "'>";
     var t2 = "</" + this.layout.wrapTag + ">";
@@ -1386,20 +1392,30 @@ if(!Nehan.ParserHook){
     if(tagName == "a2"){
       tagAttr.target = "_blank";
     }
-    if (isV){
-      this.tagStack.push(this.toLink(tagAttr));
+    // is anchor?
+    if(tagAttr.name){
+      this.anchorName = tagAttr.name;
+      this.anchors[this.anchorName] = {title:"", pageNo:pageNo};
     } else {
-      this.lineBuff += "<a " + inlineAttr(tagAttr) + ">";
+      if (isV){
+	this.tagStack.push(this.toLink(tagAttr));
+      } else {
+	this.lineBuff += "<a " + inlineAttr(tagAttr) + ">";
+      }
     }
   };
 
   StreamParser.prototype.parseLinkEnd = function(pageNo, isV, tagStr, tagAttr, tagName){
-    if(isV){
-      this.tagStack.pop();
-    } else if(tagName == "/a2"){
-      this.lineBuff += "</a>";
+    if(this.anchorName != ""){
+      this.anchorName = "";
     } else {
-      this.lineBuff += tagStr;
+      if(isV){
+	this.tagStack.pop();
+      } else if(tagName == "/a2"){
+	this.lineBuff += "</a>";
+      } else {
+	this.lineBuff += tagStr;
+      }
     }
   };
 
@@ -1725,6 +1741,10 @@ if(!Nehan.ParserHook){
   };
 
   StreamParser.prototype.pushChar = function(pageNo, isV, s1){
+
+    if(this.anchorName != ""){
+      this.anchors[this.anchorName].title += s1;
+    }
 
     var letterCount = this.getLetterCount(s1); // 0.5 or 1.0
     var scaleWeight = letterCount * this.fontScale;
