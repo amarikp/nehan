@@ -1274,9 +1274,9 @@ if(!Nehan.ParserHook){
       
     // white space size
     if(isV){
-      var restSize = this.layout.height - fig.drawHeight - this.layout.fontSize * 2;
+      var restSize = this.layout.height - fig.drawHeight - this.layout.fontSize;
     } else {
-      var restSize = this.layout.width - fig.drawWidth - this.layout.fontSize * 2;
+      var restSize = this.layout.width - fig.drawWidth - this.layout.fontSize;
     }
     var inlinePage = "";
 
@@ -1311,7 +1311,7 @@ if(!Nehan.ParserHook){
 	  charImgRoot: this.layout.charImgRoot,
 	  charImgMap: this.layout.charImgMap,
 	  charImgColor: this.layout.charImgColor,
-	  kinsokuCharCount: this.layout.kinsokuCount
+	  kinsokuCharCount: this.layout.kinsokuCharCount
 	}), this.textStream);
 
 	// set recursive flag. it makes this parser force turn page when it meets resursive image while recursive parsing.
