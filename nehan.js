@@ -536,6 +536,7 @@ if(!Nehan.ParserHook){
     this.blockIndentCount = 0;
     this.halfWordBreak = false;
     this.anchors = {};
+    this.anchorCount = 0;
     this.anchorName = "";
   };
 
@@ -1034,6 +1035,10 @@ if(!Nehan.ParserHook){
     return this.anchors;
   };
 
+  StreamParser.prototype.getAnchorCount = function(){
+    return this.anchorCount;
+  };
+
   StreamParser.prototype.getPageLayout = function(pageNo, body){
     var t1 = "<" + this.layout.wrapTag + " class='" + this.layout.textLayerClassName + "' style='" + this.layout.wrapCss + "'>";
     var t2 = "</" + this.layout.wrapTag + ">";
@@ -1396,6 +1401,7 @@ if(!Nehan.ParserHook){
     if(tagAttr.name){
       this.anchorName = tagAttr.name;
       this.anchors[this.anchorName] = {title:"", pageNo:pageNo};
+      this.anchorCount++;
     } else {
       if (isV){
 	this.tagStack.push(this.toLink(tagAttr));
