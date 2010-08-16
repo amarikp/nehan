@@ -1225,7 +1225,14 @@ if(!Nehan.ParserHook){
     var height = (typeof tagAttr.height != "undefined")? parseInt(tagAttr.height) : 300;
     var align = (typeof tagAttr.align != "undefined")? tagAttr.align : "none";
     var restWidth = this.layout.width - this.seekWidth;
-    var restHeight = Math.max(10, this.layout.height - this.seekHeight - this.layout.letterHeight * this.fontScale * 2);
+    var restHeight = this.layout.height - this.seekHeight;
+    var marginSize = this.layout.letterHeight * 2;
+
+    if(isV){
+      restHeight = Math.max(10, restHeight - marginSize);
+    } else {
+      restWidth  = Math.max(10, restWidth  - marginSize);
+    }
     var drawSize = this.adjustSize(width, height, restWidth, restHeight);
     
     this.pushFigure(pageNo, isV, "img", {
