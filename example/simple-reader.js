@@ -1,6 +1,6 @@
 /*
  source : simple-reader.js
- version : 1.0
+ version : 1.1
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -29,7 +29,7 @@
  OTHER DEALINGS IN THE SOFTWARE.
 */
 var SimpleReader = {
-  start : function(opt){
+  start : function(id, opt){
     if(typeof opt == "undefined"){
       opt = {};
     }
@@ -45,7 +45,7 @@ var SimpleReader = {
       this[prop] = (opt[prop])? opt[prop] : defopt[prop];
     }
     var self = this;
-    var text = document.getElementById("source-text").innerHTML.replace(/<br \/>/gi, "\n").replace(/<br>/gi, "\n");
+    var text = document.getElementById(id).innerHTML.replace(/<br \/>/gi, "").replace(/<br>/gi, "");
     this.pageNo = 0;
     this.writing = false;
     this.parser = new Nehan.StreamParser(new Nehan.Layout({
@@ -65,6 +65,7 @@ var SimpleReader = {
   write : function(pageNo){
     this.writing = true;
     var output = this.parser.outputPage(pageNo);
+    document.getElementById("pager-percent").innerHTML = this.parser.getSeekPercent(pageNo) + "%";
     if(output != ""){
       document.getElementById("result").innerHTML = output;
     }
