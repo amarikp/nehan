@@ -28,8 +28,6 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-
-
 var Nehan;
 
 if(!Nehan){
@@ -586,6 +584,8 @@ if(!Nehan.ParserHook){
       case "‥" : c = "mm.gif"; break;
       case "＝" : case "=" : c = "equal.gif"; break;
       case "―" : c = "dash.gif"; break;
+      case "〝" : c = "dmn1.gif"; break;
+      case "〟": c = "dmn2.gif"; break;
       case "ー" : case "－" : case "━" : c = "｜"; break;
       case "—": case "-"  : case "‐" : case "─" : case "−": case "_": case "ｰ": c = "｜"; break;
       case "→": case "⇒": c = "↓"; break;
@@ -2155,5 +2155,4 @@ if(!Nehan.ParserHook){
   Nehan.ParserHook = ParserHook;
 
 })();
-
 
