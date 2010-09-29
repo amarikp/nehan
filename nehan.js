@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.1.7
+ version : 1.1.8
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -405,7 +405,6 @@ if(!Nehan.ParserHook){
 	return ret;
       }
     }
-    return "";
   };
 
   TextStream.prototype.skipCRLF = function(){
@@ -836,7 +835,7 @@ if(!Nehan.ParserHook){
       if (str.match(/[a-z0-9]+/i)){
 	this.isHankaku = true;
 	var style = (str.length > 1)? "line-height:1em" : "line-height:1em; margin-left:0.25em";
-	return tagStart("span", {"style":style}, false) + str + "</span><br />";
+	return tagStart("div", {style:style}, false) + str + "</div>";
       }
     }
     if (str.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
