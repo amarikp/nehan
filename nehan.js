@@ -835,7 +835,7 @@ if(!Nehan.ParserHook){
       if (str.match(/[a-z0-9]+/i)){
 	this.isHankaku = true;
 	var style = (str.length > 1)? "line-height:1em" : "line-height:1em; margin-left:0.25em";
-	return tagStart("div", {style:style}, false) + str + "</div>";
+	return tagStart("span", {style:style}, false) + str + "</span><br />";
       }
     }
     if (str.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
