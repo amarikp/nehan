@@ -1,6 +1,6 @@
 /*
  source : nehan.js
- version : 1.1.7
+ version : 1.1.8
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -364,6 +364,10 @@ if(!Nehan.ParserHook){
 
   Layout.prototype.setLetterSpacingRate = function(rate){
     this.letterSpacingRate = rate;
+  };
+
+  Layout.prototype.setKinsokuCharCount = function(count){
+    this.kinsokuCharCount = count;
   };
 
   function TextStream(buffer, length, isEOF){
@@ -1870,7 +1874,9 @@ if(!Nehan.ParserHook){
 	height: 300,
 	order: 0,
 	charImgColor:"black",
-	isSinglePaging:false
+	kinsokuCharCount:1,
+	isSinglePaging:false,
+	isBreak:false
       };
 
       for(var i=0; i< list.length; i++){
@@ -1895,6 +1901,10 @@ if(!Nehan.ParserHook){
 	  ret.charImgColor = "white";
 	} else if (klass.match(/lp-single-paging/)){
 	  ret.isSinglePaging = true;
+	} else if (klass.match(/lp-kinsoku-([0-9]+)/)){
+	  ret.kinsokuCharCount = parseInt(RegExp.$1);
+	} else if (klass.match(/lp-break/)){
+	  ret.isBreak = true;
 	}
       }
       return ret;
@@ -1992,8 +2002,9 @@ if(!Nehan.ParserHook){
     lay.setWidth(grid.width);
     lay.setHeight(grid.height);
     lay.setFontSize(grid.fontSize);
-    lay.setFontFamily(this.fontFamily);
     lay.setCharImgColor(grid.charImgColor);
+    lay.setKinsokuCharCount(grid.kinsokuCharCount);
+    lay.setFontFamily(this.fontFamily);
     lay.setCharImgRoot(this.charImgRoot);
     lay.initialize();
   };
@@ -2051,7 +2062,7 @@ if(!Nehan.ParserHook){
       }
     }
 
-    if(isEndPage){
+    if(isEndPage || grid.isBreak){
       LayoutMapper.setFinish(this.groupName);
       this.onComplete(this.groupName, LayoutMapper.getSeekPercent());
       LayoutMapper.checkFinish();
@@ -2081,7 +2092,7 @@ if(!Nehan.ParserHook){
 	fontFamily : "IPA明朝, ＭＳ 明朝, Osaka-Mono, Hiragino Mincho Pro",
 	onSeek : function(groupName, percent){}, // seek each group
 	onComplete : function(groupName, percent){}, // complete each group
-	onCompleteAll : function(){} // complete all group
+	onCompleteAll : function(){} // complete all group (enable only when filter is 'direction')
       };
       if(typeof option == "undefined"){
 	option = {};
