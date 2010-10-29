@@ -252,7 +252,7 @@ if(!Nehan.ParserHook){
       height: 480,
       fontSize : 16,
       lineHeightRate: 1.8,
-      letterSpacingRate: 0,
+      letterSpacingRate: 0.1,
       direction : "vertical",
       textLayerClassName : "text-layer",
       charImgRoot: "/img/char",
@@ -279,8 +279,8 @@ if(!Nehan.ParserHook){
     this.direction = this.direction.toLowerCase();
     this.directionH = (this.direction == "horizontal" || this.direction == "vertical-lr")? "lr" : "rl";
     this.isV = (this.direction == "vertical" || this.direction == "vertical-lr" || this.direction == "vertical-rl");
-    this.baseLineHeight = this.lineHeightRate * this.fontSize;
-    this.baseLetterSpacing = this.letterSpacingRate * this.fontSize;
+    this.baseLineHeight = Math.floor(this.lineHeightRate * this.fontSize);
+    this.baseLetterSpacing = Math.floor(this.letterSpacingRate * this.fontSize);
     var minW = this.baseLineHeight;
     var minH = this.fontSize + this.baseLetterSpacing;
     this.width = Math.max(minW, this.width);
@@ -676,23 +676,13 @@ if(!Nehan.ParserHook){
 
   StreamParser.prototype.startBgColor = function(){
     if(this.layout.isV){
-      var yohaku = this.layout.yohakuHeight * this.lineScale;
-      var pTB = yohaku / 3;
-      var width = this.layout.baseLineHeight * this.lineScale;
-      var css = {
-	"text-align":"center",
-	"padding": Math.floor(pTB) + "px 0",
-	"width": Math.floor(width) + "px",
-	"background-color": this.bgColor
-      };
+      var yohaku = Math.floor(this.layout.yohakuHeight * this.lineScale);
+      var pTB = Math.floor(yohaku / 3);
+      var width = Math.floor(this.layout.baseLineHeight * this.lineScale);
+      var css = {"text-align":"center", "padding": pTB + "px 0", "width": width + "px", "background-color": this.bgColor};
       return tagStart("div", {"style":inlineCss(css)}, false);
     } else {
-      var css = {
-	"padding-top":"0.3em",
-	"padding-left":"0.3em",
-	"vertical-align":"middle",
-	"background-color": this.bgColor
-      };
+      var css = {"padding-top":"0.3em","padding-left":"0.3em","vertical-align":"middle","background-color": this.bgColor};
       return tagStart("span", {"style":inlineCss(css)}, false);
     }
   };
@@ -710,24 +700,24 @@ if(!Nehan.ParserHook){
       this.boutenCount = 0;
       this.boutenStartPos = 0;
     }
-    var bodyHeight = this.layout.fontSize * this.lineScale;
-    var yohakuHeight = this.layout.yohakuHeight * this.lineScale;
+    var bodyHeight = Math.floor(this.layout.fontSize * this.lineScale);
+    var yohakuHeight = Math.floor(this.layout.yohakuHeight * this.lineScale);
     var lineHeight = bodyHeight + yohakuHeight;
     var cssBody = {
-      "font-size": this.layout.fontSize + "px",
-      "margin": "0",
-      "padding": "0",
-      "text-align":(this.lineScale>1)? "center" : "left",
-      "line-height": Math.floor(this.layout.letterHeight) + "px",
-      "vertical-align": "top",
-      "width": Math.floor(bodyHeight) + "px"
+	"font-size": this.layout.fontSize + "px",
+	"margin": "0",
+	"padding": "0",
+	"text-align":(this.lineScale>1)? "center" : "left",
+	"line-height": this.layout.letterHeight + "px",
+	"vertical-align": "top",
+	"width": bodyHeight + "px"
     };
     var cssRuby = {
-      "margin": "0",
-      "padding": "0",
-      "text-align":"left",
-      "width":Math.floor(yohakuHeight) + "px",
-      "vertical-align": "top"
+	"margin": "0",
+	"padding": "0",
+	"text-align":"left",
+	"width":yohakuHeight + "px",
+	"vertical-align": "top"
     };
     return (tagStart("td", {"style": inlineCss(cssBody)}, false) +  this.lineBuff + "</td>" +
 	    tagStart("td", {"style": inlineCss(cssRuby)}, false) +  this.makeRubyLine() + this.makeBoutenLine() + "</td>");
@@ -736,21 +726,21 @@ if(!Nehan.ParserHook){
   StreamParser.prototype.makeRubyLine = function(){
     var ret = "";
     var self = this;
-    var rubyFontSize = this.layout.rubyFontSize * this.lineScale;
+    var rubyFontSize = Math.floor(this.layout.rubyFontSize * this.lineScale);
     var css = {
-      "position": "absolute",
-      "font-size": Math.floor(rubyFontSize) + "px",
-      "line-height":"1.14em"
+	"position": "absolute",
+	"font-size":rubyFontSize + "px",
+	"line-height":"1.14em"
     };
     var baseStyle = inlineCss(css);
     var indentOffset = this.indentCount * this.layout.letterHeight;
     var nextStack = [];
-    var maxRubyH = this.layout.height - this.fontScale * this.layout.letterHeight * 2;
+    var maxRubyH = this.layout.height - Math.floor(this.fontScale * this.layout.letterHeight * 2);
     
     for (var i = 0; i < this.rubyStack.length; i++){
       var ruby = this.rubyStack[i];
-      var mtop = indentOffset + ruby.startPos;
-      var style = baseStyle + "margin-top:" + Math.floor(mtop) + "px;";
+      var mtop = Math.floor(indentOffset + ruby.startPos);
+      var style = baseStyle + "margin-top:" + mtop + "px;";
       var h = mtop;
       ret += tagStart("div", {"style":style}, false);
       for (var k = 0; k < ruby.yomi.length; k++){
@@ -792,10 +782,10 @@ if(!Nehan.ParserHook){
     var indentOffset = this.indentCount * this.layout.letterHeight;
     var rfs = Math.floor(this.layout.rubyFontSize * this.lineScale);
     var css = {
-      "font-size": rfs + "px",
-      "margin": "0",
-      "padding": "0",
-      "line-height": rfs + "px"
+	"font-size": rfs + "px",
+        "margin": "0",
+	"padding": "0",
+	"line-height": rfs + "px"
     };
     ret += tagStart("div", {style:inlineCss(css)}, false);
 
@@ -817,20 +807,19 @@ if(!Nehan.ParserHook){
     var ret = "";
     var self = this;
     var css = {
-      "position": "absolute",
-      "margin-left": "-0.35em"
+	"position": "absolute",
+	"margin-left": "-0.35em"
     };
     var baseStyle = inlineCss(css);
-    var accentFontSize = Math.floor(this.layout.fontSize * 70 / 100);
 
     for (var i = 0; i < this.boutenStack.length; i++)(function (bouten){
       while( bouten.count > 0 ){
 	if (bouten.str == "・"){
 	  var boutenFontSize = self.layout.fontSize;
 	} else if (bouten.str == "ヽ"){
-	  var boutenFontSize = accentFontSize;
+	  var boutenFontSize = Math.floor(self.layout.fontSize * 70 / 100);
 	}
-	var style = baseStyle + "; font-size:" + boutenFontSize + "px; margin-top:" + Math.floor(bouten.startPos) + "px;";
+	var style = baseStyle + "; font-size:" + boutenFontSize + "px; margin-top:" + bouten.startPos + "px;";
 	ret += tagStart("div", {"style":style}, false);
 	ret += bouten.str;
 	ret += "</div>";
@@ -1165,10 +1154,10 @@ if(!Nehan.ParserHook){
 	this.lineBuff = this.startBgColor();
       }
       if (isV){
-	this.seekWidth += this.layout.baseLineHeight * this.lineScale;
+	this.seekWidth += Math.floor(this.layout.baseLineHeight * this.lineScale);
 	this.seekHeight = 0;
       } else {
-	this.seekHeight += this.layout.baseLineHeight * this.lineScale;
+	this.seekHeight += Math.floor(this.layout.baseLineHeight * this.lineScale);
 	this.seekWidth = 0;
       }
       this.seekLineCharCount = 0;
@@ -1178,9 +1167,9 @@ if(!Nehan.ParserHook){
 
   StreamParser.prototype.checkOverflow = function(isV){
     if(isV){
-      return this.seekWidth + this.layout.fontSize * this.lineScale > this.layout.width;
+      return (this.seekWidth + Math.floor(this.layout.fontSize * this.lineScale) > this.layout.width);
     }
-    return this.seekHeight + (this.layout.fontSize + this.layout.rubyFontSize) * this.lineScale > this.layout.height;
+    return (this.seekHeight + Math.floor((this.layout.fontSize + this.layout.rubyFontSize) * this.lineScale) > this.layout.height);
   };
 
   StreamParser.prototype.parseEndPage = function(pageNo, isV, tagStr, tagAttr, tagName){
@@ -1199,11 +1188,11 @@ if(!Nehan.ParserHook){
     var retH = baseH;
     if(baseW > maxW){
       retW = maxW;
-      retH -= (baseH / baseW) * (baseW - maxW);
+      retH -= Math.floor((baseH / baseW) * (baseW - maxW));
     }
     if(baseH > maxH){
       retH = maxH;
-      retW -= (baseW / baseH) * (baseH - maxH);
+      retW -= Math.floor((baseW / baseH) * (baseH - maxH));
     }
     return {width:retW, height:retH};
   };
@@ -1309,11 +1298,7 @@ if(!Nehan.ParserHook){
     if(isV){
       if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.height){
 	if(tagName == "img"){
-	  var figTag = tagStart("img", {
-	    "src":fig.src,
-	    "width":Math.floor(fig.drawWidth),
-	    "height":Math.floor(fig.drawHeight)
-	  }, true);
+	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
 	} else {
 	  var figTag = fig.src;
 	}
@@ -1325,7 +1310,7 @@ if(!Nehan.ParserHook){
 	  var style = "padding:0; margin-top:0;";
 	}
 	if(tagName == "img"){
-	  var figTag = tagStart("img", {src:fig.src, width:Math.floor(fig.drawWidth), height:Math.floor(fig.drawHeight), style:style}, true);
+	  var figTag = tagStart("img", {src:fig.src, width:fig.drawWidth, height:fig.drawHeight, style:style}, true);
 	} else {
 	  var figTag = tagStart("div", {style:style}, false) + fig.src + "</div>";
 	}
@@ -1334,15 +1319,14 @@ if(!Nehan.ParserHook){
 
 	// recursive output for white space(textStream is shared).
 	var parserTmp = new StreamParser(new Layout({
-	  width: Math.floor(fig.drawWidth),
-	  height: Math.floor(restSize),
+	  width: fig.drawWidth,
+	  height: restSize,
 	  fontSize: this.layout.fontSize,
 	  direction: this.layout.direction,
 	  charImgRoot: this.layout.charImgRoot,
 	  charImgMap: this.layout.charImgMap,
 	  charImgColor: this.layout.charImgColor,
-	  kinsokuCharCount: this.layout.kinsokuCharCount,
-	  letterSpacingRate: this.layout.letterSpacingRate
+	  kinsokuCharCount: this.layout.kinsokuCharCount
 	}), this.textStream);
 
 	// set recursive flag. it makes this parser force turn page when it meets resursive image while recursive parsing.
@@ -1359,7 +1343,7 @@ if(!Nehan.ParserHook){
 	
 	delete parserTmp;
       }
-      var tdCss = { "vertical-align":"top", "padding-right":Math.floor(this.layout.yohakuHeight) + "px"};
+      var tdCss = { "vertical-align":"top", "padding-right":this.layout.yohakuHeight + "px"};
       var tdBody = (fig.align == "top" || fig.align == "left")? figTag + inlinePage : inlinePage + figTag;
       this.blockBuff = tagStart("td", {"style":inlineCss(tdCss)}, false) + tdBody + "</td>" + this.blockBuff;
       this.seekWidth += fig.drawWidth + this.layout.yohakuHeight;
@@ -1367,7 +1351,7 @@ if(!Nehan.ParserHook){
     } else { // horizontal
       if(!this.textStream.isEOF || fig.align == "none" || restSize <= 0 || restSize * 2 < this.layout.width){
 	if(tagName == "img"){
-	  var figTag = tagStart("img", {"src":fig.src, "width":Math.floor(fig.drawWidth), "height":Math.floor(fig.drawHeight)}, true);
+	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
 	} else {
 	  var figTag = fig.src;
 	}
@@ -1375,15 +1359,15 @@ if(!Nehan.ParserHook){
 	this.seekHeight += fig.drawHeight + this.layout.yohakuHeight;
       } else {
 	if(tagName == "img"){
-	  var figTag = tagStart("img", {"src":fig.src, "width":Math.floor(fig.drawWidth), "height":Math.floor(fig.drawHeight)}, true);
+	  var figTag = tagStart("img", {"src":fig.src, "width":fig.drawWidth, "height":fig.drawHeight}, true);
 	} else {
 	  var figTag = fig.src;
 	}
 
 	// recursive output for white space(textStream is shared).
 	var parserTmp = new StreamParser(new Layout({
-	  width: Math.floor(restSize),
-	  height: Math.floor(fig.drawHeight),
+	  width: restSize,
+	  height: fig.drawHeight,
 	  fontSize: this.layout.fontSize,
 	  direction:"horizontal",
 	  charImgRoot: this.layout.charImgRoot,
@@ -1404,11 +1388,11 @@ if(!Nehan.ParserHook){
 	delete parserTmp;
 
 	if(fig.align == "top" || fig.align == "left"){
-	  var leftBlock  = "<div style='float:left; width:" + Math.floor(fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
-	  var rightBlock = "<div style='float:left; width:" + Math.floor(restSize) + "px;'>" + inlinePage + "</div>";
+	  var leftBlock  = "<div style='float:left; width:" + (fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
+	  var rightBlock = "<div style='float:left; width:" + restSize + "px;'>" + inlinePage + "</div>";
 	} else if(fig.align == "bottom" || fig.align == "right"){
-	  var leftBlock  = "<div style='float:left; width:" + Math.floor(restSize) + "px;'>" + inlinePage + "</div>";
-	  var rightBlock = "<div style='float:left; width:" + Math.floor(fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
+	  var leftBlock  = "<div style='float:left; width:" + restSize + "px;'>" + inlinePage + "</div>";
+	  var rightBlock = "<div style='float:left; width:" + (fig.drawWidth + this.layout.fontSize) + "px;'>" + figTag + "</div>";
 	}
 	this.blockBuff += ("<div style='width:" + this.layout.width + "px;'>" +
 			   leftBlock + rightBlock +
@@ -1540,7 +1524,7 @@ if(!Nehan.ParserHook){
     this.bouten = true;
     this.boutenStartPos = this.seekHeight;
     if(Env.isIE){
-      this.boutenStartPos += this.layout.baseLetterSpacing * this.fontScale;
+      this.boutenStartPos += Math.floor(this.layout.baseLetterSpacing * this.fontScale);
     }
     this.boutenStr = this.getBoutenStr(tagName);
   };
@@ -1737,20 +1721,20 @@ if(!Nehan.ParserHook){
       var ret = this.applyTagStack(this.halfBuff, true);
     } else if (Env.isIE){
       var css = inlineCss({
-	"writing-mode":"tb-rl",
-	"width": this.layout.fontSize + "px"
+	  "writing-mode":"tb-rl",
+	  "width": this.layout.fontSize + "px"
       });
       var ret = "<div class='hw-tbrl' style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
     } else {
       var halfSize = this.fontScale * this.layout.fontSize / 2;
       var margin = Math.max(0, Math.floor((this.halfBuff.length - 2) * halfSize));
       var css = inlineCss({
-	"-webkit-transform":"rotate(90deg)",
-	"-webkit-transform-origin":"50% 50%",
-	"-moz-transform":"rotate(90deg)",
-	"-moz-transform-origin":"50% 50%",
-	"margin-bottom": margin + "px",
-	"width": this.layout.fontSize + "px"
+	  "-webkit-transform":"rotate(90deg)",
+	  "-webkit-transform-origin":"50% 50%",
+	  "-moz-transform":"rotate(90deg)",
+	  "-moz-transform-origin":"50% 50%",
+	  "margin-bottom": margin + "px",
+	  "width": this.layout.fontSize + "px"
       });
       var ret = "<div class='hw-trans' style='" + css + "'>" + this.applyTagStack(this.halfBuff, false) + "</div>";
     }
@@ -1795,15 +1779,15 @@ if(!Nehan.ParserHook){
       }
 
       if(this.isImgChar){
-	this.seekHeight += scaleWeight * this.layout.fontSize;
+	this.seekHeight += Math.floor(scaleWeight * this.layout.fontSize);
       } else if(this.isHankaku || this.isSmall){
-	this.seekHeight += scaleWeight * this.layout.fontSize;
+	this.seekHeight += Math.floor(scaleWeight * this.layout.fontSize);
       } else {
-	this.seekHeight += scaleWeight * this.layout.letterHeight;
+	this.seekHeight += Math.floor(scaleWeight * this.layout.letterHeight);
       }
     } else {
       this.lineBuff += this.fixW(s1);
-      this.seekWidth += scaleWeight * this.layout.fontSize;
+      this.seekWidth += Math.floor(scaleWeight * this.layout.fontSize);
     }
 
     this.seekLineCharCount += scaleWeight;
@@ -1950,7 +1934,7 @@ if(!Nehan.ParserHook){
       fontSize:this.head.fontSize,
       fontFamily:this.fontFamily,
       kinsokuCharCount:1,
-      letterSpacingRate: 0,
+      letterSpacingRate: 0.1,
       charImgRoot:this.charImgRoot,
       charImgColor:this.head.charImgColor
     }), new TextStream(text, text.length, true));
