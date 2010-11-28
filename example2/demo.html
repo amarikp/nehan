@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html lang="ja">
+  <head>
+    <title>nehan2 demo</title>
+    <meta content="ja" name="content-language">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <meta http-equiv="Content-Script-Type" content="text/javascript">
+    <link rel="stylesheet" type="text/css" href="screen.css" media="screen, projection" />
+    <link rel="stylesheet" type="text/css" href="print.css" media="print" />
+    <!--[if IE]><link rel="stylesheet" type="text/css" href="ie.css" media="screen, projection" /><![endif]-->
+    <link rel="stylesheet" type="text/css" href="demo.css" />
+    <script type="text/javascript" src="nehan2.js"></script>
+    <script type="text/javascript" src="plugin.js"></script>
+    <script type="text/javascript" src="demo.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <hr class="space" />
+      <h1>nehan2 demo</h1>
+      <h2 id="progress">Wait for a while please...</h2>
+      <div class="span-24">
+	<div class="span-10 append-1">
+	  <div id="result-vertical"></div>
+	</div>
+
+	<div class="span-11 prepend-1 last">
+	  <div id="result-horizontal"></div>
+	</div>
+	<hr class="space" />
+      </div>
+
+      <pre id="src-text" style="display:none"><h2>涅槃の紹介デモ</h2>
+<subject>ルビ・文字サイズ変更・太字・リンク・傍点</subject>
+<a href="#">日本国民</a>は正当に選挙された国会における代表者を通じて行動し、<font scale="1.6">われら</font>と<font scale="2" family="Meiryo">われら</font>の<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって<dot>自由</dot>のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この<b>憲法</b>を確定する。
+<end-page>
+<subject>縦中横</subject>
+　昭和21年11月3日
+
+<subject>半角英数</subject>
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.
+ Alphabet も大丈夫。<font scale="0.8">Alphabet</font> も大丈夫。<font scale="2.0">Alphabet</font> も大丈夫。
+<end-page>
+<subject>画像の回り込み</subject>
+<img src="akutagawa.jpg" width="100" height="130" align="top"/>
+<img src="akutagawa.jpg" width="30" height="56" align="top"/>
+日本国民は正当に選挙された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+<img src="natsume.jpg" width="100" height="130" align="bottom"/>
+<img src="natsume.jpg" width="30" height="56" align="top"/>あいうえおかきくけこさしすせそなにぬねはひふへほまみむめもやゆよらりるれろわをん。
+<end-page>
+<subject>見出し表現 <font scale="0.8" weight="normal"><pack>H1</pack> - <pack>H4</pack></font></subject>
+<h1>タイトル１</h1>
+<h2>タイトル２</h2>
+<h3>タイトル３</h3>
+<h4>タイトル４</h4>
+<end-page>
+<subject>引用表現</subject>
+・引用スタート
+
+<blockquote>引用文などで、先頭や末尾にマージンを空けることも出来ます。先頭にだけスペースを与えたり、末尾にだけスペースを与えることも出来ます。</blockquote>
+・引用終わり
+</pre>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+.page-frame{
+  width: 382px;
+  height: 498px;
+  border: 1px solid #888;
+  padding-top:16px;
+  margin: 0 auto 20px;
+}
+.nehan-page{ 
+  font-family:IPA明朝, ＭＳ 明朝, Hiragino Mincho Pro, monospace;
+}
+.nehan-vertical-text-line a{
+  text-decoration:none;
+}
+/*
+.nehan-page{
+  background-color:#f7e9c0;
+}
+.nehan-vertical-text-line{
+  background-color:#e4ecf9;
+}
+.nehan-horizontal-text-line{
+  background-color:#e4ecf9;
+}
+.nehan-vertical-extra-line{
+  background-color:#c3d9ff;
+}
+.nehan-horizontal-extra-line{
+  background-color:#c3d9ff;
+}
+*/
