@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.2
+ version : 1.3
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1088,34 +1088,6 @@ if(!Nehan){
     lexer.skipCRLF();
     this.pushLine(lexer, layout, context, false);
   };
-/*
-  StreamParser.prototype.parseRuby = function(lexer, layout, context, token){
-    var yomi = "";
-    var curTagName = "ruby";
-    var rubyPos = context.seekNextChar;
-    var restartPos = token.pos + this.getTokenLength(token);
-
-    while(true){
-      var token = lexer.getNext();
-      if(token.type == "tag"){
-	var tag = token.data;
-	curTagName = tag.name;
-	if(curTagName == "/ruby"){
-	  context.rubyTokens.push(this.getRubyToken(layout, context, rubyPos, yomi));
-	  lexer.getStream().setSeekPos(restartPos);
-	  break;
-	}
-	if(curTagName == "rb"){
-	  restartPos = token.pos + this.getTokenLength(token);
-	}
-      } else if (token.type == "char"){
-	if(curTagName == "rt"){
-	  yomi += token.data;
-	}
-      }
-    }
-  };
-*/
 
   StreamParser.prototype.parseRuby = function(lexer, layout, context, token){
     var yomi = "";
