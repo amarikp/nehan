@@ -11,7 +11,7 @@
   // <h1>
   provider.setElementHandler("h1", function(proxy, tag){
     proxy.startFont({
-      scale:3.0,
+      scale:3,
       weight:"bold",
       family:"Meiryo"
     });
@@ -28,12 +28,12 @@
 
   // <blockquote>
   provider.setElementHandler("blockquote", function(proxy, tag){
-    proxy.startIndent(2, 2); // before indent = 2, after indent = 2
-    proxy.startFont({scale:"0.8"}); // make font little small.
+    proxy.startIndent(2, 2); // Nehan.ParserProxy.startIndent(beforeIndentCount, afterIndentCount)
+    proxy.startFont({scale:"0.8"}); // set font little small.
   });
   
   // </blockquote>
-  provider.setElementHandler("/" + name, function(proxy, tag){
+  provider.setElementHandler("/blockquote", function(proxy, tag){
     proxy.endIndent();
     proxy.endFont();
   });
