@@ -1099,23 +1099,22 @@ if(!Nehan){
     while(true){
       var token2 = lexer.getNext();
       if(token2.type == "tag"){
-	var tag = token2.data;
-	var curTagName = tag.name;
+	var curTagName = token2.data.name;
 	if(curTagName == "/ruby"){
 	  lexer.getStream().setSeekPos(restartPos);
 	  break;
 	} else if(curTagName == "rb"){
 	  restartPos = token2.pos + this.getTokenLength(token2);
-	} else if (tag.name == "/rt"){
+	} else if (curTagName == "/rt"){
 	  context.rubyTokens.push(this.getRubyToken(layout, context, rubyPos, yomi));
 	  rubyPos += rubyOff;
 	  yomi = "";
 	}
-      } else if (token2.type == "char"){
+      } else if (this.isTextToken(token2)){
 	if(curTagName == "rt"){
 	  yomi += token2.data;
 	} else if (curTagName != "rp"){
-	  this.setMetricsChar(layout, context, token2);
+	  this.setMetricsTextToken(layout, context, token2);
 	  rubyOff += token2.nextOffset;
 	}
       }
@@ -1216,6 +1215,16 @@ if(!Nehan){
   // ------------------------------------------------------------------------
   // metrics
   // ------------------------------------------------------------------------
+  StreamParser.prototype.setMetricsTextToken = function(layout, context, token){
+    if(token.type == "char"){
+      this.setMetricsChar(layout, context, token);
+    } else if (token.type == "word"){
+      this.setMetricsWord(layout, context, token);
+    } else if (token.type == "tcy"){
+      this.setMetricsTcy(layout, context, token);
+    }
+  };
+
   StreamParser.prototype.setMetricsChar = function(layout, context, token){
     if(token.kind == "small-kana"){
       this.setMetricsSmallKana(layout, context, token);
