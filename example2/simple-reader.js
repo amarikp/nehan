@@ -56,7 +56,6 @@ var SimpleReader = {
     }
   },
   prev : function(){
-    console.log(this.pageNo);
     if(!this.writing && this.pageNo > 0){
       this.pageNo--;
       this.write(this.pageNo);
