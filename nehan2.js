@@ -508,7 +508,6 @@ if(!Nehan){
       fontSize: 16,
       fontColor: "black",
       charImgRoot: "http://nehan.googlecode.com/hg/char-img",
-      isCharImgWhite: false,
       nextLineOffsetRate: 1.8,
       nextCharSpacingRate: 0.1
     }, opt);
@@ -517,8 +516,7 @@ if(!Nehan){
 
   Layout.prototype.init = function(){
     this.direction = this.direction.toLowerCase();
-    this.directionH = (this.direction == "horizontal" || this.direction == "vertical-lr")? "lr" : "rl";
-    this.isV = (this.direction == "vertical" || this.direction == "vertical-lr" || this.direction == "vertical-rl");
+    this.isV = this.direction.match(/vertical/i)?  true : false;
     this.baseNextLineSize = Math.floor(this.nextLineOffsetRate * this.fontSize);
     this.fontSizeHalf = Math.floor(this.fontSize / 2);
     this.baseRubyFontSize = this.fontSizeHalf;
@@ -545,10 +543,10 @@ if(!Nehan){
     return this.isV ? this.width : this.height;
   };
 
-  Layout.prototype.getAlignLeftSize = function(insWidth, insHeight){
+  Layout.prototype.getAlignSpaceSize = function(insWidth, insHeight){
     return {
-      width  : this.isV ? insWidth : this.width - insWidth - this.baseExtraLineSize,
-      height : this.isV ? this.height - insHeight - this.baseExtraLineSize : insHeight
+      width  : this.isV ? insWidth + this.baseExtraLineSize : this.width - insWidth - this.baseExtraLineSize,
+      height : this.isV ? this.height - insHeight - this.baseExtraLineSize : insHeight + this.baseExtraLineSize
     };
   };
 
@@ -683,6 +681,26 @@ if(!Nehan){
     context.curFontSizeHalf = layout.baseRubyFontSize;
     context.curCharOffset = layout.baseCharOffset;
     context.curBorderSize = 0;
+  };
+
+  StreamParser.prototype.popFont = function(layout, context){
+    context.tagStack.pop();
+    context.fontStack.pop();
+
+    var stackLen = context.fontStack.length;
+    if(stackLen > 0){
+      this.setFont(layout, context, context.fontStack[stackLen - 1]);
+    } else {
+      this.resetFont(layout, context);
+    }
+  };
+
+  StreamParser.prototype.popIndent = function(layout, context){
+    var indent = context.indentStack.pop();
+    if(indent){
+      context.curIndent.before -= indent.before;
+      context.curIndent.after -= indent.after;
+    }
   };
 
   StreamParser.prototype.getFontCss = function(layout, context, attr){
@@ -879,6 +897,15 @@ if(!Nehan){
     }
   };
 
+  StreamParser.prototype.isTailConnectableToken = function(token){
+    if(token.type == "char"){
+      if(token.data.match(/、,。\./)){
+	return true;
+      }
+    }
+    return false;
+  };
+
   StreamParser.prototype.fixLineEnd = function(context, token){
     var buffer = [token];
     var self = this;
@@ -894,6 +921,39 @@ if(!Nehan){
       buffer.sort(function(t1, t2){ return (t1.pos - t2.pos); });
     }
     context.nextLineTokens = context.nextLineTokens.concat(buffer);
+  };
+
+  // this function is only used when layout of current page is not same as one of previous.
+  StreamParser.prototype.prefixLineOverflow = function(lexer, layout, context){
+    var lineSize = context.seekNextChar; // this.getLineTextLength(context.lineTokens);
+    var lineMax = layout.getNextCharMaxSize(context);
+    if(context.nextLineTokens.length > 0){
+      lineSize += this.getLineTextLength(context.nextLineTokens);
+      context.lineTokens = context.lineTokens.concat(context.nextLineTokens);
+      context.nextLineTokens = [];
+    }
+    while(true){
+      var token = context.lineTokens.pop();
+      if(this.isTextToken(token)){
+	lineSize -= token.nextOffset;
+	if(lineSize < lineMax){
+	  lexer.getStream().setSeekPos(token.pos);
+	  break;
+	}
+      } else if(token.type == "tag"){
+	var name = token.data.name;
+	if(name == "font"){
+	  this.popFont(layout, context);
+	} else if(name == "indent"){
+	  this.popIndent(layout, context);
+	} else if(name == "blockquote"){
+	  this.popFont(layout, context);
+	  this.popIndent(layout, context);
+	} else {
+	  context.tagStack.pop();
+	}
+      }
+    }
   };
 
   // ------------------------------------------------------------------------
@@ -972,11 +1032,7 @@ if(!Nehan){
 
   StreamParser.prototype.parseIndentEnd = function(lexer, layout, context, token){
     this.setEventHandler("onPushLineComplete", context, function(caller, lexer, layout, context){
-      var indent = context.indentStack.pop();
-      if(indent){
-	context.curIndent.before -= indent.before;
-	context.curIndent.after -= indent.after;
-      }
+      caller.popIndent(layout, context);
       caller.removeEventHandler("onPushLineComplete", context);
     });
     lexer.skipCRLF();
@@ -993,15 +1049,7 @@ if(!Nehan){
 
   StreamParser.prototype.parseFontEnd = function(lexer, layout, context, token){
     context.lineTokens.push(token);
-    context.tagStack.pop();
-    context.fontStack.pop();
-
-    var stackLen = context.fontStack.length;
-    if(stackLen > 0){
-      this.setFont(layout, context, context.fontStack[stackLen - 1]);
-    } else {
-      this.resetFont(layout, context);
-    }
+    this.popFont(layout, context);
   };
 
   StreamParser.prototype.parseEndPage = function(lexer, layout, context, token, inline){
@@ -1453,7 +1501,7 @@ if(!Nehan){
     return token.data + "<br />";
   };
 
-  StreamParser.prototype.makeImgAlignText = function(lexer, layout, context, token, alignLeftSize){
+  StreamParser.prototype.makeImgAlignText = function(lexer, layout, context, token, alignSpaceSize){
     var imgAlign = token.data.attr.align;
     var isImgFirst = (imgAlign == "top" || imgAlign == "left");
     var imgAttr = {src:token.data.attr.src, width:token.width, height:token.height};
@@ -1467,7 +1515,7 @@ if(!Nehan){
     }
     imgAttr["style"] = Util.inlineCss(imgCss);
     var imgHtml = Util.tagStart("img", imgAttr, true);
-    var inlinePage = this.makeInlinePageText(lexer, layout, context, alignLeftSize.width, alignLeftSize.height);
+    var inlinePage = this.makeInlinePageText(lexer, layout, context, alignSpaceSize.width, alignSpaceSize.height);
     if(!layout.isV){
       inlinePage = Util.tagWrap("div", {style:"float:left"}, inlinePage);
     }
@@ -1489,9 +1537,9 @@ if(!Nehan){
 
   StreamParser.prototype.makeImgText = function(lexer, layout, context, token){
     if(token.data.attr.align){
-      var alignLeftSize = layout.getAlignLeftSize(token.width, token.height);
-      if(layout.isAlignEnable(alignLeftSize.width, alignLeftSize.height)){
-	return this.makeImgAlignText(lexer, layout, context, token, alignLeftSize);
+      var alignSpaceSize = layout.getAlignSpaceSize(token.width, token.height);
+      if(layout.isAlignEnable(alignSpaceSize.width, alignSpaceSize.height)){
+	return this.makeImgAlignText(lexer, layout, context, token, alignSpaceSize);
       } else {
 	return this.makeImgLineText(lexer, layout, context, token);
       }
@@ -1689,6 +1737,7 @@ if(!Nehan){
 	width:layout.width + "px",
 	height:layout.height + "px",
 	"font-size":layout.fontSize,
+	//"color":layout.fontColor,
 	"white-space":"nowrap"
       })
     }, context.pageHtml);
@@ -1727,9 +1776,6 @@ if(!Nehan){
   };
 
   StreamParser.prototype.setResume = function(lexer, layout, context){
-    if(lexer.getStream().isEOF()){
-      return;
-    }
     context.saveSeekPos = lexer.getStream().getSeekPos();
     this.restoreContext = Util.deepCopy(context);
   };
@@ -1750,7 +1796,10 @@ if(!Nehan){
   };
 
   StreamParser.prototype.outputPage = function(inline){
-    if(!inline){
+    if(this.context.seekNextChar > this.layout.height){
+      this.prefixLineOverflow(this.lexer, this.layout, this.context);
+    }
+    if(!inline && !this.lexer.getStream().isEOF()){
       this.setResume(this.lexer, this.layout, this.context);
     }
     while(true){
@@ -1849,14 +1898,11 @@ if(!Nehan){
   // ------------------------------------------------------------------------
   // PageProvider
   // ------------------------------------------------------------------------
-  function PageProvider(layoutOpt, text, streamOpt){
+  function PageProvider(layoutOpt, text, totalLength){
     this.layout = new Layout(layoutOpt);
-    if(streamOpt){
-      var totalLen = streamOpt.totalLength || text.length;
-      this.onBufferShort = streamOpt.onBufferShort;
-      this.lexer = new StreamLexer(new TextStream(text, totalLen, text.length >= totalLen));
+    if(totalLength){
+      this.lexer = new StreamLexer(new TextStream(text, totalLength, text.length >= totalLength));
     } else {
-      this.onBufferShort = function(sender){};
       this.lexer = new StreamLexer(new TextStream(text, text.length, true));
     }
     this.parser = new StreamParser(this.lexer, this.layout);
@@ -1876,7 +1922,13 @@ if(!Nehan){
   };
 
   PageProvider.prototype.isEnablePage = function(pageNo){
+    if(pageNo == 0){
+      return true;
+    }
     if(this.cache[pageNo]){
+      return true;
+    }
+    if(this.cache.length == pageNo && this.parser.hasNextPage()){
       return true;
     }
     return false;
@@ -1955,26 +2007,159 @@ if(!Nehan){
     if(this.cache[pageNo]){
       return this.cache[pageNo];
     }
-    try{
-      var head = this.getPageHeadPos(pageNo);
-      var html = this.parser.outputPage(false);
-      var percent = this.lexer.getStream().getSeekPercent();
-      var spos = this.lexer.getStream().getSeekPos();
-      var cpos = this.parser.context.curCharCount;
-      if(!this.parser.hasNextPage()){
-	this.pageCount = pageNo + 1;
+    var head = this.getPageHeadPos(pageNo);
+    var html = this.parser.outputPage(false);
+    var percent = this.lexer.getStream().getSeekPercent();
+    var spos = this.lexer.getStream().getSeekPos();
+    var cpos = this.parser.context.curCharCount;
+    if(!this.parser.hasNextPage()){
+      this.pageCount = pageNo + 1;
+    }
+    this.setPageHeadPos(pageNo+1, spos, cpos);
+    this.cache[pageNo] = {
+      html:html,
+      percent:percent,
+      spos:head.spos,
+      cpos:head.cpos
+    };
+    return this.cache[pageNo];
+  };
+
+  // ------------------------------------------------------------------------
+  // LayoutGrid
+  // ------------------------------------------------------------------------
+  function LayoutGrid(node, nodeNo){
+    this.node = node;
+    this.nodeNo = nodeNo;
+    this.groupName = "nehan-layout-group-" + nodeNo;
+    this.direction ="vertical";
+    this.fontSize = 16;
+    this.fontColor = "black";
+    this.width = 400;
+    this.height = 300;
+    this.order = 0;
+    this.isEnd = false;
+    this.init(node.className);
+  }
+
+  LayoutGrid.prototype.init = function(className){
+    var list = className.split(/[\s\t]/);
+    for(var i=0; i< list.length; i++){
+      var klass = list[i];
+      if (klass == "lp-vertical"){
+	this.direction = "vertical";
+      } else if (klass == "lp-horizontal"){
+	this.direction = "horizontal";
+      } else if (klass.match(/span-([0-9]+)/)){ // blueprint.css
+	this.width = parseInt(RegExp.$1) * 40 - 10;
+      } else if (klass.match(/lp-width-([0-9]+)/)){
+	this.width = parseInt(RegExp.$1);
+      } else if (klass.match(/lp-height-([0-9]+)/)) {
+	this.height = parseInt(RegExp.$1);
+      } else if (klass.match(/lp-font-size-([0-9]+)/)){
+	this.fontSize = parseInt(RegExp.$1);
+      } else if (klass.match(/lp-group-([a-zA-Z0-9\-_]+)/)){
+	this.groupName = RegExp.$1;
+      } else if (klass.match(/lp-order-([0-9]+)/)){
+	this.order = parseInt(RegExp.$1);
+      } else if (klass == "lp-char-img-white"){
+	this.fontColor = "white";
+      } else if (klass == "lp-end"){
+	this.isEnd = true;
       }
-      this.setPageHeadPos(pageNo+1, spos, cpos);
-      this.cache[pageNo] = {
-	html:html,
-	percent:percent,
-	spos:head.spos,
-	cpos:head.cpos
-      };
-      return this.cache[pageNo];
-    } catch (e){
-      if (e == "BufferShort"){
-	this.onBufferShort(this.parser);
+    }
+    var style = this.node.style;
+    style.width = this.width + "px";
+    style.height = this.height + "px";
+  };
+
+  LayoutGrid.prototype.getLayout = function(){
+    return new Layout({
+      direction:this.direction,
+      width: this.width,
+      height: this.height,
+      fontSize: this.fontSize
+    });
+  };
+
+  LayoutGrid.prototype.getText = function(){
+    return this.node.innerHTML.replace(/<br>/gi, "\n").replace(/<br \/>/gi, "\n");
+  };
+
+  // ------------------------------------------------------------------------
+  // LayoutGridGroup
+  // ------------------------------------------------------------------------
+  function LayoutGridGroup(groupName){
+    this.grids = [];
+    this.groupName = groupName;
+  };
+
+  LayoutGridGroup.prototype.init = function(){
+    this.grids.sort(function(g1,g2){ return g1.order - g2.order; });
+    this.provider = new PageProvider(this.grids[0].getLayout(), this.grids[0].getText());
+    return this;
+  };
+
+  LayoutGridGroup.prototype.append = function(grid){
+    this.grids.push(grid);
+  };
+
+  LayoutGridGroup.prototype.renderGrid = function(grid, pageNo){
+    this.provider.layout.width = grid.width;
+    this.provider.layout.height = grid.height;
+    this.provider.layout.direction = grid.direction;
+    this.provider.layout.fontColor = grid.fontColor;
+    this.provider.layout.init();
+    this.provider.parser.context.curFontColor = grid.fontColor;
+    grid.node.innerHTML = this.provider.outputPage(pageNo).html;
+  };
+
+  LayoutGridGroup.prototype.appendRestGrid = function(grid, pageNo){
+    var node = document.createElement("div");
+    var style = node.style;
+    style.width = grid.width + "px";
+    style.height = grid.height + "px";
+    node.innerHTML = this.provider.outputPage(pageNo).html;
+    grid.node.parentNode.appendChild(node);
+  };
+
+  LayoutGridGroup.prototype.render = function(){
+    for(var i = 0; i < this.grids.length; i++){
+      var grid = this.grids[i];
+      if(!this.provider.hasNextPage()){
+	break;
+      }
+      this.renderGrid(grid, i);
+      if(grid.isEnd){
+	return;
+      }
+    }
+    var tailGrid = this.grids[i-1];
+    while(this.provider.hasNextPage()){
+      this.appendRestGrid(tailGrid, i++);
+    }
+  };
+
+  // ------------------------------------------------------------------------
+  // LayoutMapper
+  // ------------------------------------------------------------------------
+  var LayoutMapper = {
+    start : function(opt){
+      var groups = {};
+      var nodes = document.getElementsByTagName("pre");
+      for(var nodeNo = 0; nodeNo < nodes.length; nodeNo++)(function(node){
+	var className = node.className;
+	if(className.match(/lp-vertical/i) || className.match(/lp-horizontal/i)){
+	  var grid = new LayoutGrid(node, nodeNo);
+	  if(!groups[grid.groupName]){
+	    groups[grid.groupName] = new LayoutGridGroup(grid.groupName);
+	  }
+	  groups[grid.groupName].append(grid);
+	}
+      })(nodes[nodeNo]);
+
+      for(groupName in groups){
+	(groups[groupName].init()).render();
       }
     }
   };
@@ -1988,5 +2173,6 @@ if(!Nehan){
   Nehan.StreamParser = StreamParser;
   Nehan.PageProvider = PageProvider;
   Nehan.ParserProxy = ParserProxy;
+  Nehan.LayoutMapper = LayoutMapper;
 })();
 
