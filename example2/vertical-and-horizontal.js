@@ -11,7 +11,7 @@ window.onload = function(){
     var pageNo = 0;
     var dstNode = document.getElementById(dstId);
 
-    // add <subject> element to parser for easy markup(see plugin.js).
+    // add <subject> element to parser for easy markup(see subject.js)
     Nehan.Plugin.defineSubjectElement(provider);
 
     while(provider.hasNextPage()){
