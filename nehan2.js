@@ -1934,6 +1934,10 @@ if(!Nehan){
     return false;
   };
 
+  PageProvider.prototype.getLayout = function(){
+    return this.layout;
+  };
+
   PageProvider.prototype.getText = function(){
     return this.lexer.getStream().getText();
   };

@@ -44,12 +44,12 @@ var ScrollReader = {
       var output = this.provider.outputPage(pageNo);
       this.pages.push(output.html);
       this.seekMeter.innerHTML = output.percent + "%";
-      this.totalWidth += this.provider.parser.layout.width;
+      this.totalWidth += this.provider.getLayout().width;
       setTimeout(function(){ self.processPage(pageNo+1); }, 0);
     } else {
       var s = this.wrapper.style;
       s.width = this.totalWidth + "px";
-      document.body.scrollLeft = this.totalWidth - this.provider.parser.layout.width;
+      document.body.scrollLeft = this.totalWidth - this.provider.getLayout().width;
       for(var i = 0; i < this.pages.length; i++){
 	this.appendPage(this.pages[i]);
       }
