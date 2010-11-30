@@ -975,6 +975,8 @@ if(!Nehan){
       this.parseRuby(lexer, layout, context, token);
     } else if (tag.name == "rt"){
       lexer.skipUntilTag("/rt"); // this is read already by parseRuby, so skip it.
+    } else if (tag.name == "rp"){
+      lexer.skipUntilTag("/rp"); // this is read already by parseRuby, so skip it.
     } else if (tag.name == "font"){
       this.parseFontStart(lexer, layout, context, token);
     } else if (tag.name == "/font"){
