@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.1
+ version : 1.2
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1088,13 +1088,12 @@ if(!Nehan){
     lexer.skipCRLF();
     this.pushLine(lexer, layout, context, false);
   };
-
+/*
   StreamParser.prototype.parseRuby = function(lexer, layout, context, token){
     var yomi = "";
-    var kanji = "";
     var curTagName = "ruby";
     var rubyPos = context.seekNextChar;
-    var restartPos = -1;
+    var restartPos = token.pos + this.getTokenLength(token);
 
     while(true){
       var token = lexer.getNext();
@@ -1103,19 +1102,49 @@ if(!Nehan){
 	curTagName = tag.name;
 	if(curTagName == "/ruby"){
 	  context.rubyTokens.push(this.getRubyToken(layout, context, rubyPos, yomi));
-	  if(restartPos >= 0){
-	    lexer.getStream().setSeekPos(restartPos);
-	  }
+	  lexer.getStream().setSeekPos(restartPos);
 	  break;
 	}
 	if(curTagName == "rb"){
-	  restartPos = lexer.getStream().getSeekPos();
+	  restartPos = token.pos + this.getTokenLength(token);
 	}
       } else if (token.type == "char"){
-	if(curTagName == "rb"){
-	  kanji += token.data;
-	} else if (curTagName == "rt"){
+	if(curTagName == "rt"){
 	  yomi += token.data;
+	}
+      }
+    }
+  };
+*/
+
+  StreamParser.prototype.parseRuby = function(lexer, layout, context, token){
+    var yomi = "";
+    var curTagName = "ruby";
+    var rubyPos = context.seekNextChar;
+    var rubyOff = 0;
+    var restartPos = token.pos + this.getTokenLength(token);
+
+    while(true){
+      var token2 = lexer.getNext();
+      if(token2.type == "tag"){
+	var tag = token2.data;
+	var curTagName = tag.name;
+	if(curTagName == "/ruby"){
+	  lexer.getStream().setSeekPos(restartPos);
+	  break;
+	} else if(curTagName == "rb"){
+	  restartPos = token2.pos + this.getTokenLength(token2);
+	} else if (tag.name == "/rt"){
+	  context.rubyTokens.push(this.getRubyToken(layout, context, rubyPos, yomi));
+	  rubyPos += rubyOff;
+	  yomi = "";
+	}
+      } else if (token2.type == "char"){
+	if(curTagName == "rt"){
+	  yomi += token2.data;
+	} else if (curTagName != "rp"){
+	  this.setMetricsChar(layout, context, token2);
+	  rubyOff += token2.nextOffset;
 	}
       }
     }
