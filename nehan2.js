@@ -1903,8 +1903,20 @@ if(!Nehan){
     this.parser.parseIndentEnd(this.lexer, this.layout, this.parser.context, this.createTagToken("/indent", {}));
   };
 
+  ParserProxy.prototype.pushImg = function(attr){
+    this.parser.parseImg(this.lexer, this.layout, this.parser.context, this.createTagToken("img", attr));
+  };
+
   ParserProxy.prototype.pushChar = function(c1){
     this.parser.parseChar(this.lexer, this.layout, this.parser.context, this.lexer.character(-1, c1));
+  };
+
+  ParserProxy.prototype.pushWord = function(word){
+    this.parser.parseWord(this.lexer, this.layout, this.parser.context, this.lexer.word(-1, word));
+  };
+
+  ParserProxy.prototype.pushTcy = function(tcy){
+    this.parser.parseTcy(this.lexer, this.layout, this.parser.context, this.lexer.tcy(-1, tcy));
   };
 
   // ------------------------------------------------------------------------
