@@ -583,8 +583,8 @@ if(!Nehan){
       height: 300,
       fontSize: 16,
       fontColor: "000000",
-      //charImgRoot: "http://nehan.googlecode.com/hg/char-img",
-      charImgRoot:"/img/char-img/",
+      charImgRoot: "http://nehan.googlecode.com/hg/char-img/",
+      //charImgRoot:"/img/char-img/",
       nextLineOffsetRate: 1.8,
       nextCharSpacingRate: 0.1
     }, opt);
