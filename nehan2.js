@@ -195,49 +195,125 @@ if(!Nehan){
   var CharMap = {
     get : function(c){
       switch(c){
-      case "「": case "｢": c = "kakko1.gif"; break;
-      case "」": case "｣" : c = "kakko2.gif"; break;
-      case "『": c = "kakko3.gif"; break;
-      case "』": c = "kakko4.gif"; break;
-      case "（": case "(": case "{": c = "kakko5.gif"; break;
-      case "）": case "}": case ")": c = "kakko6.gif"; break;
-      case "＜" : case "<"  : case "〈" : c = "kakko7.gif"; break;
-      case "＞" : case ">"  : case "〉" : c = "kakko8.gif"; break;
-      case "《" : case "≪" : c = "kakko9.gif"; break;
-      case "》" : case "≫" : c = "kakko10.gif"; break;
-      case "［" : case "["  : case "〔" : c = "kakko13.gif"; break;
-      case "］" : case "]"  : case "〕" : c = "kakko14.gif"; break;
-      case "【" : c = "kakko17.gif"; break;
-      case "】" : c = "kakko18.gif"; break;
-      case "｡":  case "。" : c = "kuten.gif"; break;
-      case "．" :  case "."  : c = "kuten2.gif"; break;
-      case "､": case "、" : case ","  : case  "，" : c = "touten.gif"; break;
-      case  "～" : case  "〜" : c = "kara.gif"; break;
-      case "…" : c = "mmm.gif"; break;
-      case "：" : case ":" : c = "tenten.gif"; break;
-      case "‥" : c = "mm.gif"; break;
-      case "＝" : case "=" : c = "equal.gif"; break;
-      case "―" : c = "dash.gif"; break;
-      case "〝" : c = "dmn1.gif"; break;
-      case "〟": c = "dmn2.gif"; break;
+      case "「": case "｢": 
+	c = "kakko1.png"; break;
+      case "」": case "｣" : 
+	c = "kakko2.png"; break;
+      case "『":
+	c = "kakko3.png"; break;
+      case "』": 
+	c = "kakko4.png"; break;
+      case "（": case "(": case "{": 
+	c = "kakko5.png"; break;
+      case "）": case "}": case ")": 
+	c = "kakko6.png"; break;
+      case "＜" : case "<"  : case "〈" : 
+	c = "kakko7.png"; break;
+      case "＞" : case ">"  : case "〉" : 
+	c = "kakko8.png"; break;
+      case "《" : case "≪" : 
+	c = "kakko9.png"; break;
+      case "》" : case "≫" : 
+	c = "kakko10.png"; break;
+      case "［" : case "["  : case "〔" : 
+	c = "kakko11.png"; break;
+      case "］" : case "]"  : case "〕" : 
+	c = "kakko12.png"; break;
+      case "【" : 
+	c = "kakko17.png"; break;
+      case "】" : 
+	c = "kakko18.png"; break;
+      case "｡":  case "。" : 
+	c = "kuten.png"; break;
+      case "．" :  case "."  : 
+	c = "period.png"; break;
+      case "､": case "、" : case ","  : case  "，" : 
+	c = "touten.png"; break;
+      case  "～" : case  "〜" : 
+	c = "kara.png"; break;
+      case "…" : 
+	c = "mmm.png"; break;
+      case "：" : case ":" : 
+	c = "tenten.png"; break;
+      case "‥" : 
+	c = "mm.png"; break;
+      case "＝" : case "=" : 
+	c = "equal.png"; break;
+      case "―" : 
+	c = "dash.png"; break;
+      case "〝" : 
+	c = "dmn1.png"; break;
+      case "〟": 
+	c = "dmn2.png"; break;
       case "ー" : case "－" : case "━" :
       case "—": case "-"  : case "‐" : case "─" : case "−": 
-      case "_": case "ｰ": c = "|"; break; //c = "onbiki.gif"; break;
-      case "→": case "⇒": c = "↓"; break;
-      case "←": c = "↑"; break;
-      case "!": c = "！"; break;
-      case "?": c = "？"; break;
-      case "･": c = "・"; break;
-      case "+": c = "＋"; break;
-      case "@": c = "＠"; break;
-      case "#": c = "＃"; break;
-      case "\\": c = "￥"; break;
+      case "_": case "ｰ": 
+	c = "|"; break;
+	//c = "onbiki.png"; break;
+      case "→": case "⇒": 
+	c = "↓"; break;
+      case "←": 
+	c = "↑"; break;
+      case "!": 
+	c = "！"; break;
+      case "?": 
+	c = "？"; break;
+      case "･": 
+	c = "・"; break;
+      case "+": 
+	c = "＋"; break;
+      case "@": 
+	c = "＠"; break;
+      case "#": 
+	c = "＃"; break;
+      case "\\": 
+	c = "￥"; break;
       default: break;
       }
       return c;
     }
   };
 
+  // ------------------------------------------------------------------------
+  // 256 color map
+  // ------------------------------------------------------------------------
+  var ColorMap = {
+    RG : [0, 36, 73, 109, 146, 182, 219, 255],
+    B : [0, 85, 170, 255],
+    getRGB : function(cstr){
+      var r = parseInt(cstr.substring(0,2), 16);
+      var g = parseInt(cstr.substring(2,4), 16);
+      var b = parseInt(cstr.substring(4,6), 16);
+      return {r:r, g:g, b:b};
+    },
+    findNear : function(val, ary){
+      if(val == 0 || val == 255){
+	return val;
+      }
+      var min = 256;
+      var ret = 0;
+      for(var i = 0; i < ary.length; i++){
+	var dist = Math.abs(val - ary[i]);
+	if(dist < min){
+	  min = dist;
+	  ret = ary[i];
+	}
+      }
+      return ret;
+    },
+    getPaletteColor : function(color){
+      var zerofix = function(s){ return (s.length <= 1)? "0" + s : s; };
+      var rs = zerofix(this.findNear(color.r, this.RG).toString(16));
+      var gs = zerofix(this.findNear(color.g, this.RG).toString(16));
+      var bs = zerofix(this.findNear(color.b, this.B).toString(16));
+      return rs + gs + bs;
+    },
+    find : function(cstr){
+      var color = this.getRGB(cstr);
+      return this.getPaletteColor(color).toUpperCase();
+    }
+  };
+  
   // ------------------------------------------------------------------------
   // utility functions
   // ------------------------------------------------------------------------
@@ -432,8 +508,8 @@ if(!Nehan){
 
   StreamLexer.prototype.character = function(pos, c1){
     var c2 = CharMap.get(c1);
-    if(c2.match("gif")){
-      return {type:"char", half:false, kind:"img-char", data:c1, filename:c2, pos:pos};
+    if(c2.match("png")){
+      return {type:"char", half:false, kind:"img-char", data:c1, imgname:c2.replace("\.png",""), pos:pos};
     }
     if(c1 != c2){
       return {type:"char", half:false, kind:"cnv-char", data:c2, fromdata:c1, pos:pos};
@@ -506,8 +582,9 @@ if(!Nehan){
       width: 400,
       height: 300,
       fontSize: 16,
-      fontColor: "black",
-      charImgRoot: "http://nehan.googlecode.com/hg/char-img",
+      fontColor: "000000",
+      //charImgRoot: "http://nehan.googlecode.com/hg/char-img",
+      charImgRoot:"/img/char-img/",
       nextLineOffsetRate: 1.8,
       nextCharSpacingRate: 0.1
     }, opt);
@@ -666,7 +743,7 @@ if(!Nehan){
       context.curBorderSize = parseInt(attr["border-width"]);
     }
     if(attr.color){
-      context.curFontColor = attr.color;
+      context.curFontColor = ColorMap.find(attr.color);
     }
   };
   
@@ -1245,10 +1322,7 @@ if(!Nehan){
   StreamParser.prototype.setMetricsImgChar = function(layout, context, token){
     token.nextOffset = context.curFontSize;
     token.fontSize = context.curFontSize;
-    color = context.curFontColor;
-    if(color == "white" || color == "#fff" || color == "#ffffff"){
-      token.filename = "w_" + token.filename;
-    }
+    token.color = context.curFontColor;
   };
 
   StreamParser.prototype.setMetricsHalfChar = function(layout, context, token){
@@ -1445,7 +1519,7 @@ if(!Nehan){
 
   StreamParser.prototype.makeImgCharText = function(layout, context, token){
     return Util.tagStart("img", {
-      src: Util.filenameConcat(layout.charImgRoot, token.filename),
+      src: Util.filenameConcat(layout.charImgRoot, token.imgname + "/" + token.color + ".png"),
       style: Util.inlineCss({
 	"line-height": token.fontSize + "px",
 	width: token.fontSize + "px",
@@ -2062,7 +2136,7 @@ if(!Nehan){
     this.groupName = "nehan-layout-group-" + nodeNo;
     this.direction ="vertical";
     this.fontSize = 16;
-    this.fontColor = "black";
+    this.fontColor = "000000";
     this.width = 400;
     this.height = 300;
     this.order = 0;
@@ -2086,12 +2160,12 @@ if(!Nehan){
 	this.height = parseInt(RegExp.$1);
       } else if (klass.match(/lp-font-size-([0-9]+)/)){
 	this.fontSize = parseInt(RegExp.$1);
+      } else if (klass.match(/lp-font-color-(.+)/)){
+	this.fontColor = RegExp.$1.toUpperCase();
       } else if (klass.match(/lp-group-([a-zA-Z0-9\-_]+)/)){
 	this.groupName = RegExp.$1;
       } else if (klass.match(/lp-order-([0-9]+)/)){
 	this.order = parseInt(RegExp.$1);
-      } else if (klass == "lp-char-img-white"){
-	this.fontColor = "white";
       } else if (klass == "lp-end"){
 	this.isEnd = true;
       }
@@ -2106,7 +2180,8 @@ if(!Nehan){
       direction:this.direction,
       width: this.width,
       height: this.height,
-      fontSize: this.fontSize
+      fontSize: this.fontSize,
+      fontColor: this.fontColor
     });
   };
 
