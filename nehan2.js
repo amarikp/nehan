@@ -281,10 +281,11 @@ if(!Nehan){
     RG : [0, 36, 73, 109, 146, 182, 219, 255],
     B : [0, 85, 170, 255],
     getRGB : function(cstr){
-      var r = parseInt(cstr.substring(0,2), 16);
-      var g = parseInt(cstr.substring(2,4), 16);
-      var b = parseInt(cstr.substring(4,6), 16);
-      return {r:r, g:g, b:b};
+      return {
+	r : parseInt(cstr.substring(0,2), 16),
+	g : parseInt(cstr.substring(2,4), 16),
+	b : parseInt(cstr.substring(4,6), 16)
+      };
     },
     findNear : function(val, ary){
       if(val == 0 || val == 255){
@@ -301,16 +302,13 @@ if(!Nehan){
       }
       return ret;
     },
-    getPaletteColor : function(color){
+    get : function(cstr){
+      var color = this.getRGB(cstr);
       var zerofix = function(s){ return (s.length <= 1)? "0" + s : s; };
       var rs = zerofix(this.findNear(color.r, this.RG).toString(16));
       var gs = zerofix(this.findNear(color.g, this.RG).toString(16));
       var bs = zerofix(this.findNear(color.b, this.B).toString(16));
-      return rs + gs + bs;
-    },
-    find : function(cstr){
-      var color = this.getRGB(cstr);
-      return this.getPaletteColor(color).toUpperCase();
+      return (rs + gs + bs).toUpperCase();
     }
   };
   
@@ -743,7 +741,7 @@ if(!Nehan){
       context.curBorderSize = parseInt(attr["border-width"]);
     }
     if(attr.color){
-      context.curFontColor = ColorMap.find(attr.color);
+      context.curFontColor = ColorMap.get(attr.color);
     }
   };
   
