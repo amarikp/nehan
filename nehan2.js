@@ -833,6 +833,23 @@ if(!Nehan){
     return layout.isV ? "</div>" : "</span>";
   };
 
+  StreamParser.prototype.wrapTagStack = function(layout, context, body){
+    var ret = "";
+    var fontEndTag = this.tagFontEnd(layout);
+
+    for(var i = 0; i < context.lineTokens.length; i++){
+      ret += this.makeTokenText(layout, context, context.lineTokens[i], 1);
+    }
+
+    ret += body;
+
+    for(var i = context.tagStack.length - 1; i >= 0; i--){
+      var token = context.tagStack[i];
+      ret += (token.data.name == "font")? fontEndTag : "</" + token.data.name + ">";
+    }
+    return ret;
+  };
+
   StreamParser.prototype.getMaxFontScale = function(lineTokens){
     var ret = 1;
     for(var i = 0; i < lineTokens.length; i++){
@@ -1601,7 +1618,7 @@ if(!Nehan){
       imgCss["float"] = "left";
     }
     imgAttr["style"] = Util.inlineCss(imgCss);
-    var imgHtml = Util.tagStart("img", imgAttr, true);
+    var imgHtml = this.wrapTagStack(layout, context, Util.tagStart("img", imgAttr, true));
     var inlinePage = this.makeInlinePageText(lexer, layout, context, alignSpaceSize.width, alignSpaceSize.height);
     if(!layout.isV){
       inlinePage = Util.tagWrap("div", {style:"float:left"}, inlinePage);
@@ -1614,14 +1631,16 @@ if(!Nehan){
   StreamParser.prototype.makeImgLineText = function(lexer, layout, context, token){
     var css = layout.isV ? {"margin-right": layout.baseExtraLineSize + "px", "float": "right"} :
     {"margin-bottom": layout.baseExtraLineSize + "px"};
-    return Util.tagStart("img", {
-      src:token.data.attr.src,
-      width:token.width,
-      height:token.height,
-      style:Util.inlineCss(css)
-    }, true);
-  };
 
+    return this.wrapTagStack(layout, context,
+      Util.tagStart("img", {
+	src:token.data.attr.src,
+	width:token.width,
+	height:token.height,
+	style:Util.inlineCss(css)
+      }, true));
+  };
+  
   StreamParser.prototype.makeImgText = function(lexer, layout, context, token){
     if(token.data.attr.align){
       var alignSpaceSize = layout.getAlignSpaceSize(token.width, token.height);
