@@ -1133,7 +1133,7 @@ if(!Nehan){
     if(inline){
       lexer.getStream().setSeekPos(token.pos);
     } else {
-      lexer.skipCRLF();
+      this.pushLine(lexer, layout, context, token, inline);
     }
     throw "PageEnd";
   };
