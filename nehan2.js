@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.7
+ version : 1.8
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -598,6 +598,8 @@ if(!Nehan){
     this.baseExtraLineSize = this.baseNextLineSize - this.fontSize;
     this.baseLetterSpacing = this.isV ? Math.floor(this.nextCharSpacingRate * this.fontSize) : 0;
     this.baseCharOffset = this.fontSize + this.baseLetterSpacing;
+    this.width = this.isV? Math.max(this.baseCharOffset, this.width) : Math.max(this.fontSize, this.width);
+    this.height = this.isV? Math.max(this.fontSize, this.height) : Math.max(this.baseCharOffset, this.height);
   };
 
   Layout.prototype.getIndentCount = function(indent){
