@@ -1820,7 +1820,7 @@ if(!Nehan){
       style:Util.inlineCss({
 	width:layout.width + "px",
 	height:layout.height + "px",
-	"font-size":layout.fontSize,
+	"font-size":layout.fontSize + "px",
 	//"color":layout.fontColor,
 	"white-space":"nowrap"
       })
