@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.9
+ version : 1.10
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -666,6 +666,11 @@ if(!Nehan){
     this.curCharOffset = Math.floor(layout.baseCharOffset * scale);
   };
 
+  ParserContext.prototype.inheritLine = function(){
+    this.lineTokens = this.nextLineTokens;
+    this.nextLineTokens = new Array();
+  };
+
   // ------------------------------------------------------------------------
   // StreamParser
   // ------------------------------------------------------------------------
@@ -833,23 +838,6 @@ if(!Nehan){
     return layout.isV ? "</div>" : "</span>";
   };
 
-  StreamParser.prototype.wrapTagStack = function(layout, context, body){
-    var ret = "";
-    var fontEndTag = this.tagFontEnd(layout);
-
-    for(var i = 0; i < context.lineTokens.length; i++){
-      ret += this.makeTokenText(layout, context, context.lineTokens[i], 1);
-    }
-
-    ret += body;
-
-    for(var i = context.tagStack.length - 1; i >= 0; i--){
-      var token = context.tagStack[i];
-      ret += (token.data.name == "font")? fontEndTag : "</" + token.data.name + ">";
-    }
-    return ret;
-  };
-
   StreamParser.prototype.getMaxFontScale = function(lineTokens){
     var ret = 1;
     for(var i = 0; i < lineTokens.length; i++){
@@ -869,9 +857,6 @@ if(!Nehan){
       }
     }
     return ret;
-  };
-
-  StreamParser.prototype.getLineHeight = function(layout, context){
   };
 
   StreamParser.prototype.getLineTextLength = function(lineTokens){
@@ -1300,7 +1285,7 @@ if(!Nehan){
   };
 
   StreamParser.prototype.parseImg = function(lexer, layout, context, token){
-    if(this.context.lineTokens.length > 0){
+    if(this.getLineTextLength(this.context.lineTokens) > 0){
       this.pushLine(lexer, layout, context, false);
     }
     this.setMetricsImg(layout, context, token);
@@ -1401,7 +1386,6 @@ if(!Nehan){
       }
       throw "PageEnd";
     }
-    //var textHeight = Math.floor(layout.fontSize * maxScale);
     var textHeight = Math.floor(layout.fontSize * maxScale) + borderSize;
     var extraHeight = lineHeight - textHeight;
     var mainText = this.makeMainText(layout, context, maxScale);
@@ -1413,8 +1397,7 @@ if(!Nehan){
     context.pageHtml += this.makeTextLine(layout, context, mainText, textHeight);
     context.seekNextLine += lineHeight;
     context.seekNextChar = this.getLineTextLength(context.nextLineTokens);
-    context.lineTokens = context.nextLineTokens;
-    context.nextLineTokens = new Array();
+    context.inheritLine();
 
     this.callEventHandler("onPushLineComplete", this, lexer, layout, context);
   };
@@ -1486,6 +1469,7 @@ if(!Nehan){
     lexer.skipCRLF(); // skip flowing CRLF if exists.
     context.seekNextLine += token.nextOffset;
     context.pageHtml += this.makeImgText(lexer, layout, context, token);
+    context.pageHtml += tmp;
   };
 
   // ------------------------------------------------------------------------
@@ -1618,7 +1602,11 @@ if(!Nehan){
       imgCss["float"] = "left";
     }
     imgAttr["style"] = Util.inlineCss(imgCss);
-    var imgHtml = this.wrapTagStack(layout, context, Util.tagStart("img", imgAttr, true));
+    var imgHtml = "";
+    imgHtml += this.makeLineTokensText(layout, context, 1);
+    imgHtml += Util.tagStart("img", imgAttr, true);
+    imgHtml += this.makeTagStackCloseText(layout, context);
+    context.inheritLine();
     var inlinePage = this.makeInlinePageText(lexer, layout, context, alignSpaceSize.width, alignSpaceSize.height);
     if(!layout.isV){
       inlinePage = Util.tagWrap("div", {style:"float:left"}, inlinePage);
@@ -1629,16 +1617,20 @@ if(!Nehan){
   };
 
   StreamParser.prototype.makeImgLineText = function(lexer, layout, context, token){
+    var ret = "";
     var css = layout.isV ? {"margin-right": layout.baseExtraLineSize + "px", "float": "right"} :
     {"margin-bottom": layout.baseExtraLineSize + "px"};
-
-    return this.wrapTagStack(layout, context,
-      Util.tagStart("img", {
-	src:token.data.attr.src,
-	width:token.width,
-	height:token.height,
-	style:Util.inlineCss(css)
-      }, true));
+    var imgHtml = Util.tagStart("img", {
+      src:token.data.attr.src,
+      width:token.width,
+      height:token.height,
+      style:Util.inlineCss(css)
+    }, true);
+    ret += this.makeLineTokensText(layout, context, 1);
+    ret += imgHtml;
+    ret += this.makeTagStackCloseText(layout, context);
+    context.inheritLine();
+    return ret;
   };
   
   StreamParser.prototype.makeImgText = function(lexer, layout, context, token){
@@ -1703,32 +1695,48 @@ if(!Nehan){
     }
   };
 
-  StreamParser.prototype.makeMainText = function(layout, context, maxScale){
-    var text = "";
-
-    // indent margin before
-    for(var i = 0; i < context.curIndent.before; i++){
-      text += this.makeTokenText(layout, context, {type:"char", half:false, kind:"zen", data:"　"}, 1);
-    }
-
-    // main text
+  StreamParser.prototype.makeLineTokensText = function(layout, context, maxScale){
+    var ret = "";
     for(var i = 0; i < context.lineTokens.length; i++){
-      text += this.makeTokenText(layout, context, context.lineTokens[i], maxScale);
+      ret += this.makeTokenText(layout, context, context.lineTokens[i], maxScale);
     }
+    return ret;
+  };
 
-    // indent margin after
+  StreamParser.prototype.makeMainText = function(layout, context, maxScale){
+    var ret = this.makeLineTokensText(layout, context, maxScale);
+    ret = this.makeIndentStackWrapText(layout, context, ret);
+    ret += this.makeTagStackCloseText(layout, context, ret);
+    return ret;
+  };
+
+  StreamParser.prototype.makeIndentStackWrapText = function(layout, context, body){
+    var ret = "";
+    for(var i = 0; i < context.curIndent.before; i++){
+      ret += this.makeTokenText(layout, context, {type:"char", half:false, kind:"zen", data:"　"}, 1);
+    }
+    ret += body;
     for(var i = 0; i < context.curIndent.after; i++){
-      text += this.makeTokenText(layout, context, {type:"char", half:false, kind:"zen", data:"　"}, 1);
+      ret += this.makeTokenText(layout, context, {type:"char", half:false, kind:"zen", data:"　"}, 1);
     }
+    return ret;
+  };
 
-    // enclose tag that is not closed on this line.
-    var fontEndTag = this.tagFontEnd(layout);
+  StreamParser.prototype.makeTagStackCloseText = function(layout, context){
+    var ret = "";
     for(var i = context.tagStack.length - 1; i >= 0; i--){
       var token = context.tagStack[i];
-      text += (token.data.name == "font")? fontEndTag : "</" + token.data.name + ">";
+      ret += this.makeTagCloseText(layout, token);
       context.nextLineTokens.unshift(token);
     }
-    return text;
+    return ret;
+  };
+
+  StreamParser.prototype.makeTagCloseText = function(layout, token){
+    if(token.data.name == "font"){
+      return this.tagFontEnd(layout);
+    }
+    return "</" + token.data.name + ">";
   };
 
   StreamParser.prototype.makeDotText = function(layout, context, maxScale){
