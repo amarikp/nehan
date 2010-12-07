@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.10
+ version : 1.11
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -540,7 +540,7 @@ if(!Nehan){
     } else if (c1=="&") {
       return this.character(p1, this.stream.readUntil(";"));
     } else if(Env.canTransform && c1.match(/[0-9a-zA-Z!\?\.]/)){
-      var str = this.stream.readMatch(/[0-9a-zA-Z!\.\?]+/);
+      var str = this.stream.readMatch(/[0-9a-zA-Z!\.\?\/\_:]+/);
       if(str.length <= 2 && !isNaN(str) || str == "!?" || str == "!!" || str == "??"){
 	return this.tcy(p1, str);
       } else {
