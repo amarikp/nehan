@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html lang="ja">
   <head>
-    <title>simple reader</title>
+    <title>inline layout2</title>
     <meta content="ja" name="content-language">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="Content-Style-Type" content="text/css">
@@ -9,15 +9,16 @@
     <style type="text/css">
       body{ margin:1em 3.2em;font-family:"Helvetica Neue", Arial, Helvetica, sans-serif; }
       .nehan-page{ font-family:IPA明朝, ＭＳ 明朝, Hiragiro Mincho Pro, monospace; }
+      .notice{ border:1px solid #ccc; padding:1em; width: 700px; }
     </style>
     <script type="text/javascript" src="nehan2.js"></script>
     <script type="text/javascript" src="simple-reader.js"></script>
     <script type="text/javascript">
       window.onload = function(){
         SimpleReader.start("text", {
-          direction:"vertical",
-          width:600,
-          height:400,
+          direction:"horizontal",
+          width:700,
+          height:500,
           fontSize:16,
           charImgRoot:"http://nehan.googlecode.com/hg/char-img"
         });
@@ -26,7 +27,17 @@
   </head>
   <body>
     <div class="container">
-      <h1>Simple Reader</h1>
+      <h1>Inline layout - vertical in horizontal</h1>
+
+      <p class="notice">
+	In following document, inline layout is wrote as<br />
+	<br />
+	&lt;layout width="380" height="200" direction="vertical" align="right"&gt; ～ &lt;/layout&gt;<br />
+	<br />
+	Notice that all of the text must be filled in the inline layout space.<br />
+	If there is some contents that overflow the inline layout, nehan will just ignore it.
+      </p>
+      
       <h2 id="progress"></h2>
       
       <div class="pager">
@@ -34,9 +45,8 @@
 	<a href="#prev" id="pager-prev">PREV &raquo;</a>
       </div>
       <pre id="text" style="display:none">　日本国民は正当に選挙された国会における代表者を通じて行動し、われらとわれらの子孫のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び戦争の惨禍が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
-　そもそも国政は、国民の厳粛な信託によるものであって、その権威は国民に由来し、その権力は国民の代表者がこれを行使し、その福利は国民がこれを享受する。これは人類普遍の原理であり、この憲法は、かかる原理に基くものである。われらは、これに反する一切の憲法、法令及び詔勅を排除する。
-　日本国民は正当に選挙された国会における代表者を通じて行動し、われらとわれらの子孫のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び戦争の惨禍が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
-　そもそも国政は、国民の厳粛な信託によるものであって、その権威は国民に由来し、その権力は国民の代表者がこれを行使し、その福利は国民がこれを享受する。これは人類普遍の原理であり、この憲法は、かかる原理に基くものである。われらは、これに反する一切の憲法、法令及び詔勅を排除する。
+<layout width="380" height="200" direction="vertical" align="right"><indent after="1">　そもそも国政は、国民の厳粛な信託によるものであって、その権威は国民に由来し、その権力は国民の代表者がこれを行使し、その福利は国民がこれを享受する。これは人類<ruby><rb>普遍</rb><rt>ふへん</rt></ruby>の原理であり、この憲法は、かかる原理に基くものである。われらは、これに反する一切の憲法、法令及び詔勅を排除する。</indent></layout>
+<img src="tategakibunko.png" align="top" width="45" height="45" />　日本国民は正当に選挙された国会における代表者を通じて行動し、われらとわれらの子孫のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び戦争の惨禍が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。そもそも国政は、国民の厳粛な信託によるものであって、その権威は国民に由来し、その権力は国民の代表者がこれを行使し、その福利は国民がこれを享受する。これは人類普遍の原理であり、この憲法は、かかる原理に基くものである。われらは、これに反する一切の憲法、法令及び詔勅を排除する。
 　日本国民は正当に選挙された国会における代表者を通じて行動し、われらとわれらの子孫のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び戦争の惨禍が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
 　そもそも国政は、国民の厳粛な信託によるものであって、その権威は国民に由来し、その権力は国民の代表者がこれを行使し、その福利は国民がこれを享受する。これは人類普遍の原理であり、この憲法は、かかる原理に基くものである。われらは、これに反する一切の憲法、法令及び詔勅を排除する。
 　日本国民は正当に選挙された国会における代表者を通じて行動し、われらとわれらの子孫のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び戦争の惨禍が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
