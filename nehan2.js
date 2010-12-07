@@ -602,6 +602,10 @@ if(!Nehan){
     this.height = this.isV? Math.max(this.fontSize, this.height) : Math.max(this.baseCharOffset, this.height);
   };
 
+  Layout.prototype.getReverseDirection = function(direction){
+    return (direction == "vertical")? "horizontal" : "vertical";
+  };
+
   Layout.prototype.getIndentCount = function(indent){
     return indent.before + indent.after;
   };
@@ -1082,7 +1086,26 @@ if(!Nehan){
       this.parseBlockquoteStart(lexer, layout, context, token);
     } else if (tag.name == "/blockquote"){
       this.parseBlockquoteEnd(lexer, layout, context, token);
+    } else if (tag.name == "layout"){
+      this.parseInlineLayoutStart(lexer, layout, context, token);
+    } else if (tag.name == "/layout"){
+      this.parseInlineLayoutEnd(lexer, layout, context, token);
     }
+  };
+
+  StreamParser.prototype.parseInlineLayoutStart = function(lexer, layout, context, token){
+    if(this.getLineTextLength(context.lineTokens)){
+      lexer.skipCRLF();
+      this.pushLine(lexer, layout, context, false);
+    }
+    this.setMetricsLayout(layout, context, token);
+    this.pushInlineLayout(lexer, layout, context, token);
+  };
+  
+  StreamParser.prototype.parseInlineLayoutEnd = function(lexer, layout, context, token){
+    lexer.skipCRLF();
+    this.pushLine(lexer, layout, context, token, false);
+    throw "PageEnd";
   };
 
   StreamParser.prototype.parseStraightForwardTagStart = function(lexer, layout, context, token){
@@ -1138,7 +1161,7 @@ if(!Nehan){
       lexer.getStream().setSeekPos(token.pos);
     } else {
       lexer.skipCRLF();
-      this.pushLine(lexer, layout, context, token, inline);
+      this.pushLine(lexer, layout, context, token, false);
     }
     throw "PageEnd";
   };
@@ -1371,6 +1394,13 @@ if(!Nehan){
     token.nextOffset = (layout.isV? width : height) + layout.baseExtraLineSize;
   };
 
+  StreamParser.prototype.setMetricsLayout = function(layout, context, token){
+    var attr = token.data.attr;
+    token.width = parseInt(attr.width);
+    token.height = parseInt(attr.height);
+    token.nextOffset = layout.isV? token.width : token.height;
+  };
+
   // ------------------------------------------------------------------------
   // push
   // ------------------------------------------------------------------------
@@ -1470,6 +1500,17 @@ if(!Nehan){
     context.seekNextLine += token.nextOffset;
     context.pageHtml += this.makeImgText(lexer, layout, context, token);
     context.pageHtml += tmp;
+  };
+
+  StreamParser.prototype.pushInlineLayout = function(lexer, layout, context, token){
+    if(token.width > layout.width || token.height > layout.height){
+      return;
+    }
+    if(this.isNextLineOver(layout, context, token.nextOffset)){
+      throw "PageEnd";
+    }
+    context.pageHtml += this.makeInlineLayoutText(lexer, layout, context, token);
+    context.seekNextLine += token.nextOffset;
   };
 
   // ------------------------------------------------------------------------
@@ -1646,6 +1687,36 @@ if(!Nehan){
     }
   };
   
+  StreamParser.prototype.makeInlineLayoutText = function(lexer, layout, context, token){
+    var attr = token.data.attr;
+    var backupDir = layout.direction;
+    layout.direction = attr.direction? attr.direction : layout.getReverseDirection(layout.direction);
+    layout.init();
+    var layoutPage1 = this.makeInlinePageText(lexer, layout, context, token.width, token.height);
+    context.lineTokens = [];
+    context.nextLineTokens = [];
+    layout.direction = backupDir;
+    layout.init();
+
+    if(attr.align){
+      var p1First = (attr.align == "top" || attr.align == "left");
+      var p2Width = layout.isV? token.width : layout.width - token.width;
+      var p2Height = layout.isV? layout.height - token.height : token.height;
+      var layoutPage2 = this.makeInlinePageText(lexer, layout, context, p2Width, p2Height);
+      if(layout.isV){
+	var mixPage = p1First? layoutPage1 + layoutPage2 : layoutPage2 + layoutPage1;
+	return Util.tagWrap("div", {style:"float:right"}, mixPage);
+      } else {
+	var layoutPage1Float = Util.tagWrap("div", {style:"float:left"}, layoutPage1);
+	var layoutPage2Float = Util.tagWrap("div", {style:"float:left"}, layoutPage2);
+	var mixPage = p1First? layoutPage1Float + layoutPage2Float : layoutPage2Float + layoutPage1Float;
+	return Util.tagWrap("div", {}, mixPage) + "<div style='clear:both; line-height:0;'></div>";
+      }
+    } else {
+      return tagWrap("div", {style:"float:" + (layout.isV? "right" : "left")}, layoutPage1);
+    }
+  };
+
   StreamParser.prototype.makeTextLine = function(layout, context, body, lineSize){
     if(layout.isV){
       return Util.tagWrap("div", {
@@ -1910,7 +1981,8 @@ if(!Nehan){
   };
 
   StreamParser.prototype.outputPage = function(inline){
-    if(this.context.seekNextChar > this.layout.height){
+    if(this.context.seekNextChar > this.layout.getNextCharMaxSize(this.context)){
+      console.log("prefix Line Overflow");
       this.prefixLineOverflow(this.lexer, this.layout, this.context);
     }
     if(!inline && !this.lexer.getStream().isEOF()){
