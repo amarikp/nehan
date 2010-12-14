@@ -299,7 +299,7 @@ if(!Nehan){
   };
 
   // ------------------------------------------------------------------------
-  // char -> img mapping
+  // vertical character mapping
   // ------------------------------------------------------------------------
   var VerticalCharMap = {
     "「":{imgname:"kakko1", hscale:0.5, kind:"img-char"},
@@ -1570,11 +1570,9 @@ if(!Nehan){
   StreamParser.prototype.makeImgCharText = function(layout, context, token){
     return Util.tagStart("img", {
       src: Util.filenameConcat(layout.charImgRoot, token.imgname + "/" + token.color + ".png"),
+      width: token.fontSize,
+      height: token.nextOffset,
       style: Util.inlineCss({
-	width: token.fontSize + "px",
-	//height: ((token.hscale == 1)? token.fontSize : Math.floor(token.fontSize * token.hscale)) + "px",
-	//"line-height": token.fontSize + "px",
-	height: token.nextOffset + "px",
 	"line-height": token.nextOffset + "px",
 	margin:0,
 	padding:0,
