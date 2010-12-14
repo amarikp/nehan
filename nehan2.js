@@ -369,6 +369,9 @@ if(!Nehan){
 
     "〟":{imgname:"dmn2", hscale:1, kind:"img-char"},
 
+    "＝":{imgname:"equal", hscale:1, kind:"img-char"},
+    "=":{imgname:"equal", hscale:1, kind:"img-char"},
+
     //"ー":{imgname:"onbiki", hscale:1, kind:"img-char"},
 
     "ー":{data:"｜", kind:"cnv-char"},
