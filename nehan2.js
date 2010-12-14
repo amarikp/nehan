@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.11
+ version : 1.12
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -190,91 +190,6 @@ if(!Nehan){
   Env.init();
 
   // ------------------------------------------------------------------------
-  // char -> img mapping
-  // ------------------------------------------------------------------------
-  var CharMap = {
-    get : function(c){
-      switch(c){
-      case "「": case "｢": 
-	c = "kakko1.png"; break;
-      case "」": case "｣" : 
-	c = "kakko2.png"; break;
-      case "『":
-	c = "kakko3.png"; break;
-      case "』": 
-	c = "kakko4.png"; break;
-      case "（": case "(": case "{": 
-	c = "kakko5.png"; break;
-      case "）": case "}": case ")": 
-	c = "kakko6.png"; break;
-      case "＜" : case "<"  : case "〈" : 
-	c = "kakko7.png"; break;
-      case "＞" : case ">"  : case "〉" : 
-	c = "kakko8.png"; break;
-      case "《" : case "≪" : 
-	c = "kakko9.png"; break;
-      case "》" : case "≫" : 
-	c = "kakko10.png"; break;
-      case "［" : case "["  : case "〔" : 
-	c = "kakko11.png"; break;
-      case "］" : case "]"  : case "〕" : 
-	c = "kakko12.png"; break;
-      case "【" : 
-	c = "kakko17.png"; break;
-      case "】" : 
-	c = "kakko18.png"; break;
-      case "｡":  case "。" : 
-	c = "kuten.png"; break;
-      case "．" :  case "."  : 
-	c = "period.png"; break;
-      case "､": case "、" : case ","  : case  "，" : 
-	c = "touten.png"; break;
-      case  "～" : case  "〜" : 
-	c = "kara.png"; break;
-      case "…" : 
-	c = "mmm.png"; break;
-      case "：" : case ":" : 
-	c = "tenten.png"; break;
-      case "‥" : 
-	c = "mm.png"; break;
-      case "＝" : case "=" : 
-	c = "equal.png"; break;
-      case "―" : 
-	c = "dash.png"; break;
-      case "〝" : 
-	c = "dmn1.png"; break;
-      case "〟": 
-	c = "dmn2.png"; break;
-      case "ー" : case "－" : case "━" :
-      case "—": case "-"  : case "‐" : case "─" : case "−": 
-      case "_": case "ｰ": 
-	c = "|"; break;
-	//c = "onbiki.png"; break;
-      case "→": case "⇒": 
-	c = "↓"; break;
-      case "←": 
-	c = "↑"; break;
-      case "!": 
-	c = "！"; break;
-      case "?": 
-	c = "？"; break;
-      case "･": 
-	c = "・"; break;
-      case "+": 
-	c = "＋"; break;
-      case "@": 
-	c = "＠"; break;
-      case "#": 
-	c = "＃"; break;
-      case "\\": 
-	c = "￥"; break;
-      default: break;
-      }
-      return c;
-    }
-  };
-
-  // ------------------------------------------------------------------------
   // 256 color map
   // ------------------------------------------------------------------------
   var ColorMap = {
@@ -381,6 +296,91 @@ if(!Nehan){
       dst["-khtml-border-radius-" + p1 + p2] = rpx;
       dst["-webkit-border-" + p1 + "-" + p2 + "-radius"] = rpx;
     }
+  };
+
+  // ------------------------------------------------------------------------
+  // char -> img mapping
+  // ------------------------------------------------------------------------
+  var VerticalCharMap = {
+    "「":{imgname:"kakko1", hscale:0.5, kind:"img-char"},
+    "｢":{imgname:"kakko1", hscale:0.5, kind:"img-char"},
+    "」":{imgname:"kakko2", hscale:0.5, kind:"img-char"},
+    "｣":{imgname:"kakko2", hscale:0.5, kind:"img-char"},
+
+    "『":{imgname:"kakko3", hscale:0.5, kind:"img-char"},
+    "』":{imgname:"kakko4", hscale:0.5, kind:"img-char"},
+
+    "（":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
+    "(":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
+    "｛":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
+    "{":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
+
+    "）":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
+    ")":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
+    "｝":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
+    "}":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
+
+    "＜":{imgname:"kakko7", hscale:0.5, kind:"img-char"},
+    "<":{imgname:"kakko7", hscale:0.5, kind:"img-char"},
+    "〈":{imgname:"kakko7", hscale:0.5, kind:"img-char"},
+
+    "＞":{imgname:"kakko8", hscale:0.5, kind:"img-char"},
+    ">":{imgname:"kakko8", hscale:0.5, kind:"img-char"},
+    "〉":{imgname:"kakko8", hscale:0.5, kind:"img-char"},
+
+    "《":{imgname:"kakko9", hscale:0.5, kind:"img-char"},
+    "≪":{imgname:"kakko9", hscale:0.5, kind:"img-char"},
+
+    "》":{imgname:"kakko10", hscale:0.5, kind:"img-char"},
+    "≫":{imgname:"kakko10", hscale:0.5, kind:"img-char"},
+
+    "［":{imgname:"kakko11", hscale:0.5, kind:"img-char"},
+    "〔":{imgname:"kakko11", hscale:0.5, kind:"img-char"},
+    "[":{imgname:"kakko11", hscale:0.5, kind:"img-char"},
+
+    "］":{imgname:"kakko12", hscale:0.5, kind:"img-char"},
+    "〕":{imgname:"kakko12", hscale:0.5, kind:"img-char"},
+    "]":{imgname:"kakko12", hscale:0.5, kind:"img-char"},
+
+    "【":{imgname:"kakko17", hscale:0.5, kind:"img-char"},
+    "】":{imgname:"kakko18", hscale:0.5, kind:"img-char"},
+
+    "：":{imgname:"tenten", hscale:0.5, kind:"img-char"},
+    ":":{imgname:"tenten", hscale:0.5, kind:"img-char"},
+
+    "。":{imgname:"kuten", hscale:1, kind:"img-char"},
+    "｡":{imgname:"kuten", hscale:1, kind:"img-char"},
+
+    "．":{imgname:"period", hscale:1, kind:"img-char"},
+    ".":{imgname:"period", hscale:1, kind:"img-char"},
+
+    "、":{imgname:"touten", hscale:1, kind:"img-char"},
+    "､":{imgname:"touten", hscale:1, kind:"img-char"},
+    ",":{imgname:"touten", hscale:1, kind:"img-char"},
+    "，":{imgname:"touten", hscale:1, kind:"img-char"},
+
+    "～":{imgname:"kara", hscale:1, kind:"img-char"},
+
+    "…":{imgname:"mmm", hscale:1, kind:"img-char"},
+
+    "‥":{imgname:"mm", hscale:1, kind:"img-char"},
+
+    "〝":{imgname:"dmn1", hscale:1, kind:"img-char"},
+
+    "〟":{imgname:"dmn2", hscale:1, kind:"img-char"},
+
+    "↑":{data:"→", kind:"cnv-char"},
+
+    "→":{data:"↓", kind:"cnv-char"},
+    "⇒":{data:"↓", kind:"cnv-char"},
+
+    "↓":{data:"←", kind:"cnv-char"},
+
+    "←":{data:"↑", kind:"cnv-char"},
+
+    "ー":{data:"｜", kind:"cnv-char"},
+    "-":{data:"｜", kind:"cnv-char"},
+    "―":{data:"｜", kind:"cnv-char"}
   };
 
   // ------------------------------------------------------------------------
@@ -505,12 +505,17 @@ if(!Nehan){
   };
 
   StreamLexer.prototype.character = function(pos, c1){
-    var c2 = CharMap.get(c1);
-    if(c2.match("png")){
-      return {type:"char", half:false, kind:"img-char", data:c1, imgname:c2.replace("\.png",""), pos:pos};
-    }
-    if(c1 != c2){
-      return {type:"char", half:false, kind:"cnv-char", data:c2, fromdata:c1, pos:pos};
+    var c2 = VerticalCharMap[c1] || null;
+    if(c2){
+      c2.type ="char";
+      c2.half = false;
+      c2.pos = pos;
+      if(c2.kind == "img-char"){
+	c2.data = c1;
+      } else if (c2.kind == "cnv-char"){
+	c2.fromdata = c1;
+      }
+      return c2;
     }
     if(c1.match(/[ぁァぃィぅゥぇェぉォヵヶっッゃャゅュょョゎヮ]/)){
       return {type:"char", half:false, kind:"small-kana", data:c1, pos:pos};
@@ -1346,7 +1351,9 @@ if(!Nehan){
   };
 
   StreamParser.prototype.setMetricsImgChar = function(layout, context, token){
-    token.nextOffset = context.curFontSize;
+    token.nextOffset = (token.hscale == 1)? context.curFontSize : Math.floor(context.curFontSize * token.hscale);
+    //token.nextOffset = (token.hscale == 1)? context.curFontSize : context.curFontSizeHalf;
+    //token.nextOffset = context.curFontSize;
     token.fontSize = context.curFontSize;
     token.color = context.curFontColor;
   };
@@ -1564,9 +1571,11 @@ if(!Nehan){
     return Util.tagStart("img", {
       src: Util.filenameConcat(layout.charImgRoot, token.imgname + "/" + token.color + ".png"),
       style: Util.inlineCss({
-	"line-height": token.fontSize + "px",
 	width: token.fontSize + "px",
-	height: token.fontSize + "px",
+	//height: ((token.hscale == 1)? token.fontSize : Math.floor(token.fontSize * token.hscale)) + "px",
+	//"line-height": token.fontSize + "px",
+	height: token.nextOffset + "px",
+	"line-height": token.nextOffset + "px",
 	margin:0,
 	padding:0,
 	border:0
