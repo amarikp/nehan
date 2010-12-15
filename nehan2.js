@@ -377,6 +377,7 @@ if(!Nehan){
     "ー":{data:"｜", kind:"cnv-char"},
     "-":{data:"｜", kind:"cnv-char"},
     "―":{data:"｜", kind:"cnv-char"},
+		"－":{data:"｜", kind:"cnv-char"},
 
     "↑":{data:"→", kind:"cnv-char"},
 
