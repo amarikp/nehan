@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -1581,10 +1581,9 @@ if(!Nehan){
       height: token.nextOffset
     }, true);
 
-    // in webkit, this makes some trouble when used via ajax.
     return Util.tagWrap("div", {
       "class":"img-char",
-      style:"line-height:" + token.nextOffset + "; height:" +  token.nextOffset + "px"
+      style:"clear:both; line-height:" + token.nextOffset + "px; height:" +  token.nextOffset + "px"
     }, img);
   };
 
