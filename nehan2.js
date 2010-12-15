@@ -1584,7 +1584,7 @@ if(!Nehan){
     // in webkit, this makes some trouble when used via ajax.
     return Util.tagWrap("div", {
       "class":"img-char",
-      style:"vertical-align:top; height:" +  token.nextOffset + "px"
+      style:"line-height:" + token.nextOffset + "; height:" +  token.nextOffset + "px"
     }, img);
   };
 
