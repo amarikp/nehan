@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -1565,7 +1565,7 @@ if(!Nehan){
     if(token.kind == "small-kana"){
       return this.makeSmallKanaText(layout, context, token);
     } else if (token.kind == "img-char"){
-      return this.makeImgCharText(layout, context, token) + "<br />";
+      return this.makeImgCharText(layout, context, token);
     } else if (token.half){
       return this.makeHalfCharText(layout, context, token);
     } else {
@@ -1574,17 +1574,20 @@ if(!Nehan){
   };
 
   StreamParser.prototype.makeImgCharText = function(layout, context, token){
-    return Util.tagStart("img", {
+    var img = Util.tagStart("img", {
       src: Util.filenameConcat(layout.charImgRoot, token.imgname + "/" + token.color + ".png"),
       width: token.fontSize,
-      height: token.nextOffset,
-      style: Util.inlineCss({
-	"line-height": token.nextOffset + "px",
-	margin:0,
-	padding:0,
-	border:0
-      })
+      height: token.nextOffset
     }, true);
+
+    return Util.tagWrap("div", {
+      style:Util.inlineCss({
+	"line-height:" :token.nextOffset + "px",
+	height: token.nextOffset,
+	margin: 0,
+	padding: 0
+      })
+    }, img);
   };
 
   StreamParser.prototype.makeSmallKanaText = function(layout, context, token){
