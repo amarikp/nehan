@@ -1581,18 +1581,11 @@ if(!Nehan){
       height: token.nextOffset
     }, true);
 
-    return Util.tagWrap("span", {
-      "class":"img-char",
-      style:"height:" + token.nextOffset + "px; line-height:" + token.nextOffset + "px"
-    }, img + "<br />");
-
-    // for webkit bug (trouble when layouting flowing code via ajax).
-    /*
+    // in webkit, this makes some trouble when used via ajax.
     return Util.tagWrap("div", {
       "class":"img-char",
-      style:"height:" +  token.nextOffset + "px"
+      style:"vertical-align:top; height:" +  token.nextOffset + "px"
     }, img);
-    */
   };
 
   StreamParser.prototype.makeSmallKanaText = function(layout, context, token){
