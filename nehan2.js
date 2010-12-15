@@ -360,6 +360,7 @@ if(!Nehan){
     "，":{imgname:"touten", hscale:1, kind:"img-char"},
 
     "～":{imgname:"kara", hscale:1, kind:"img-char"},
+    "〜":{imgname:"kara", hscale:1, kind:"img-char"},
 
     "…":{imgname:"mmm", hscale:1, kind:"img-char"},
 
