@@ -1581,12 +1581,8 @@ if(!Nehan){
     }, true);
 
     return Util.tagWrap("div", {
-      style:Util.inlineCss({
-	"line-height:" :token.nextOffset + "px",
-	height: token.nextOffset + "px",
-	margin: 0,
-	padding: 0
-      })
+      "class":"img-char",
+      style:"height:" +  token.nextOffset + "px"
     }, img);
   };
 
