@@ -904,8 +904,8 @@ if(!Nehan){
   };
 
   StreamParser.prototype.getLineTailStr = function(context){
-    for(var i = this.lineTokens.length - 1; i >= 0; i--){
-      var token = this.lineTokens[i];
+    for(var i = context.lineTokens.length - 1; i >= 0; i--){
+      var token = context.lineTokens[i];
       if(this.isTextToken(token)){
 	return token;
       }
@@ -1351,6 +1351,7 @@ if(!Nehan){
   // metrics
   // ------------------------------------------------------------------------
   StreamParser.prototype.setMetricsStr = function(lexer, layout, context, token){
+    var curChar = token.data;
     if(token.type == "char"){
       this.setMetricsChar(lexer, layout, context, token);
     } else if (token.type == "word"){
@@ -1380,18 +1381,26 @@ if(!Nehan){
   StreamParser.prototype.setMetricsImgChar = function(lexer, layout, context, token){
     var curChar = token.data;
     var curImgName = token.imgname;
-    var nextToken = lexer.lookNextStr();
-    var nextChar = nextToken.data;
-    var nextImgName = nextToken.imgname;
 
     token.height = token.nextOffset = (token.hscale == 1)? context.curFontSize :
       (token.hscale == 0.5)? context.curFontSizeHalf : Math.floor(context.curFontSize * token.hscale);
 
-    if(this.isKakkoEndChar(curChar)){
-      if(nextImgName != "tenten" && nextImgName != "kuten" && nextImgName != "touten" && nextChar != "・"){
+    if(this.isKakkoStartChar(curChar)){
+      var prevToken = this.getLineTailStr(context);
+      if(prevToken && !this.isKakkoStartChar(prevToken.data)){
+	token.nextOffset += context.curFontSizeHalf;
+	token.marginTop = context.curFontSizeHalf;
+      }
+    } else if(this.isKakkoEndChar(curChar)){
+      var nextToken = lexer.lookNextStr();
+      var nextChar = nextToken.data;
+      var nextImgName = nextToken.imgname;
+      if(!this.isKakkoEndChar(nextChar) && nextImgName != "tenten" && nextImgName != "kuten" &&
+	 nextImgName != "touten" && nextChar != "・"){
 	token.nextOffset = context.curFontSize;
       }
     } else if (curImgName == "kuten" || curImgName == "touten"){
+      var nextChar = lexer.lookNextStr().data;
       if(!this.isKakkoEndChar(nextChar)){
 	token.nextOffset = context.curFontSize;
       }
@@ -1605,20 +1614,29 @@ if(!Nehan){
     } else if (token.half){
       return this.makeHalfCharText(layout, context, token);
     } else {
-      return token.data + "<br />";
+      return this.makeFullCharText(layout, context, token);
     }
+  };
+
+  StreamParser.prototype.makeFullCharText = function(layout, context, token){
+    return token.data + "<br />";
   };
 
   StreamParser.prototype.makeImgCharText = function(layout, context, token){
     var img = Util.tagStart("img", {
       src: Util.filenameConcat(layout.charImgRoot, token.imgname + "/" + token.color + ".png"),
       width: token.fontSize,
-      height: token.height
+      height: token.height,
+      style: token.marginTop? "margin-top:" + token.marginTop + "px" : ""
     }, true);
 
     return Util.tagWrap("div", {
       "class":"img-char",
-      style:"clear:both; vertical-align:top; line-height:" + token.nextOffset + "px; height:" +  token.nextOffset + "px"
+      style:Util.inlineCss({
+	"clear":"both",
+	"line-height":token.nextOffset + "px",
+	"height": token.nextOffset + "px"
+      })
     }, img);
   };
 
