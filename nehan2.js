@@ -1628,7 +1628,6 @@ if(!Nehan){
       width: token.fontSize,
       height: token.height,
       style: Util.inlineCss({
-	"vertical-align": "top", // if not specified, make positionning troubles when used via ajax.
 	"margin-top": token.marginTop? "margin-top:" + token.marginTop + "px" : ""
       })
     }, true);
