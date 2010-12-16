@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -1627,7 +1627,10 @@ if(!Nehan){
       src: Util.filenameConcat(layout.charImgRoot, token.imgname + "/" + token.color + ".png"),
       width: token.fontSize,
       height: token.height,
-      style: token.marginTop? "margin-top:" + token.marginTop + "px" : ""
+      style: Util.inlineCss({
+	"vertical-align": "top", // if not specified, make positionning troubles when used via ajax.
+	"margin-top": token.marginTop? "margin-top:" + token.marginTop + "px" : ""
+      })
     }, true);
 
     return Util.tagWrap("div", {
