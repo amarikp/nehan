@@ -335,11 +335,11 @@ if(!Nehan){
       case "：": case ":": 
 	return {imgname:"tenten", hscale:0.5, kind:"img-char"};
       case "。": case "｡": 
-	return {imgname:"kuten", hscale:1, kind:"img-char"};
+	return {imgname:"kuten", hscale:0.5, kind:"img-char"};
       case "．": case ".": 
 	return {imgname:"period", hscale:1, kind:"img-char"};
       case "、": case "､": case ",": case "，": 
-	return {imgname:"touten", hscale:1, kind:"img-char"};
+	return {imgname:"touten", hscale:0.5, kind:"img-char"};
       case "～": case "〜": 
 	return {imgname:"kara", hscale:1, kind:"img-char"};
       case "…":
@@ -589,8 +589,8 @@ if(!Nehan){
       height: 300,
       fontSize: 16,
       fontColor: "000000",
-      charImgRoot: "http://nehan.googlecode.com/hg/char-img/",
-      //charImgRoot:"/img/char-img/",
+      //charImgRoot: "http://nehan.googlecode.com/hg/char-img/",
+      charImgRoot:"/img/char-img/",
       nextLineOffsetRate: 1.8,
       nextCharSpacingRate: 0
     }, opt);
@@ -738,14 +738,6 @@ if(!Nehan){
 
   StreamParser.prototype.isTextToken = function(token){
     return (token.type == "char" || token.type == "word" || token.type == "tcy");
-  };
-
-  StreamParser.prototype.isKutenChar = function(c1){
-    return (c1 == "。" || c1 == "｡");
-  };
-
-  StreamParser.prototype.isToutenChar = function(c1){
-    return (c1 == "、" || c1 ==  "､" || c1 == "," || c1 == "，");
   };
 
   StreamParser.prototype.isKakkoStartChar = function(c1){
@@ -1386,16 +1378,23 @@ if(!Nehan){
   };
 
   StreamParser.prototype.setMetricsImgChar = function(lexer, layout, context, token){
-    var cur = token.data;
-    var next = lexer.lookNextStr().data;
+    var curChar = token.data;
+    var curImgName = token.imgname;
+    var nextToken = lexer.lookNextStr();
+    var nextChar = nextToken.data;
+    var nextImgName = nextToken.imgname;
+
     token.height = token.nextOffset = (token.hscale == 1)? context.curFontSize :
       (token.hscale == 0.5)? context.curFontSizeHalf : Math.floor(context.curFontSize * token.hscale);
-    if(this.isKakkoEndChar(cur) && this.isKakkoStartChar(next)){
-      token.nextOffset += context.curFontSizeHalf;
-    } else if ((this.isKutenChar(cur) || this.isToutenChar(cur)) && this.isKakkoEndChar(next)){
-      token.height = token.nextOffset = context.curFontSizeHalf;
-      token.imgname = token.imgname + "-half";
-      token.hscale = 0.5;
+
+    if(this.isKakkoEndChar(curChar)){
+      if(nextImgName != "tenten" && nextImgName != "kuten" && nextImgName != "touten" && nextChar != "・"){
+	token.nextOffset = context.curFontSize;
+      }
+    } else if (curImgName == "kuten" || curImgName == "touten"){
+      if(!this.isKakkoEndChar(nextChar)){
+	token.nextOffset = context.curFontSize;
+      }
     }
     token.fontSize = context.curFontSize;
     token.color = context.curFontColor;
