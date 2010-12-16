@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.14
+ version : 1.15
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -302,92 +302,70 @@ if(!Nehan){
   // vertical character mapping
   // ------------------------------------------------------------------------
   var VerticalCharMap = {
-    "「":{imgname:"kakko1", hscale:0.5, kind:"img-char"},
-    "｢":{imgname:"kakko1", hscale:0.5, kind:"img-char"},
-    "」":{imgname:"kakko2", hscale:0.5, kind:"img-char"},
-    "｣":{imgname:"kakko2", hscale:0.5, kind:"img-char"},
-
-    "『":{imgname:"kakko3", hscale:0.5, kind:"img-char"},
-    "』":{imgname:"kakko4", hscale:0.5, kind:"img-char"},
-
-    "（":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
-    "(":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
-    "｛":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
-    "{":{imgname:"kakko5", hscale:0.5, kind:"img-char"},
-
-    "）":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
-    ")":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
-    "｝":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
-    "}":{imgname:"kakko6", hscale:0.5, kind:"img-char"},
-
-    "＜":{imgname:"kakko7", hscale:0.5, kind:"img-char"},
-    "<":{imgname:"kakko7", hscale:0.5, kind:"img-char"},
-    "〈":{imgname:"kakko7", hscale:0.5, kind:"img-char"},
-
-    "＞":{imgname:"kakko8", hscale:0.5, kind:"img-char"},
-    ">":{imgname:"kakko8", hscale:0.5, kind:"img-char"},
-    "〉":{imgname:"kakko8", hscale:0.5, kind:"img-char"},
-
-    "《":{imgname:"kakko9", hscale:0.5, kind:"img-char"},
-    "≪":{imgname:"kakko9", hscale:0.5, kind:"img-char"},
-
-    "》":{imgname:"kakko10", hscale:0.5, kind:"img-char"},
-    "≫":{imgname:"kakko10", hscale:0.5, kind:"img-char"},
-
-    "［":{imgname:"kakko11", hscale:0.5, kind:"img-char"},
-    "〔":{imgname:"kakko11", hscale:0.5, kind:"img-char"},
-    "[":{imgname:"kakko11", hscale:0.5, kind:"img-char"},
-
-    "］":{imgname:"kakko12", hscale:0.5, kind:"img-char"},
-    "〕":{imgname:"kakko12", hscale:0.5, kind:"img-char"},
-    "]":{imgname:"kakko12", hscale:0.5, kind:"img-char"},
-
-    "【":{imgname:"kakko17", hscale:0.5, kind:"img-char"},
-    "】":{imgname:"kakko18", hscale:0.5, kind:"img-char"},
-
-    "：":{imgname:"tenten", hscale:0.5, kind:"img-char"},
-    ":":{imgname:"tenten", hscale:0.5, kind:"img-char"},
-
-    "。":{imgname:"kuten", hscale:1, kind:"img-char"},
-    "｡":{imgname:"kuten", hscale:1, kind:"img-char"},
-
-    "．":{imgname:"period", hscale:1, kind:"img-char"},
-    ".":{imgname:"period", hscale:1, kind:"img-char"},
-
-    "、":{imgname:"touten", hscale:1, kind:"img-char"},
-    "､":{imgname:"touten", hscale:1, kind:"img-char"},
-    ",":{imgname:"touten", hscale:1, kind:"img-char"},
-    "，":{imgname:"touten", hscale:1, kind:"img-char"},
-
-    "～":{imgname:"kara", hscale:1, kind:"img-char"},
-    "〜":{imgname:"kara", hscale:1, kind:"img-char"},
-
-    "…":{imgname:"mmm", hscale:1, kind:"img-char"},
-
-    "‥":{imgname:"mm", hscale:1, kind:"img-char"},
-
-    "〝":{imgname:"dmn1", hscale:1, kind:"img-char"},
-
-    "〟":{imgname:"dmn2", hscale:1, kind:"img-char"},
-
-    "＝":{imgname:"equal", hscale:1, kind:"img-char"},
-    "=":{imgname:"equal", hscale:1, kind:"img-char"},
-
-    //"ー":{imgname:"onbiki", hscale:1, kind:"img-char"},
-
-    "ー":{data:"｜", kind:"cnv-char"},
-    "-":{data:"｜", kind:"cnv-char"},
-    "―":{data:"｜", kind:"cnv-char"},
-		"－":{data:"｜", kind:"cnv-char"},
-
-    "↑":{data:"→", kind:"cnv-char"},
-
-    "→":{data:"↓", kind:"cnv-char"},
-    "⇒":{data:"↓", kind:"cnv-char"},
-
-    "↓":{data:"←", kind:"cnv-char"},
-
-    "←":{data:"↑", kind:"cnv-char"}
+    get : function(c1){
+      switch(c1){
+      case "「": case "｢": 
+	return {imgname:"kakko1", hscale:0.5, kind:"img-char"};
+      case "」": case "｣": 
+	return {imgname:"kakko2", hscale:0.5, kind:"img-char"};
+      case "『": 
+	return {imgname:"kakko3", hscale:0.5, kind:"img-char"};
+      case "』": 
+      return {imgname:"kakko4", hscale:0.5, kind:"img-char"};
+      case "（": case "(": case "｛": case "{": 
+	return {imgname:"kakko5", hscale:0.5, kind:"img-char"};
+      case "）": case ")": case "｝": case "}": 
+	return {imgname:"kakko6", hscale:0.5, kind:"img-char"};
+      case "＜": case "<": case "〈": 
+	return {imgname:"kakko7", hscale:0.5, kind:"img-char"};
+      case "＞": case ">": case "〉": 
+	return {imgname:"kakko8", hscale:0.5, kind:"img-char"};
+      case "《": case "≪": 
+	return {imgname:"kakko9", hscale:0.5, kind:"img-char"};
+      case "》": case "≫": 
+      return {imgname:"kakko10", hscale:0.5, kind:"img-char"};
+      case "［": case "〔": case "[": 
+	return {imgname:"kakko11", hscale:0.5, kind:"img-char"};
+      case "］": case "〕": case "]": 
+	return {imgname:"kakko12", hscale:0.5, kind:"img-char"};
+      case "【": 
+	return {imgname:"kakko17", hscale:0.5, kind:"img-char"};
+      case "】": 
+      return {imgname:"kakko18", hscale:0.5, kind:"img-char"};
+      case "：": case ":": 
+	return {imgname:"tenten", hscale:0.5, kind:"img-char"};
+      case "。": case "｡": 
+	return {imgname:"kuten", hscale:1, kind:"img-char"};
+      case "．": case ".": 
+	return {imgname:"period", hscale:1, kind:"img-char"};
+      case "、": case "､": case ",": case "，": 
+	return {imgname:"touten", hscale:1, kind:"img-char"};
+      case "～": case "〜": 
+	return {imgname:"kara", hscale:1, kind:"img-char"};
+      case "…":
+      return {imgname:"mmm", hscale:1, kind:"img-char"};
+      case "‥":
+	return {imgname:"mm", hscale:1, kind:"img-char"};
+      case "〝":
+	return {imgname:"dmn1", hscale:1, kind:"img-char"};
+      case "〟":
+	return {imgname:"dmn2", hscale:1, kind:"img-char"};
+      case "＝": case "=":
+	return {imgname:"equal", hscale:1, kind:"img-char"};
+      case "ー": case "-": case "―": case "－":
+	return {data:"｜", kind:"cnv-char"};
+      case "↑":
+      return {data:"→", kind:"cnv-char"};
+      case "→": case "⇒":
+	return {data:"↓", kind:"cnv-char"};
+      case "↓":
+	return {data:"←", kind:"cnv-char"};
+      case "←":
+	return {data:"↑", kind:"cnv-char"};
+      default:
+	return null;
+      }
+    }
   };
 
   // ------------------------------------------------------------------------
@@ -512,7 +490,7 @@ if(!Nehan){
   };
 
   StreamLexer.prototype.character = function(pos, c1){
-    var c2 = VerticalCharMap[c1] || null;
+    var c2 = VerticalCharMap.get(c1);
     if(c2){
       c2.type ="char";
       c2.half = false;
@@ -564,6 +542,24 @@ if(!Nehan){
     }
   };
 
+  StreamLexer.prototype.lookNextStr = function(){
+    var backup = this.stream.getSeekPos();
+    var ret = null;
+    while(true){
+      try {
+	var token = this.getNext();
+	if(token.type == "char" || token.type == "tcy" || token.type == "word"){
+	  ret = token;
+	  break;
+	}
+      } catch (e){
+	break;
+      }
+    }
+    this.stream.setSeekPos(backup);
+    return ret;
+  };
+
   StreamLexer.prototype.skipUntilTag = function(tagName){
     while(true){
       var token = this.getNext();
@@ -593,10 +589,10 @@ if(!Nehan){
       height: 300,
       fontSize: 16,
       fontColor: "000000",
-      charImgRoot: "http://nehan.googlecode.com/hg/char-img/",
-      //charImgRoot:"/img/char-img/",
+      //charImgRoot: "http://nehan.googlecode.com/hg/char-img/",
+      charImgRoot:"/img/char-img/",
       nextLineOffsetRate: 1.8,
-      nextCharSpacingRate: 0.1
+      nextCharSpacingRate: 0
     }, opt);
     this.init();
   }
@@ -742,6 +738,28 @@ if(!Nehan){
 
   StreamParser.prototype.isTextToken = function(token){
     return (token.type == "char" || token.type == "word" || token.type == "tcy");
+  };
+
+  StreamParser.prototype.isKutenChar = function(c1){
+    return (c1 == "。" || c1 == "｡");
+  };
+
+  StreamParser.prototype.isToutenChar = function(c1){
+    return (c1 == "、" || c1 ==  "､" || c1 == "," || c1 == "，");
+  };
+
+  StreamParser.prototype.isKakkoStartChar = function(c1){
+    if(c1.match(/[「『【［（《〈≪＜\[\(]/)){
+      return true;
+    }
+    return false;
+  };
+
+  StreamParser.prototype.isKakkoEndChar = function(c1){
+    if(c1.match(/[」』】］）》〉≫＞\]\)]/)){
+      return true;
+    }
+    return false;
   };
 
   StreamParser.prototype.isParserEnd = function(){
@@ -891,6 +909,16 @@ if(!Nehan){
       return token.data.src.length;
     }
     return token.data.length;
+  };
+
+  StreamParser.prototype.getLineTailStr = function(context){
+    for(var i = this.lineTokens.length - 1; i >= 0; i--){
+      var token = this.lineTokens[i];
+      if(this.isTextToken(token)){
+	return token;
+      }
+    }
+    return null;
   };
 
   StreamParser.prototype.getRubyToken = function(layout, context, pos, yomi){
@@ -1110,7 +1138,7 @@ if(!Nehan){
       lexer.skipCRLF();
       this.pushLine(lexer, layout, context, false);
     }
-    this.setMetricsLayout(layout, context, token);
+    this.setMetricsLayout(lexer, layout, context, token);
     this.pushInlineLayout(lexer, layout, context, token);
   };
   
@@ -1229,7 +1257,7 @@ if(!Nehan){
 	if(curTagName == "rt"){
 	  yomi += token2.data;
 	} else if (curTagName != "rp"){
-	  this.setMetricsTextToken(layout, context, token2);
+	  this.setMetricsStr(lexer, layout, context, token2);
 	  rubyOff += token2.nextOffset;
 	}
       }
@@ -1299,19 +1327,19 @@ if(!Nehan){
     } else if (token.data == "\n"){
       this.pushLine(lexer, layout, context, false);
     } else {
-      this.setMetricsChar(layout, context, token);
+      this.setMetricsChar(lexer, layout, context, token);
       this.pushChar(lexer, layout, context, token);
     }
   };
 
   StreamParser.prototype.parseWord = function(lexer, layout, context, token){
-    this.setMetricsWord(layout, context, token);
+    this.setMetricsWord(lexer, layout, context, token);
     this.pushWord(lexer, layout, context, token);
   };
 
   StreamParser.prototype.parseTcy = function(lexer, layout, context, token){
     if(layout.isV){
-      this.setMetricsTcy(layout, context, token);
+      this.setMetricsTcy(lexer, layout, context, token);
       this.pushTcy(lexer, layout, context, token);
     } else {
       token.type = "word";
@@ -1323,70 +1351,78 @@ if(!Nehan){
     if(this.getLineTextLength(this.context.lineTokens) > 0){
       this.pushLine(lexer, layout, context, false);
     }
-    this.setMetricsImg(layout, context, token);
+    this.setMetricsImg(lexer, layout, context, token);
     this.pushImg(lexer, layout, context, token);
   };
 
   // ------------------------------------------------------------------------
   // metrics
   // ------------------------------------------------------------------------
-  StreamParser.prototype.setMetricsTextToken = function(layout, context, token){
+  StreamParser.prototype.setMetricsStr = function(lexer, layout, context, token){
     if(token.type == "char"){
-      this.setMetricsChar(layout, context, token);
+      this.setMetricsChar(lexer, layout, context, token);
     } else if (token.type == "word"){
-      this.setMetricsWord(layout, context, token);
+      this.setMetricsWord(lexer, layout, context, token);
     } else if (token.type == "tcy"){
-      this.setMetricsTcy(layout, context, token);
+      this.setMetricsTcy(lexer, layout, context, token);
     }
   };
 
-  StreamParser.prototype.setMetricsChar = function(layout, context, token){
+  StreamParser.prototype.setMetricsChar = function(lexer, layout, context, token){
     if(token.kind == "small-kana"){
-      this.setMetricsSmallKana(layout, context, token);
+      this.setMetricsSmallKana(lexer, layout, context, token);
     } else if (token.kind == "img-char"){
-      this.setMetricsImgChar(layout, context, token);
+      this.setMetricsImgChar(lexer, layout, context, token);
     } else if (token.half){
-      this.setMetricsHalfChar(layout, context, token);
+      this.setMetricsHalfChar(lexer, layout, context, token);
     } else {
-      this.setMetricsFullChar(layout, context, token);
+      this.setMetricsFullChar(lexer, layout, context, token);
     }
   };
 
-  StreamParser.prototype.setMetricsSmallKana = function(layout, context, token){
+  StreamParser.prototype.setMetricsSmallKana = function(lexer, layout, context, token){
     token.nextOffset = context.curFontSize;
     token.fontSize = context.curFontSize;
   };
 
-  StreamParser.prototype.setMetricsImgChar = function(layout, context, token){
-    token.nextOffset = (token.hscale == 1)? context.curFontSize : Math.floor(context.curFontSize * token.hscale);
-    //token.nextOffset = (token.hscale == 1)? context.curFontSize : context.curFontSizeHalf;
-    //token.nextOffset = context.curFontSize;
+  StreamParser.prototype.setMetricsImgChar = function(lexer, layout, context, token){
+    var cur = token.data;
+    var next = lexer.lookNextStr().data;
+    token.height = token.nextOffset = (token.hscale == 1)? context.curFontSize :
+      (token.hscale == 0.5)? context.curFontSizeHalf : Math.floor(context.curFontSize * token.hscale);
+    if(this.isKakkoEndChar(cur) && this.isKakkoStartChar(next)){
+      token.nextOffset += context.curFontSizeHalf;
+    } else if ((this.isKutenChar(cur) || this.isToutenChar(cur)) && this.isKakkoEndChar(next)){
+      token.height = token.nextOffset = context.curFontSizeHalf;
+      token.imgname = token.imgname + "-half";
+      token.hscale = 0.5;
+    }
     token.fontSize = context.curFontSize;
     token.color = context.curFontColor;
   };
 
-  StreamParser.prototype.setMetricsHalfChar = function(layout, context, token){
+  StreamParser.prototype.setMetricsHalfChar = function(lexer, layout, context, token){
     token.nextOffset = (Env.canTransform || !layout.isV)? context.curFontSizeHalf : context.curFontSize;
     token.fontSize = context.curFontSize;
   };
 
-  StreamParser.prototype.setMetricsFullChar = function(layout, context, token){
+  StreamParser.prototype.setMetricsFullChar = function(lexer, layout, context, token){
     token.nextOffset = context.curCharOffset;
     token.fontSize = context.curFontSize;
   };
 
-  StreamParser.prototype.setMetricsTcy = function(layout, context, token){
+  StreamParser.prototype.setMetricsTcy = function(lexer, layout, context, token){
     token.fontSize = context.curFontSize;
     token.nextOffset = context.curCharOffset;
   };
 
-  StreamParser.prototype.setMetricsWord = function(layout, context, token){
+  StreamParser.prototype.setMetricsWord = function(lexer, layout, context, token){
     token.fontSize = context.curFontSize;
     token.fontWidth = context.curFontSizeHalf;
     token.nextOffset = token.data.length * context.curFontSizeHalf;
   };
 
-  StreamParser.prototype.setMetricsImg = function(layout, context, token){
+  StreamParser.prototype.setMetricsImg = function(lexer, layout, context, token){
     var attr = token.data.attr;
     var width = parseInt(attr.width);
     var height = parseInt(attr.height);
@@ -1408,7 +1444,7 @@ if(!Nehan){
     token.nextOffset = (layout.isV? width : height) + layout.baseExtraLineSize;
   };
 
-  StreamParser.prototype.setMetricsLayout = function(layout, context, token){
+  StreamParser.prototype.setMetricsLayout = function(lexer, layout, context, token){
     var attr = token.data.attr;
     token.width = parseInt(attr.width);
     token.height = parseInt(attr.height);
@@ -1578,12 +1614,12 @@ if(!Nehan){
     var img = Util.tagStart("img", {
       src: Util.filenameConcat(layout.charImgRoot, token.imgname + "/" + token.color + ".png"),
       width: token.fontSize,
-      height: token.nextOffset
+      height: token.height
     }, true);
 
     return Util.tagWrap("div", {
       "class":"img-char",
-      style:"clear:both; line-height:" + token.nextOffset + "px; height:" +  token.nextOffset + "px"
+      style:"clear:both; vertical-align:top; line-height:" + token.nextOffset + "px; height:" +  token.nextOffset + "px"
     }, img);
   };
 
