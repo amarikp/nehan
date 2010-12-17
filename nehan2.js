@@ -218,7 +218,7 @@ if(!Nehan){
       return ret;
     },
     get : function(cstr){
-      var color = this.getRGB(cstr);
+      var color = this.getRGB(cstr.replace("#", ""));
       var zerofix = function(s){ return (s.length <= 1)? "0" + s : s; };
       var rs = zerofix(this.findNear(color.r, this.RG).toString(16));
       var gs = zerofix(this.findNear(color.g, this.RG).toString(16));
@@ -589,6 +589,7 @@ if(!Nehan){
       height: 300,
       fontSize: 16,
       fontColor: "000000",
+      linkColor: "0000FF",
       charImgRoot: "http://nehan.googlecode.com/hg/char-img/",
       //charImgRoot:"/img/char-img/",
       nextLineOffsetRate: 1.8,
@@ -608,6 +609,7 @@ if(!Nehan){
     this.baseCharOffset = this.fontSize + this.baseLetterSpacing;
     this.width = this.isV? Math.max(this.baseCharOffset, this.width) : Math.max(this.fontSize, this.width);
     this.height = this.isV? Math.max(this.fontSize, this.height) : Math.max(this.baseCharOffset, this.height);
+    this.linkColor = ColorMap.get(this.linkColor);
   };
 
   Layout.prototype.getReverseDirection = function(direction){
@@ -649,6 +651,7 @@ if(!Nehan){
   function ParserContext(layout){
     this.lineTokens = [];
     this.nextLineTokens = [];
+    this.activeTags = {};
     this.tagStack = [];
     this.fontStack = [];
     this.indentStack = [];
@@ -669,6 +672,14 @@ if(!Nehan){
     this.seekNextLine = 0;
     this.seekNextChar = 0;
     this.pageHtml = "";
+  };
+
+  ParserContext.prototype.setActiveTag = function(tagName){
+    this.activeTags[tagName.replace("/","")] = tagName.substring(0,1) != "/";
+  };
+
+  ParserContext.prototype.isActiveTag = function(tagName){
+    return (this.activeTags[tagName] || false);
   };
 
   ParserContext.prototype.setFontScale = function(layout, scale){
@@ -1076,6 +1087,7 @@ if(!Nehan){
   // ------------------------------------------------------------------------
   StreamParser.prototype.parseTag = function(lexer, layout, context, token, inline){
     var tag = token.data;
+    context.setActiveTag(tag.name);
     if(this.elementHandler[tag.name]){
       (this.elementHandler[tag.name])(this, lexer, layout, context, token);
     } else if(tag.name == "a"){
@@ -1406,7 +1418,7 @@ if(!Nehan){
       }
     }
     token.fontSize = context.curFontSize;
-    token.color = context.curFontColor;
+    token.color = context.isActiveTag("a")? layout.linkColor : context.curFontColor;
   };
 
   StreamParser.prototype.setMetricsHalfChar = function(lexer, layout, context, token){
@@ -1988,7 +2000,6 @@ if(!Nehan){
 	width:layout.width + "px",
 	height:layout.height + "px",
 	"font-size":layout.fontSize + "px",
-	//"color":layout.fontColor,
 	"white-space":"nowrap"
       })
     }, context.pageHtml);
@@ -2048,7 +2059,6 @@ if(!Nehan){
 
   StreamParser.prototype.outputPage = function(inline){
     if(this.context.seekNextChar > this.layout.getNextCharMaxSize(this.context)){
-      console.log("prefix Line Overflow");
       this.prefixLineOverflow(this.lexer, this.layout, this.context);
     }
     if(!inline && !this.lexer.getStream().isEOF()){
@@ -2303,6 +2313,7 @@ if(!Nehan){
     this.direction ="vertical";
     this.fontSize = 16;
     this.fontColor = "000000";
+    this.linkColor = "0000FF";
     this.width = 400;
     this.height = 300;
     this.order = 0;
