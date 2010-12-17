@@ -1951,7 +1951,9 @@ if(!Nehan){
 	rubyText += this.makeCharText(layout, context, {
 	  type:"char", half:false, kind:"zen", data:c1, fontSize:ruby.fontSize
 	});*/
-	rubyText += this.makeCharText(layout, context, lexer.character(-1, c1));
+	ctoken = lexer.character(-1, c1);
+	ctoken.color = layout.fontColor;
+	rubyText += this.makeCharText(layout, context, ctoken);
 	curRubyPos += ruby.nextOffset;
       }
 
