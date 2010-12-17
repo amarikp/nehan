@@ -1492,7 +1492,7 @@ if(!Nehan){
     var textHeight = Math.floor(layout.fontSize * maxScale) + borderSize;
     var extraHeight = lineHeight - textHeight;
     var mainText = this.makeMainText(layout, context, maxScale);
-    var rubyText = this.makeRubyText(layout, context, maxScale);
+    var rubyText = this.makeRubyText(lexer, layout, context, maxScale);
     var dotText = this.makeDotText(layout, context, maxScale);
     var extraText = rubyText + dotText;
 
@@ -1925,7 +1925,7 @@ if(!Nehan){
     return ret;
   };
 
-  StreamParser.prototype.makeRubyText = function(layout, context, maxScale){
+  StreamParser.prototype.makeRubyText = function(lexer, layout, context, maxScale){
     var ret = "";
     var retryTokens = [];
     var indentBefore = layout.getIndentSize(context.curIndent.before);
@@ -1947,9 +1947,11 @@ if(!Nehan){
 	  retryTokens.push(ruby2);
 	  break;
 	}
+	/*
 	rubyText += this.makeCharText(layout, context, {
 	  type:"char", half:false, kind:"zen", data:c1, fontSize:ruby.fontSize
-	});
+	});*/
+	rubyText += this.makeCharText(layout, context, lexer.character(c1));
 	curRubyPos += ruby.nextOffset;
       }
 
