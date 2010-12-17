@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -352,7 +352,10 @@ if(!Nehan){
 	return {imgname:"dmn2", hscale:1, kind:"img-char"};
       case "＝": case "=":
 	return {imgname:"equal", hscale:1, kind:"img-char"};
-      case "ー": case "-": case "―": case "－":
+      case "ー":
+	return {data:"｜", kind:"cnv-char"};
+	//return {imgname:"onbiki", hscale:1, kind:"img-char"};
+      case "-": case "―": case "－":
 	return {data:"｜", kind:"cnv-char"};
       case "↑":
       return {data:"→", kind:"cnv-char"};
