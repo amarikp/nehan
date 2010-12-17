@@ -932,7 +932,7 @@ if(!Nehan){
       pos:pos,
       yomi:yomi,
       fontSize:context.curFontSizeHalf,
-      nextOffset:Math.floor(1.1 * context.curFontSizeHalf),
+      nextOffset:context.curFontSizeHalf,
       requireSpaceSize:context.curCharOffset
     };
   };
@@ -1399,6 +1399,8 @@ if(!Nehan){
 
     token.height = token.nextOffset = (token.hscale == 1)? context.curFontSize :
       (token.hscale == 0.5)? context.curFontSizeHalf : Math.floor(context.curFontSize * token.hscale);
+    token.fontSize = context.curFontSize;
+    token.color = context.isActiveTag("a")? layout.linkColor : context.curFontColor;
 
     if(this.isKakkoStartChar(curChar)){
       var prevToken = this.getLineTailStr(context);
@@ -1420,8 +1422,6 @@ if(!Nehan){
 	token.nextOffset = context.curFontSize;
       }
     }
-    token.fontSize = context.curFontSize;
-    token.color = context.isActiveTag("a")? layout.linkColor : context.curFontColor;
   };
 
   StreamParser.prototype.setMetricsHalfChar = function(lexer, layout, context, token){
@@ -1947,15 +1947,13 @@ if(!Nehan){
 	  retryTokens.push(ruby2);
 	  break;
 	}
-	/*
-	// If your text of RT does not include any special char, this is better for performance.
-	rubyText += this.makeCharText(layout, context, {
-	  type:"char", half:false, kind:"zen", data:c1, fontSize:ruby.fontSize
-	});*/
-	ctoken = lexer.character(-1, c1);
-	ctoken.color = layout.fontColor;
-	rubyText += this.makeCharText(layout, context, ctoken);
-	curRubyPos += ruby.nextOffset;
+	// Generally, rt does not include any special char(like yakumono).
+	if(!VerticalCharMap.get(c1)){
+	  rubyText += this.makeCharText(layout, context, {
+	    type:"char", half:false, kind:"zen", data:c1, fontSize:ruby.fontSize
+	  });
+	  curRubyPos += ruby.nextOffset;
+	}
       }
 
       if(rubyText != ""){
