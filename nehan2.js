@@ -1948,6 +1948,7 @@ if(!Nehan){
 	  break;
 	}
 	/*
+	// If your text of RT does not include any special char, this is better for performance.
 	rubyText += this.makeCharText(layout, context, {
 	  type:"char", half:false, kind:"zen", data:c1, fontSize:ruby.fontSize
 	});*/
