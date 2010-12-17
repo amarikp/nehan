@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -1260,7 +1260,7 @@ if(!Nehan){
 	  rubyPos += rubyOff;
 	  yomi = "";
 	}
-      } else if (this.isTextToken(token2)){
+      } else if (this.isTextToken(token2) && token2.kind != "img-char"){
 	if(curTagName == "rt"){
 	  yomi += token2.data;
 	} else if (curTagName != "rp"){
@@ -1947,13 +1947,10 @@ if(!Nehan){
 	  retryTokens.push(ruby2);
 	  break;
 	}
-	// Generally, rt does not include any special char(like yakumono).
-	if(!VerticalCharMap.get(c1)){
-	  rubyText += this.makeCharText(layout, context, {
-	    type:"char", half:false, kind:"zen", data:c1, fontSize:ruby.fontSize
-	  });
-	  curRubyPos += ruby.nextOffset;
-	}
+	rubyText += this.makeCharText(layout, context, {
+	  type:"char", half:false, kind:"zen", data:c1, fontSize:ruby.fontSize
+	});
+	curRubyPos += ruby.nextOffset;
       }
 
       if(rubyText != ""){
