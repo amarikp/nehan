@@ -2309,18 +2309,19 @@ if(!Nehan){
   // ------------------------------------------------------------------------
   // LayoutGrid
   // ------------------------------------------------------------------------
-  function LayoutGrid(node, nodeNo){
+  function LayoutGrid(node, nodeNo, opt){
     this.node = node;
     this.nodeNo = nodeNo;
     this.groupName = "nehan-layout-group-" + nodeNo;
-    this.direction ="vertical";
-    this.fontSize = 16;
-    this.fontColor = "000000";
-    this.linkColor = "0000FF";
-    this.width = 400;
-    this.height = 300;
     this.order = 0;
     this.isEnd = false;
+    this.direction = opt.direction || "vertical";
+    this.fontSize = opt.fontSize || 16;
+    this.fontColor = opt.fontColor || "000000";
+    this.linkColor = opt.linkColor || "0000FF";
+    this.width = opt.width || 400;
+    this.height = opt.height || 300;
+    this.noBR = opt.noBR || true;
     this.init(node.className);
   }
 
@@ -2342,6 +2343,8 @@ if(!Nehan){
 	this.fontSize = parseInt(RegExp.$1);
       } else if (klass.match(/lp-font-color-(.+)/)){
 	this.fontColor = RegExp.$1.toUpperCase();
+      } else if (klass.match(/lp-link-color-(.+)/)){
+	this.linkColor = RegExp.$1.toUpperCase();
       } else if (klass.match(/lp-group-([a-zA-Z0-9\-_]+)/)){
 	this.groupName = RegExp.$1;
       } else if (klass.match(/lp-order-([0-9]+)/)){
@@ -2361,12 +2364,17 @@ if(!Nehan){
       width: this.width,
       height: this.height,
       fontSize: this.fontSize,
-      fontColor: this.fontColor
+      fontColor: this.fontColor,
+      linkColor: this.linkColor
     });
   };
 
   LayoutGrid.prototype.getText = function(){
-    return this.node.innerHTML.replace(/<br>/gi, "\n").replace(/<br \/>/gi, "\n");
+    if(this.noBR){
+      return this.node.innerHTML.replace(/<br>/gi, "").replace(/<br \/>/gi, "");
+    } else {
+      return this.node.innerHTML.replace(/<br>/gi, "\n").replace(/<br \/>/gi, "\n");
+    }
   };
 
   // ------------------------------------------------------------------------
@@ -2427,13 +2435,15 @@ if(!Nehan){
   // LayoutMapper
   // ------------------------------------------------------------------------
   var LayoutMapper = {
+    // opt(default): {linkColor:0000FF, noBR:true}
     start : function(opt){
+      var opt = opt || {};
       var groups = {};
       var nodes = document.getElementsByTagName("pre");
       for(var nodeNo = 0; nodeNo < nodes.length; nodeNo++)(function(node){
 	var className = node.className;
 	if(className.match(/lp-vertical/i) || className.match(/lp-horizontal/i)){
-	  var grid = new LayoutGrid(node, nodeNo);
+	  var grid = new LayoutGrid(node, nodeNo, opt);
 	  if(!groups[grid.groupName]){
 	    groups[grid.groupName] = new LayoutGridGroup(grid.groupName);
 	  }
