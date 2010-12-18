@@ -1016,11 +1016,11 @@ if(!Nehan){
 
   StreamParser.prototype.sweepNgChars = function(tokens, buffer, checker){
     while(tokens.length > 0){
-      var t = tokens[tokens.length - 1];
+      var t = tokens.pop();
       if(checker(t)){
-	buffer.push(tokens.pop());
+	buffer.push(t);
       } else if (this.isTextToken(t)){
-	buffer.push(tokens.pop());
+	buffer.push(t);
 	break;
       }
     }
