@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -532,7 +532,7 @@ if(!Nehan){
       return this.tag(p1, this.stream.readUntil(">"));
     } else if (c1=="&") {
       return this.character(p1, this.stream.readUntil(";"));
-    } else if(Env.canTransform && c1.match(/[0-9a-zA-Z!\?\.]/)){
+    } else if(Env.canTransform && c1.match(/[0-9a-zA-Z!\.\?\/\_:]/)){
       var str = this.stream.readMatch(/[0-9a-zA-Z!\.\?\/\_:]+/);
       if(str.length <= 2 && !isNaN(str) || str == "!?" || str == "!!" || str == "??"){
 	return this.tcy(p1, str);
