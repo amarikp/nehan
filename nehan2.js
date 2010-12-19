@@ -1573,7 +1573,6 @@ if(!Nehan){
     lexer.skipCRLF(); // skip flowing CRLF if exists.
     context.seekNextLine += token.nextOffset;
     context.pageHtml += this.makeImgText(lexer, layout, context, token);
-    context.pageHtml += tmp;
   };
 
   StreamParser.prototype.pushInlineLayout = function(lexer, layout, context, token){
