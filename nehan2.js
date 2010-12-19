@@ -549,13 +549,9 @@ if(!Nehan){
     var backup = this.stream.getSeekPos();
     var ret = null;
     while(true){
-      try {
-	var token = this.getNext();
-	if(token.type == "char" || token.type == "tcy" || token.type == "word"){
-	  ret = token;
-	  break;
-	}
-      } catch (e){
+      var token = this.getNext();
+      if(token.type == "char" || token.type == "tcy" || token.type == "word"){
+	ret = token;
 	break;
       }
     }
@@ -1410,16 +1406,21 @@ if(!Nehan){
       }
     } else if(this.isKakkoEndChar(curChar)){
       var nextToken = lexer.lookNextStr();
-      var nextChar = nextToken.data;
-      var nextImgName = nextToken.imgname;
-      if(!this.isKakkoEndChar(nextChar) && nextImgName != "tenten" && nextImgName != "kuten" &&
-	 nextImgName != "touten" && nextChar != "・"){
-	token.nextOffset = context.curFontSize;
+      if(nextToken){
+	var nextChar = nextToken.data;
+	var nextImgName = nextToken.imgname;
+	if(!this.isKakkoEndChar(nextChar) && nextImgName != "tenten" && nextImgName != "kuten" &&
+	   nextImgName != "touten" && nextChar != "・"){
+	  token.nextOffset = context.curFontSize;
+	}
       }
     } else if (curImgName == "kuten" || curImgName == "touten"){
-      var nextChar = lexer.lookNextStr().data;
-      if(!this.isKakkoEndChar(nextChar)){
-	token.nextOffset = context.curFontSize;
+      var nextToken = lexer.lookNextStr();
+      if(nextToken){
+	var nextChar = nextToken.data;
+	if(!this.isKakkoEndChar(nextChar)){
+	  token.nextOffset = context.curFontSize;
+	}
       }
     }
   };
@@ -2040,18 +2041,6 @@ if(!Nehan){
     return lexer.getNext();
   };
 
-  StreamParser.prototype.setResume = function(lexer, layout, context){
-    context.saveSeekPos = lexer.getStream().getSeekPos();
-    this.restoreContext = Util.deepCopy(context);
-  };
-
-  StreamParser.prototype.resume = function(lexer, layout, context){
-    if(this.restoreContext){
-      context = this.restoreContext;
-      lexer.getStream().setSeekPos(this.restoreContext.saveSeekPos);
-    }
-  };
-
   StreamParser.prototype.reset = function(layout){
     this.lexer.getStream().setSeekPos(0);
     this.layout = layout;
@@ -2063,9 +2052,6 @@ if(!Nehan){
   StreamParser.prototype.outputPage = function(inline){
     if(this.context.seekNextChar > this.layout.getNextCharMaxSize(this.context)){
       this.prefixLineOverflow(this.lexer, this.layout, this.context);
-    }
-    if(!inline && !this.lexer.getStream().isEOF()){
-      this.setResume(this.lexer, this.layout, this.context);
     }
     while(true){
       try {
@@ -2080,12 +2066,7 @@ if(!Nehan){
 	  this.parseTag(this.lexer, this.layout, this.context, token, inline);
 	}
       } catch (e){
-	if(e == "BufferShort"){
-	  if(!inline){
-	    this.resume(this.lexer, this.layout, this.context);
-	  }
-	  throw "BufferShort";
-	} else if (e == "BufferEnd"){
+	if(e == "BufferEnd"){
 	  this.parseEnd = true;
 	  if(this.context.lineTokens.length > 0){
 	    try {
@@ -2101,6 +2082,8 @@ if(!Nehan){
 	  var output = this.makePageText(this.lexer, this.layout, this.context, inline);
 	  this.callEventHandler("onPageComplete", this, this.lexer, this.layout, this.context);
 	  return output;
+	} else {
+	  throw e;
 	}
       }
     }
@@ -2185,6 +2168,7 @@ if(!Nehan){
     this.parser = new StreamParser(this.lexer, this.layout);
     this.parserProxy = new ParserProxy(this.layout, this.lexer, this.parser);
     this.pageHeadPos = [{spos:0, cpos:0}];
+    this.resuming = false;
     this.cache = [];
   };
 
@@ -2289,21 +2273,34 @@ if(!Nehan){
       return this.cache[pageNo];
     }
     var head = this.getPageHeadPos(pageNo);
-    var html = this.parser.outputPage(false);
-    var percent = this.lexer.getStream().getSeekPercent();
-    var spos = this.lexer.getStream().getSeekPos();
-    var cpos = this.parser.context.curCharCount;
-    if(!this.parser.hasNextPage()){
-      this.pageCount = pageNo + 1;
+    if(!this.parser.lexer.getStream().isEOF() && !this.resuming){
+      this.restoreContext = Util.deepCopy(this.parser.context);
     }
-    this.setPageHeadPos(pageNo+1, spos, cpos);
-    this.cache[pageNo] = {
-      html:html,
-      percent:percent,
-      spos:head.spos,
-      cpos:head.cpos
-    };
-    return this.cache[pageNo];
+    try {
+      var html = this.parser.outputPage(false);
+      var percent = this.lexer.getStream().getSeekPercent();
+      var spos = this.lexer.getStream().getSeekPos();
+      var cpos = this.parser.context.curCharCount;
+      if(!this.parser.hasNextPage()){
+	this.pageCount = pageNo + 1;
+      }
+      this.resuming = false;
+      this.setPageHeadPos(pageNo+1, spos, cpos);
+      this.cache[pageNo] = {
+	html:html,
+	percent:percent,
+	spos:head.spos,
+	cpos:head.cpos
+      };
+      return this.cache[pageNo];
+    } catch (e){
+      if(e == "BufferShort"){
+	this.resuming = true;
+	this.parser.context = Util.deepCopy(this.restoreContext);
+	this.parser.lexer.getStream().setSeekPos(head.spos);
+      }
+      throw e;
+    }
   };
 
   // ------------------------------------------------------------------------
