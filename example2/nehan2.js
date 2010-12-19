@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.16
+ version : 1.17
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -28,6 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
+
 var Nehan;Nehan||(Nehan={});
 (function(){function n(a,b,c){this.text=a;this.length=b;this.eof=c;this.pos=0}function o(a){this.stream=a}function p(a){h.readOption(this,{direction:"vertical",width:400,height:300,fontSize:16,fontColor:"000000",linkColor:"0000FF",charImgRoot:"http://nehan.googlecode.com/hg/char-img/",nextLineOffsetRate:1.8,nextCharSpacingRate:0},a);this.init()}function r(a){this.lineTokens=[];this.nextLineTokens=[];this.activeTags={};this.tagStack=[];this.fontStack=[];this.indentStack=[];this.rubyTokens=[];this.dotTokens=
 [];this.repushTokenStack=[];this.eventHandler=[];this.curFontScale=1;this.curFontColor=a.fontColor;this.curFontSize=a.fontSize;this.curFontSizeHalf=a.fontSizeHalf;this.curCharOffset=a.baseCharOffset;this.curIndent={before:0,after:0};this.seekNextChar=this.seekNextLine=this.curCharCount=this.saveSeekPos=this.curPageNo=this.curBorderSize=0;this.pageHtml=""}function g(a,b){this.lexer=a;this.layout=b;this.context=new r(b);this.restoreContext=null;this.parseEnd=false;this.elementHandler=[];this.tocTable=
