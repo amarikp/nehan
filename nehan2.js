@@ -2273,6 +2273,7 @@ if(!Nehan){
     }
     var head = this.getPageHeadPos(pageNo);
     if(!this.parser.lexer.getStream().isEOF() && !this.resuming){
+      this.lexer.getStream().setSeekPos(head.spos);
       this.restoreContext = Util.deepCopy(this.parser.context);
     }
     try {
