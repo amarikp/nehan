@@ -2272,9 +2272,11 @@ if(!Nehan){
       return this.cache[pageNo];
     }
     var head = this.getPageHeadPos(pageNo);
-    if(!this.parser.lexer.getStream().isEOF() && !this.resuming){
+    if(!this.resuming){
       this.lexer.getStream().setSeekPos(head.spos);
-      this.restoreContext = Util.deepCopy(this.parser.context);
+      if(!this.parser.lexer.getStream().isEOF()){
+	this.restoreContext = Util.deepCopy(this.parser.context);
+      }
     }
     try {
       var html = this.parser.outputPage(false);
