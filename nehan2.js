@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.18
+ version : 1.19
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1027,13 +1027,11 @@ if(!Nehan){
   };
 
   StreamParser.prototype.sweepOverflowTokens = function(layout, context){
-    var src = context.lineTokens;
-    var srcLen = src.length;
-    var dst = context.nextLineTokens;
-    var size = 0;
+    var len = context.lineTokens.length;
     var max = layout.getNextCharMaxSize(context);
-    for(var i = 0; i < srcLen; i++){
-      var token = src[i];
+    var size = 0;
+    for(var i = 0; i < len; i++){
+      var token = context.lineTokens[i];
       if(this.isTextToken(token)){
 	size += token.nextOffset;
 	if(size > max){
@@ -1041,11 +1039,9 @@ if(!Nehan){
 	}
       }
     }
-    if(0 < i && i < srcLen){
-      left = src.slice(0,i);
-      right = src.slice(i);
-      src = left;
-      dst = right.concat(dst)
+    if(0 < i && i < len){
+      context.nextLineTokens = context.lineTokens.slice(i).concat(context.nextLineTokens);
+      context.lineTokens = context.lineTokens.slice(0,i); 
     }
   };
   
@@ -1066,7 +1062,7 @@ if(!Nehan){
     var size = 0;
   };
 
-  StreamParser.prototype.fixLineEnd = function(lineTokens, nextLineTokens){
+  StreamParser.prototype.fixLineEnd = function(layout, lineTokens, nextLineTokens){
     var self = this;
     var modified = false;
     var curTail = this.getTailCharToken(lineTokens);
@@ -1079,6 +1075,8 @@ if(!Nehan){
     }
     if(isHeadNg && !isTailNg && this.isTailConnectiveChar(nextHead)){
       if(curTail && curTail.type == "char" && !this.isTailNgToken(curTail)){
+	nextHead.fontSize = layout.fontSize;
+	nextHead.height = layout.fontSizeHalf;
 	lineTokens.push(nextHead);
 	nextLineTokens.shift();
 	return;
@@ -1554,7 +1552,7 @@ if(!Nehan){
 	this.sweepOverflowTokens(layout, context);
       }
       context.nextLineTokens.push(token);
-      this.fixLineEnd(context.lineTokens, context.nextLineTokens);
+      this.fixLineEnd(layout, context.lineTokens, context.nextLineTokens);
       this.pushLine(lexer, layout, context, true);
     } else {
       context.lineTokens.push(token);
