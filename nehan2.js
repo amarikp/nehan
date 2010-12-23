@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.17
+ version : 1.18
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -568,11 +568,18 @@ if(!Nehan){
     }
   };
 
-  StreamLexer.prototype.skipCRLF = function(){
+  StreamLexer.prototype.skipCRLF = function(skipCount){
+    var count = 0;
     while(true){
       var token = this.getNext();
       if(token.type != "char" || (token.type == "char" && token.data != "\r" && token.data != "\n")){
 	this.stream.setSeekPos(token.pos);
+	break;
+      }
+      if(token.data == "\n"){
+	count++;
+      }
+      if(skipCount && count >= skipCount){
 	break;
       }
     }
@@ -591,8 +598,7 @@ if(!Nehan){
       linkColor: "0000FF",
       charImgRoot: "http://nehan.googlecode.com/hg/char-img/",
       //charImgRoot:"/img/char-img/",
-      nextLineOffsetRate: 1.8,
-      nextCharSpacingRate: 0
+      nextLineOffsetRate: 1.8
     }, opt);
     this.init();
   }
@@ -604,15 +610,23 @@ if(!Nehan){
     this.fontSizeHalf = Math.floor(this.fontSize / 2);
     this.baseRubyFontSize = this.fontSizeHalf;
     this.baseExtraLineSize = this.baseNextLineSize - this.fontSize;
-    this.baseLetterSpacing = this.isV ? Math.floor(this.nextCharSpacingRate * this.fontSize) : 0;
-    this.baseCharOffset = this.fontSize + this.baseLetterSpacing;
-    this.width = this.isV? Math.max(this.baseCharOffset, this.width) : Math.max(this.fontSize, this.width);
-    this.height = this.isV? Math.max(this.fontSize, this.height) : Math.max(this.baseCharOffset, this.height);
+    if(this.isV){
+      this.invDirection = "horizontal";
+      this.extraFontSize = this.fontSizeHalf;
+      this.width = Math.max(this.baseNextLineSize, this.width);
+      this.height = Math.max(this.fontSize + this.extraFontSize, this.height);
+      this.lineEndSize = this.height - this.extraFontSize;
+      this.nextCharMaxSize = this.height;
+      this.nextLineMaxSize = this.width;
+    } else {
+      this.invDirection = "vertical";
+      this.extraFontSize = this.fontSize;
+      this.width = Math.max(this.fontSize + this.extraFontSize, this.width);
+      this.height = Math.max(this.baseNextLineSize, this.height);
+      this.nextCharMaxSize = this.width - this.extraFontSize;
+      this.nextLineMaxSize = this.height;
+    }
     this.linkColor = ColorMap.get(this.linkColor);
-  };
-
-  Layout.prototype.getReverseDirection = function(direction){
-    return (direction == "vertical")? "horizontal" : "vertical";
   };
 
   Layout.prototype.getIndentCount = function(indent){
@@ -620,17 +634,13 @@ if(!Nehan){
   };
 
   Layout.prototype.getIndentSize = function(indentCount){
-    return this.baseCharOffset * indentCount;
+    return this.fontSize * indentCount;
   };
 
   Layout.prototype.getNextCharMaxSize = function(context){
     var indentCount = this.getIndentCount(context.curIndent);
     var indentSize = this.getIndentSize(indentCount);
-    return this.isV ? this.height - indentSize : this.width - indentSize;
-  };
-
-  Layout.prototype.getNextLineMaxSize = function(){
-    return this.isV ? this.width : this.height;
+    return this.nextCharMaxSize - indentSize;
   };
 
   Layout.prototype.getAlignSpaceSize = function(insWidth, insHeight){
@@ -650,19 +660,18 @@ if(!Nehan){
   function ParserContext(layout){
     this.lineTokens = [];
     this.nextLineTokens = [];
+    this.rubyTokens = [];
+    this.nextRubyTokens = [];
     this.activeTags = {};
     this.tagStack = [];
     this.fontStack = [];
     this.indentStack = [];
-    this.rubyTokens = [];
     this.dotTokens = [];
     this.repushTokenStack = [];
-    this.eventHandler = [];
     this.curFontScale = 1;
     this.curFontColor = layout.fontColor;
     this.curFontSize = layout.fontSize;
     this.curFontSizeHalf = layout.fontSizeHalf;
-    this.curCharOffset = layout.baseCharOffset;
     this.curIndent = {before:0, after:0};
     this.curBorderSize = 0;
     this.curPageNo = 0;
@@ -685,12 +694,13 @@ if(!Nehan){
     this.curFontScale = scale;
     this.curFontSize = Math.floor(layout.fontSize * scale);
     this.curFontSizeHalf = Math.floor(this.curFontSize / 2);
-    this.curCharOffset = Math.floor(layout.baseCharOffset * scale);
   };
 
   ParserContext.prototype.inheritLine = function(){
     this.lineTokens = this.nextLineTokens;
     this.nextLineTokens = new Array();
+    this.rubyTokens = this.nextRubyTokens;
+    this.nextRubyTokens = new Array();
   };
 
   // ------------------------------------------------------------------------
@@ -700,7 +710,6 @@ if(!Nehan){
     this.lexer = lexer;
     this.layout = layout;
     this.context = new ParserContext(layout);
-    this.restoreContext = null;
     this.parseEnd = false;
     this.elementHandler = [];
     this.tocTable = [];
@@ -750,6 +759,10 @@ if(!Nehan){
     return (token.type == "char" || token.type == "word" || token.type == "tcy");
   };
 
+  StreamParser.prototype.isTailConnectiveChar = function(token){
+    return (token.type == "char" && token.data.match(/[、。,]/));
+  };
+
   StreamParser.prototype.isKakkoStartChar = function(c1){
     if(c1.match(/[「『【［（《〈≪＜\[\(]/)){
       return true;
@@ -773,7 +786,11 @@ if(!Nehan){
   };
 
   StreamParser.prototype.isNextLineOver = function(layout, context, nextLineSize){
-    return (context.seekNextLine + nextLineSize > layout.getNextLineMaxSize());
+    return (context.seekNextLine + nextLineSize > layout.nextLineMaxSize);
+  };
+
+  StreamParser.prototype.isLineOverflow = function(layout, context){
+    return (context.seekNextChar > layout.getNextCharMaxSize(context));
   };
 
   StreamParser.prototype.setFont = function(layout, context, attr){
@@ -797,7 +814,6 @@ if(!Nehan){
     context.curFontColor = layout.fontColor;
     context.curFontSize = layout.fontSize;
     context.curFontSizeHalf = layout.baseRubyFontSize;
-    context.curCharOffset = layout.baseCharOffset;
     context.curBorderSize = 0;
   };
 
@@ -829,7 +845,7 @@ if(!Nehan){
 	var scaleFontSize = Math.floor(layout.fontSize * scale);
 	css["font-size"] = scaleFontSize + "px";
 	if(layout.isV){
-	  css["line-height"] = Math.floor(layout.baseCharOffset * scale) + "px";
+	  css["line-height"] = Math.floor(layout.fontSize * scale) + "px";
 	}
       } else if (prop == "family"){
 	css["font-family"] = attr[prop];
@@ -929,7 +945,7 @@ if(!Nehan){
       yomi:yomi,
       fontSize:context.curFontSizeHalf,
       nextOffset:context.curFontSizeHalf,
-      requireSpaceSize:context.curCharOffset
+      requireSpaceSize:context.curFontSize
     };
   };
 
@@ -966,8 +982,8 @@ if(!Nehan){
       pos:dotPos,
       count:count,
       fontSize:dotFontSize,
-      nextOffset:context.curCharOffset,
-      requireSpaceSize:context.curCharOffset,
+      nextOffset:context.curFontSize,
+      requireSpaceSize:context.curFontSize,
       offsetHead:offsetHead,
       hspace:hspace
     };
@@ -1010,74 +1026,79 @@ if(!Nehan){
     return false;
   };
 
-  StreamParser.prototype.sweepNgChars = function(tokens, buffer, checker){
-    while(tokens.length > 0){
-      var t = tokens.pop();
+  StreamParser.prototype.sweepOverflowTokens = function(layout, context){
+    var src = context.lineTokens;
+    var srcLen = src.length;
+    var dst = context.nextLineTokens;
+    var size = 0;
+    var max = layout.getNextCharMaxSize(context);
+    for(var i = 0; i < srcLen; i++){
+      var token = src[i];
+      if(this.isTextToken(token)){
+	size += token.nextOffset;
+	if(size > max){
+	  break;
+	}
+      }
+    }
+    if(0 < i && i < srcLen){
+      left = src.slice(0,i);
+      right = src.slice(i);
+      src = left;
+      dst = right.concat(dst)
+    }
+  };
+  
+  StreamParser.prototype.sweepWhileMatch = function(src, dst, checker){
+    while(src.length > 0){
+      var t = src.pop();
       if(checker(t)){
-	buffer.push(t);
+	dst.push(t);
       } else if (this.isTextToken(t)){
-	buffer.push(t);
+	dst.push(t);
 	break;
       }
     }
   };
 
-  StreamParser.prototype.isTailConnectableToken = function(token){
-    if(token.type == "char"){
-      if(token.data.match(/、,。\./)){
-	return true;
-      }
-    }
-    return false;
+  StreamParser.prototype.fixLineOver = function(layout, lineTokens){
+    var max = layout.nextLineMaxSize;
+    var size = 0;
   };
 
-  StreamParser.prototype.fixLineEnd = function(context, token){
-    var buffer = [token];
+  StreamParser.prototype.fixLineEnd = function(lineTokens, nextLineTokens){
     var self = this;
-    if(this.isHeadNgToken(token)){
-      this.sweepNgChars(context.lineTokens, buffer, function(t){ return self.isHeadNgToken(t); });
-    }
-    if(this.isTailNgLine(context.lineTokens)){
-      this.sweepNgChars(context.lineTokens, buffer, function(t){ return self.isTailNgToken(t); });
-    }
-    buffer.sort(function(t1, t2){ return (t1.pos - t2.pos); });
-    if(this.isHeadNgToken(buffer[0])){
-      this.sweepNgChars(context.lineTokens, buffer, function(t){ return self.isHeadNgToken(t); });
-      buffer.sort(function(t1, t2){ return (t1.pos - t2.pos); });
-    }
-    context.nextLineTokens = context.nextLineTokens.concat(buffer);
-  };
+    var modified = false;
+    var curTail = this.getTailCharToken(lineTokens);
+    var nextHead = nextLineTokens[0];
+    var isTailNg = curTail? this.isTailNgToken(curTail) : false;
+    var isHeadNg = this.isHeadNgToken(nextHead);
 
-  // this function is only used when layout of current page is not same as one of previous.
-  StreamParser.prototype.prefixLineOverflow = function(lexer, layout, context){
-    var lineSize = context.seekNextChar; // this.getLineTextLength(context.lineTokens);
-    var lineMax = layout.getNextCharMaxSize(context);
-    if(context.nextLineTokens.length > 0){
-      lineSize += this.getLineTextLength(context.nextLineTokens);
-      context.lineTokens = context.lineTokens.concat(context.nextLineTokens);
-      context.nextLineTokens = [];
+    if(!isTailNg && !isHeadNg){
+      return;
     }
-    while(true){
-      var token = context.lineTokens.pop();
-      if(this.isTextToken(token)){
-	lineSize -= token.nextOffset;
-	if(lineSize < lineMax){
-	  lexer.getStream().setSeekPos(token.pos);
-	  break;
-	}
-      } else if(token.type == "tag"){
-	var name = token.data.name;
-	if(name == "font"){
-	  this.popFont(layout, context);
-	} else if(name == "indent"){
-	  this.popIndent(layout, context);
-	} else if(name == "blockquote"){
-	  this.popFont(layout, context);
-	  this.popIndent(layout, context);
-	} else {
-	  context.tagStack.pop();
-	}
+    if(isHeadNg && !isTailNg && this.isTailConnectiveChar(nextHead)){
+      if(curTail && curTail.type == "char" && !this.isTailNgToken(curTail)){
+	lineTokens.push(nextHead);
+	nextLineTokens.shift();
+	return;
       }
+    }
+
+    if(this.isHeadNgToken(nextHead)){
+      this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){ return self.isHeadNgToken(t); });
+      modified = true;
+    }
+    if(this.isTailNgLine(lineTokens)){
+      this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){ return self.isTailNgToken(t); });
+      modified = true;
+    }
+    if(this.isHeadNgToken(nextLineTokens[0])){
+      this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){ return self.isHeadNgToken(t); });
+      modified = true;
+    }
+    if(modified){
+      nextLineTokens.sort(function(t1, t2){ return (t1.pos - t2.pos); });
     }
   };
 
@@ -1137,7 +1158,7 @@ if(!Nehan){
   };
 
   StreamParser.prototype.parseInlineLayoutStart = function(lexer, layout, context, token){
-    if(this.getLineTextLength(context.lineTokens)){
+    if(this.getLineTextLength(context.lineTokens) > 0){
       lexer.skipCRLF();
       this.pushLine(lexer, layout, context, false);
     }
@@ -1178,12 +1199,12 @@ if(!Nehan){
   };
 
   StreamParser.prototype.parseIndentEnd = function(lexer, layout, context, token){
-    this.setEventHandler("onPushLineComplete", context, function(caller, lexer, layout, context){
-      caller.popIndent(layout, context);
-      caller.removeEventHandler("onPushLineComplete", context);
-    });
     lexer.skipCRLF();
-    this.pushLine(lexer, layout, context, false);
+    try {
+      this.pushLine(lexer, layout, context, false);
+    } finally {
+      this.popIndent(layout, context);
+    }
   };
 
   StreamParser.prototype.parseFontStart = function(lexer, layout, context, token){
@@ -1241,6 +1262,7 @@ if(!Nehan){
     var rubyPos = context.seekNextChar;
     var rubyOff = 0;
     var restartPos = token.pos + this.getTokenLength(token);
+    var nextCharMax = layout.getNextCharMaxSize(context);
 
     while(true){
       var token2 = lexer.getNext();
@@ -1252,8 +1274,13 @@ if(!Nehan){
 	} else if(curTagName == "rb"){
 	  restartPos = token2.pos + this.getTokenLength(token2);
 	} else if (curTagName == "/rt"){
-	  context.rubyTokens.push(this.getRubyToken(layout, context, rubyPos, yomi));
-	  rubyPos += rubyOff;
+	  if(rubyPos + context.curFontSize >= nextCharMax){
+	    rubyPos = 0;
+	    context.nextRubyTokens.push(this.getRubyToken(layout, context, rubyPos, yomi));
+	  } else {
+	    context.rubyTokens.push(this.getRubyToken(layout, context, rubyPos, yomi));
+	    rubyPos += rubyOff;
+	  }
 	  yomi = "";
 	}
       } else if (this.isTextToken(token2) && token2.kind != "img-char"){
@@ -1431,13 +1458,13 @@ if(!Nehan){
   };
 
   StreamParser.prototype.setMetricsFullChar = function(lexer, layout, context, token){
-    token.nextOffset = context.curCharOffset;
+    token.nextOffset = context.curFontSize;
     token.fontSize = context.curFontSize;
   };
 
   StreamParser.prototype.setMetricsTcy = function(lexer, layout, context, token){
     token.fontSize = context.curFontSize;
-    token.nextOffset = context.curCharOffset;
+    token.nextOffset = context.curFontSize;
   };
 
   StreamParser.prototype.setMetricsWord = function(lexer, layout, context, token){
@@ -1483,7 +1510,6 @@ if(!Nehan){
     var borderSize = context.curBorderSize + context.curBorderSize;
     var lineHeight = Math.floor(layout.baseNextLineSize * maxScale);
     lineHeight += borderSize;
-
     if(this.isNextLineOver(layout, context, lineHeight)){
       if(!overflowLine){
 	context.repushTokenStack.push({type:"char", half:true, kind:"small", data:"\n", pos:-1});
@@ -1502,8 +1528,6 @@ if(!Nehan){
     context.seekNextLine += lineHeight;
     context.seekNextChar = this.getLineTextLength(context.nextLineTokens);
     context.inheritLine();
-
-    this.callEventHandler("onPushLineComplete", this, lexer, layout, context);
   };
 
   StreamParser.prototype.pushSpaceLine = function(lexer, layout, context, lineHeight){
@@ -1523,7 +1547,14 @@ if(!Nehan){
   StreamParser.prototype.pushChar = function(lexer, layout, context, token){
     context.curCharCount++;
     if(this.isNextCharOver(layout, context, token)){
-      this.fixLineEnd(context, token);
+      if(context.nextLineTokens.length == 0 && this.isTailConnectiveChar(token)){
+	lexer.skipCRLF(1);
+      }
+      if(this.isLineOverflow(layout, context)){
+	this.sweepOverflowTokens(layout, context);
+      }
+      context.nextLineTokens.push(token);
+      this.fixLineEnd(context.lineTokens, context.nextLineTokens);
       this.pushLine(lexer, layout, context, true);
     } else {
       context.lineTokens.push(token);
@@ -1564,7 +1595,7 @@ if(!Nehan){
   };
 
   StreamParser.prototype.pushImg = function(lexer, layout, context, token){
-    var spaceSize = layout.getNextLineMaxSize() - context.seekNextLine;
+    var spaceSize = layout.nextLineMaxSize - context.seekNextLine;
     var tag = token.data;
     if(spaceSize < token.nextOffset){
       lexer.getStream().setSeekPos(token.pos);
@@ -1770,13 +1801,13 @@ if(!Nehan){
   
   StreamParser.prototype.makeInlineLayoutText = function(lexer, layout, context, token){
     var attr = token.data.attr;
-    var backupDir = layout.direction;
-    layout.direction = attr.direction? attr.direction : layout.getReverseDirection(layout.direction);
+    var dir = layout.direction;
+    layout.direction = attr.direction || layout.invDirection;
     layout.init();
     var layoutPage1 = this.makeInlinePageText(lexer, layout, context, token.width, token.height);
     context.lineTokens = [];
     context.nextLineTokens = [];
-    layout.direction = backupDir;
+    layout.direction = dir;
     layout.init();
 
     if(attr.align){
@@ -1805,7 +1836,7 @@ if(!Nehan){
 	style:Util.inlineCss({
 	  "float":"right",
 	  "text-align":"center",
-	  "line-height":layout.baseCharOffset + "px",
+	  "line-height":layout.fontSize + "px",
 	  width:lineSize + "px",
 	  height:layout.height + "px"
 	})
@@ -1927,7 +1958,6 @@ if(!Nehan){
 
   StreamParser.prototype.makeRubyText = function(lexer, layout, context, maxScale){
     var ret = "";
-    var retryTokens = [];
     var indentBefore = layout.getIndentSize(context.curIndent.before);
     var indentAfter = layout.getIndentSize(context.curIndent.after);
     var rubyMaxPos = layout.getNextCharMaxSize(context) + indentBefore;
@@ -1940,11 +1970,12 @@ if(!Nehan){
 
       for(var k = 0; k < ruby.yomi.length; k++){
 	c1 = ruby.yomi.charAt(k);
+	// sometimes not beautiful.
 	if(rubyMaxPos - curRubyPos < ruby.requireSpaceSize){
 	  var ruby2 = Util.deepCopy(ruby);
 	  ruby2.pos = 0;
 	  ruby2.yomi = ruby.yomi.substring(k);
-	  retryTokens.push(ruby2);
+	  context.nextRubyTokens.push(ruby2);
 	  break;
 	}
 	rubyText += this.makeCharText(layout, context, {
@@ -1958,7 +1989,6 @@ if(!Nehan){
 	ret += Util.tagWrap("span", {style:Util.inlineCss(css)}, rubyText);
       }
     }
-    context.rubyTokens = retryTokens;
     return ret;
   };
 
@@ -1971,6 +2001,7 @@ if(!Nehan){
     // set temporary parameter for inline output.
     layout.width = width;
     layout.height = height;
+    layout.init();
     context.seekNextLine = 0;
     context.seekNextChar = 0;
     context.pageHtml = "";
@@ -1986,10 +2017,11 @@ if(!Nehan){
       })(context.nextLineTokens[i]);
       context.nextLineTokens = new Array();
     }
-    
+
     // restore main parameter.
     layout.width = backupWidth;
     layout.height = backupHeight;
+    layout.init();
     context.seekNextLine = backupSeekNextLine;
     context.pageHtml = backupHtml;
 
@@ -2015,20 +2047,6 @@ if(!Nehan){
     return output;
   };
 
-  StreamParser.prototype.setEventHandler = function(name, context, callback){
-    context.eventHandler[name] = callback;
-  };
-
-  StreamParser.prototype.removeEventHandler = function(name, context){
-    context.eventHandler[name] = null;
-  };
-
-  StreamParser.prototype.callEventHandler = function(name, caller, lexer, layout, context){
-    if(context.eventHandler[name]){
-      (context.eventHandler[name])(caller, lexer, layout, context);
-    }
-  };
-
   StreamParser.prototype.setElementHandler = function(tagName, callback){
     this.elementHandler[tagName] = callback;
   };
@@ -2049,9 +2067,6 @@ if(!Nehan){
   };
 
   StreamParser.prototype.outputPage = function(inline){
-    if(this.context.seekNextChar > this.layout.getNextCharMaxSize(this.context)){
-      this.prefixLineOverflow(this.lexer, this.layout, this.context);
-    }
     while(true){
       try {
 	var token = this.getNextToken(this.lexer, this.context);
@@ -2078,9 +2093,7 @@ if(!Nehan){
 	  }
 	  return this.makePageText(this.lexer, this.layout, this.context, inline);
 	} else if (e == "PageEnd"){
-	  var output = this.makePageText(this.lexer, this.layout, this.context, inline);
-	  this.callEventHandler("onPageComplete", this, this.lexer, this.layout, this.context);
-	  return output;
+	  return this.makePageText(this.lexer, this.layout, this.context, inline);
 	} else {
 	  throw e;
 	}
@@ -2169,6 +2182,7 @@ if(!Nehan){
     this.pageHeadPos = [{spos:0, cpos:0}];
     this.resuming = false;
     this.cache = [];
+    this.restoreContext = null;
   };
 
   PageProvider.prototype.reset = function(layoutOpt){
@@ -2271,13 +2285,10 @@ if(!Nehan){
     if(this.cache[pageNo]){
       return this.cache[pageNo];
     }
-    var head = this.getPageHeadPos(pageNo);
-    if(!this.resuming){
-      this.lexer.getStream().setSeekPos(head.spos);
-      if(!this.parser.lexer.getStream().isEOF()){
-	this.restoreContext = Util.deepCopy(this.parser.context);
-      }
+    if(!this.resuming && !this.lexer.getStream().isEOF()){
+      this.restoreContext = Util.deepCopy(this.parser.context);
     }
+    var head = this.getPageHeadPos(pageNo);
     try {
       var html = this.parser.outputPage(false);
       var percent = this.lexer.getStream().getSeekPercent();
