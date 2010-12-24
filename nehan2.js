@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.19
+ version : 1.20
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1045,58 +1045,50 @@ if(!Nehan){
     }
   };
   
-  StreamParser.prototype.sweepWhileMatch = function(src, dst, checker){
+  StreamParser.prototype.sweepWhileMatch = function(src, dst, sweepCheck, breakCheck, sweepBreakCheck){
+    var modified = false;
     while(src.length > 0){
       var t = src.pop();
-      if(checker(t)){
+      if(sweepCheck(t)){
 	dst.push(t);
-      } else if (this.isTextToken(t)){
+	modified = true;
+      } else if(sweepBreakCheck(t)){
 	dst.push(t);
+	modified = true;
+	break;
+      } else if(breakCheck(t)){
+	src.push(t);
 	break;
       }
     }
-  };
-
-  StreamParser.prototype.fixLineOver = function(layout, lineTokens){
-    var max = layout.nextLineMaxSize;
-    var size = 0;
+    return modified;
   };
 
   StreamParser.prototype.fixLineEnd = function(layout, lineTokens, nextLineTokens){
     var self = this;
-    var modified = false;
-    var curTail = this.getTailCharToken(lineTokens);
-    var nextHead = nextLineTokens[0];
-    var isTailNg = curTail? this.isTailNgToken(curTail) : false;
-    var isHeadNg = this.isHeadNgToken(nextHead);
-
-    if(!isTailNg && !isHeadNg){
-      return;
-    }
-    if(isHeadNg && !isTailNg && this.isTailConnectiveChar(nextHead)){
-      if(curTail && curTail.type == "char" && !this.isTailNgToken(curTail)){
-	nextHead.fontSize = layout.fontSize;
-	nextHead.height = layout.fontSizeHalf;
-	lineTokens.push(nextHead);
-	nextLineTokens.shift();
-	return;
+    var tail = this.getTailCharToken(lineTokens);
+    if(tail && this.isTailNgToken(tail)){
+      if(this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){
+	return self.isTailNgToken(t);
+      }, function(t){
+	return !self.isTailNgToken(t);
+      }, function(t){
+	return false;
+      })){
+	nextLineTokens.sort(function(t1, t2){ return (t1.pos - t2.pos); });
       }
     }
-
-    if(this.isHeadNgToken(nextHead)){
-      this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){ return self.isHeadNgToken(t); });
-      modified = true;
-    }
-    if(this.isTailNgLine(lineTokens)){
-      this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){ return self.isTailNgToken(t); });
-      modified = true;
-    }
-    if(this.isHeadNgToken(nextLineTokens[0])){
-      this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){ return self.isHeadNgToken(t); });
-      modified = true;
-    }
-    if(modified){
-      nextLineTokens.sort(function(t1, t2){ return (t1.pos - t2.pos); });
+    var head = nextLineTokens[0];
+    if(this.isHeadNgToken(head)){
+      if(this.sweepWhileMatch(lineTokens, nextLineTokens, function(t){
+	return false;
+      }, function(t){
+	return false;
+      }, function(t){
+	return !self.isHeadNgToken(t);
+      })){
+	nextLineTokens.sort(function(t1, t2){ return (t1.pos - t2.pos); });
+      }
     }
   };
 
@@ -1545,15 +1537,20 @@ if(!Nehan){
   StreamParser.prototype.pushChar = function(lexer, layout, context, token){
     context.curCharCount++;
     if(this.isNextCharOver(layout, context, token)){
-      if(context.nextLineTokens.length == 0 && this.isTailConnectiveChar(token)){
-	lexer.skipCRLF(1);
-      }
       if(this.isLineOverflow(layout, context)){
 	this.sweepOverflowTokens(layout, context);
       }
-      context.nextLineTokens.push(token);
-      this.fixLineEnd(layout, context.lineTokens, context.nextLineTokens);
-      this.pushLine(lexer, layout, context, true);
+      if(this.isTailConnectiveChar(token) && context.nextLineTokens.length == 0){
+	token.fontSize = layout.fontSize;
+	token.height = layout.fontSizeHalf;
+	context.lineTokens.push(token);
+	lexer.skipCRLF(1);
+	this.pushLine(lexer, layout, context, true);
+      } else {
+	context.nextLineTokens.push(token);
+	this.fixLineEnd(layout, context.lineTokens, context.nextLineTokens);
+	this.pushLine(lexer, layout, context, true);
+      }
     } else {
       context.lineTokens.push(token);
       context.seekNextChar += token.nextOffset;
