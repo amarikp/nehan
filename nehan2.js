@@ -1687,7 +1687,7 @@ if(!Nehan){
       "style":Util.inlineCss({
 	overflow:"visible",
 	position:"relative",
-	top:"-0.12em",
+	top:Env.isIPhone? "-0.22em" : "-0.12em",
 	right:"-0.12em",
 	height:token.nextOffset + "px",
 	"line-height":token.nextOffset + "px"
