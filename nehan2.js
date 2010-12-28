@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -169,6 +169,7 @@ if(!Nehan){
       this.isIE = (browser == "explorer");
       this.isWin = (os == "Windows");
       this.isMac = (os == "Mac");
+      this.isIPhone = (os == "iPhone/iPod");
 
       // check if browser can support transform method
       if (browser == "chrome"){
@@ -1831,7 +1832,7 @@ if(!Nehan){
 	style:Util.inlineCss({
 	  "float":"right",
 	  "text-align":"center",
-	  "line-height":layout.fontSize + "px",
+	  "line-height":Env.isIPhone? "0.9em" : layout.fontSize + "px",
 	  width:lineSize + "px",
 	  height:layout.height + "px"
 	})
@@ -1858,7 +1859,8 @@ if(!Nehan){
 	  "float":"right",
 	  "text-align":"left",
 	  width:lineSize + "px",
-	  height:layout.height + "px"
+	  height:layout.height + "px",
+	  "line-height":Env.isIPhone? "0.9em" : "1em"
 	})
       }, body);
     } else {
