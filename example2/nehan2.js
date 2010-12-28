@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.20
+ version : 1.21
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
