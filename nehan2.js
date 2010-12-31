@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -1432,7 +1432,7 @@ if(!Nehan){
 	  token.nextOffset = context.curFontSize;
 	}
       }
-    } else if (curImgName == "kuten" || curImgName == "touten"){
+    } else if (curImgName == "kuten" || curImgName == "touten" || curImgName == "period"){
       var nextToken = lexer.lookNextStr();
       if(nextToken){
 	var nextChar = nextToken.data;
