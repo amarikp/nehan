@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.21
+ version : 1.22
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -2414,9 +2414,9 @@ if(!Nehan){
 
   LayoutGridGroup.prototype.appendRestGrid = function(grid, pageNo){
     var node = document.createElement("div");
-    var style = node.style;
-    style.width = grid.width + "px";
-    style.height = grid.height + "px";
+    //var style = node.style;
+    //style.width = grid.width + "px";
+    //style.height = grid.height + "px";
     node.innerHTML = this.provider.outputPage(pageNo).html;
     grid.node.parentNode.appendChild(node);
   };
