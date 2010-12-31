@@ -1432,7 +1432,7 @@ if(!Nehan){
 	  token.nextOffset = context.curFontSize;
 	}
       }
-    } else if (curImgName == "kuten" || curImgName == "touten" || curImgName == "period"){
+    } else if (curImgName == "kuten" || curImgName == "touten"){
       var nextToken = lexer.lookNextStr();
       if(nextToken){
 	var nextChar = nextToken.data;
