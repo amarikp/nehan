@@ -729,7 +729,7 @@ if(!Nehan){
   };
 
   StreamParser.prototype.isHeadNg = function(c1){
-    if(c1.match(/[）\)」】〕］\]。』＞〉》、,]/)){
+    if(c1.match(/[）\)」】〕］\]。』＞〉》、．\.,]/)){
       return true;
     }
     return false;
@@ -761,7 +761,7 @@ if(!Nehan){
   };
 
   StreamParser.prototype.isTailConnectiveChar = function(token){
-    return (token.type == "char" && token.data.match(/[、。,]/));
+    return (token.type == "char" && token.data.match(/[、。\.．,]/));
   };
 
   StreamParser.prototype.isKakkoStartChar = function(c1){
