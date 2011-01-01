@@ -28,7 +28,7 @@
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
 */
-var Nehan;
+﻿var Nehan;
 
 if(!Nehan){
   Nehan = {};
@@ -2446,7 +2446,7 @@ if(!Nehan){
     start : function(opt){
       var opt = opt || {};
       var groups = {};
-      var nodes = document.getElementsByTagName(opt.tag || "pre");
+      var nodes = document.getElementsByTagName("pre");
       for(var nodeNo = 0; nodeNo < nodes.length; nodeNo++)(function(node){
 	var className = node.className;
 	if(className.match(/lp-vertical/i) || className.match(/lp-horizontal/i)){
