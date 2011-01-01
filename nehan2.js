@@ -2322,13 +2322,12 @@ if(!Nehan){
     this.groupName = "nehan-layout-group-" + nodeNo;
     this.order = 0;
     this.isEnd = false;
-    this.direction = opt.direction || "vertical";
-    this.fontSize = opt.fontSize || 16;
-    this.fontColor = opt.fontColor || "000000";
-    this.linkColor = opt.linkColor || "0000FF";
-    this.width = opt.width || 400;
-    this.height = opt.height || 300;
-    this.noBR = opt.noBR || true;
+    this.direction = "vertical";
+    this.fontSize = 16;
+    this.fontColor = "000000";
+    this.linkColor = "0000FF";
+    this.width = 400;
+    this.height = 300;
     this.init(node.className);
   }
 
@@ -2376,25 +2375,26 @@ if(!Nehan){
     });
   };
 
-  LayoutGrid.prototype.getText = function(){
-    if(this.noBR){
-      return this.node.innerHTML.replace(/<br>/gi, "").replace(/<br \/>/gi, "");
-    } else {
-      return this.node.innerHTML.replace(/<br>/gi, "\n").replace(/<br \/>/gi, "\n");
+  LayoutGrid.prototype.getText = function(convBR){
+    var text = this.node.innerHTML;
+    if(convBR){
+      return text.replace(/<br>/gi, "\n").replace(/<br \/>/gi, "\n");
     }
+    return text.replace(/<br>/gi, "").replace(/<br \/>/gi, "");
   };
 
   // ------------------------------------------------------------------------
   // LayoutGridGroup
   // ------------------------------------------------------------------------
-  function LayoutGridGroup(groupName){
+  function LayoutGridGroup(groupName, opt){
     this.grids = [];
     this.groupName = groupName;
+    this.opt = opt;
   };
 
   LayoutGridGroup.prototype.init = function(){
     this.grids.sort(function(g1,g2){ return g1.order - g2.order; });
-    this.provider = new PageProvider(this.grids[0].getLayout(), this.grids[0].getText());
+    this.provider = new PageProvider(this.grids[0].getLayout(), this.grids[0].getText(this.opt.convBR || false));
     return this;
   };
 
@@ -2414,9 +2414,6 @@ if(!Nehan){
 
   LayoutGridGroup.prototype.appendRestGrid = function(grid, pageNo){
     var node = document.createElement("div");
-    //var style = node.style;
-    //style.width = grid.width + "px";
-    //style.height = grid.height + "px";
     node.innerHTML = this.provider.outputPage(pageNo).html;
     grid.node.parentNode.appendChild(node);
   };
@@ -2450,9 +2447,9 @@ if(!Nehan){
       for(var nodeNo = 0; nodeNo < nodes.length; nodeNo++)(function(node){
 	var className = node.className;
 	if(className.match(/lp-vertical/i) || className.match(/lp-horizontal/i)){
-	  var grid = new LayoutGrid(node, nodeNo, opt);
+	  var grid = new LayoutGrid(node, nodeNo);
 	  if(!groups[grid.groupName]){
-	    groups[grid.groupName] = new LayoutGridGroup(grid.groupName);
+	    groups[grid.groupName] = new LayoutGridGroup(grid.groupName, opt);
 	  }
 	  groups[grid.groupName].append(grid);
 	}
