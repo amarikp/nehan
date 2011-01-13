@@ -962,9 +962,7 @@ if(!Nehan){
 
     if(layout.isV){
       css["margin-top"] = rubyPos + "px";
-      if(!Env.isMobileSafari){
-	css["line-height"] = "1.1em";
-      }
+      css["line-height"] = Env.isMobileSafari? "0.9em" : "1.1em";
       if(maxScale > 1 && rubyFontSize <= layout.baseRubyFontSize){
 	css["margin-left"] = "-" + scaleOffset + "px";
 	css["float"] = "left";
