@@ -169,7 +169,10 @@ if(!Nehan){
       this.isIE = (browser == "explorer");
       this.isWin = (os == "Windows");
       this.isMac = (os == "Mac");
-      this.isIPhone = (os == "iPhone/iPod");
+      this.isIPhone = (navigator.platform == "iPhone");
+      this.isIPad = (navigator.platform == "iPad");
+      this.isIPod = (navigator.platform == "iPod");
+      this.isMobileSafari = this.isIPhone || this.isIPad || this.isIPod;
 
       // check if browser can support transform method
       if (browser == "chrome"){
@@ -1687,7 +1690,7 @@ if(!Nehan){
       "style":Util.inlineCss({
 	overflow:"visible",
 	position:"relative",
-	top:Env.isIPhone? "-0.22em" : "-0.12em",
+	top:Env.isMobileSafari? "-0.22em" : "-0.12em",
 	right:"-0.12em",
 	height:token.nextOffset + "px",
 	"line-height":token.nextOffset + "px"
@@ -1832,7 +1835,7 @@ if(!Nehan){
 	style:Util.inlineCss({
 	  "float":"right",
 	  "text-align":"center",
-	  "line-height":Env.isIPhone? "0.9em" : layout.fontSize + "px",
+	  "line-height":Env.isMobileSafari? "0.9em" : layout.fontSize + "px",
 	  width:lineSize + "px",
 	  height:layout.height + "px"
 	})
@@ -1860,7 +1863,7 @@ if(!Nehan){
 	  "text-align":"left",
 	  width:lineSize + "px",
 	  height:layout.height + "px",
-	  "line-height":Env.isIPhone? "0.9em" : "1em"
+	  "line-height":Env.isMobileSafari? "0.9em" : "1em"
 	})
       }, body);
     } else {
