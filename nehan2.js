@@ -684,6 +684,7 @@ if(!Nehan){
     this.seekNextLine = 0;
     this.seekNextChar = 0;
     this.pageHtml = "";
+    this.pageHeadPos = 0;
   };
 
   ParserContext.prototype.setActiveTag = function(tagName){
@@ -1519,6 +1520,7 @@ if(!Nehan){
 
     context.pageHtml += this.makeExtraLine(layout, context, extraText, extraHeight);
     context.pageHtml += this.makeTextLine(layout, context, mainText, textHeight);
+    context.pageHeadPos = lexer.getStream().getSeekPos();
     context.seekNextLine += lineHeight;
     context.seekNextChar = this.getLineTextLength(context.nextLineTokens);
     context.inheritLine();
@@ -1536,6 +1538,7 @@ if(!Nehan){
     }
     context.pageHtml += this.makeTextLine(layout, context, "&nbsp;", lineHeight);
     context.seekNextLine += lineHeight;
+    context.pageHeadPos = lexer.getStream().getSeekPos();
   };
 
   StreamParser.prototype.pushChar = function(lexer, layout, context, token){
@@ -1603,6 +1606,7 @@ if(!Nehan){
     lexer.skipCRLF(); // skip flowing CRLF if exists.
     context.seekNextLine += token.nextOffset;
     context.pageHtml += this.makeImgText(lexer, layout, context, token);
+    context.pageHeadPos = lexer.getStream().getSeekPos();
   };
 
   StreamParser.prototype.pushInlineLayout = function(lexer, layout, context, token){
@@ -1612,8 +1616,9 @@ if(!Nehan){
     if(this.isNextLineOver(layout, context, token.nextOffset)){
       throw "PageEnd";
     }
-    context.pageHtml += this.makeInlineLayoutText(lexer, layout, context, token);
     context.seekNextLine += token.nextOffset;
+    context.pageHtml += this.makeInlineLayoutText(lexer, layout, context, token);
+    context.pageHeadPos = lexer.getStream().getSeekPos();
   };
 
   // ------------------------------------------------------------------------
@@ -2292,7 +2297,7 @@ if(!Nehan){
     try {
       var html = this.parser.outputPage(false);
       var percent = this.lexer.getStream().getSeekPercent();
-      var spos = this.lexer.getStream().getSeekPos();
+      var spos = this.parser.context.pageHeadPos;
       var cpos = this.parser.context.curCharCount;
       if(!this.parser.hasNextPage()){
 	this.pageCount = pageNo + 1;
