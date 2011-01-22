@@ -2397,7 +2397,7 @@ if(!Nehan){
 
   LayoutGridGroup.prototype.init = function(){
     this.grids.sort(function(g1,g2){ return g1.order - g2.order; });
-    this.provider = new PageProvider(this.grids[0].getLayout(), this.grids[0].getText(this.opt.convBR || false));
+    this.provider = new PageProvider(this.grids[0].getLayout(), this.grids[0].getText(this.opt.convBR || true));
     this.rootNode = document.createElement("div");
     return this;
   };
@@ -2445,7 +2445,7 @@ if(!Nehan){
   // LayoutMapper
   // ------------------------------------------------------------------------
   var LayoutMapper = {
-    // opt(default): {linkColor:0000FF, noBR:true}
+    // opt(default): {linkColor:0000FF, convBR:true}
     start : function(opt){
       var opt = opt || {};
       var groups = {};
