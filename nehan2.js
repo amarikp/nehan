@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.22
+ version : 1.23
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -2398,6 +2398,7 @@ if(!Nehan){
   LayoutGridGroup.prototype.init = function(){
     this.grids.sort(function(g1,g2){ return g1.order - g2.order; });
     this.provider = new PageProvider(this.grids[0].getLayout(), this.grids[0].getText(this.opt.convBR || false));
+    this.rootNode = document.createElement("div");
     return this;
   };
 
@@ -2415,10 +2416,11 @@ if(!Nehan){
     grid.node.innerHTML = this.provider.outputPage(pageNo).html;
   };
 
-  LayoutGridGroup.prototype.appendRestGrid = function(grid, pageNo){
+  LayoutGridGroup.prototype.appendRestGrid = function(tailGrid, pageNo){
     var node = document.createElement("div");
     node.innerHTML = this.provider.outputPage(pageNo).html;
-    grid.node.parentNode.appendChild(node);
+    node.className = "nehan-rest-grid";
+    tailGrid.node.appendChild(node);
   };
 
   LayoutGridGroup.prototype.render = function(){
@@ -2433,6 +2435,7 @@ if(!Nehan){
       }
     }
     var tailGrid = this.grids[i-1];
+    tailGrid.node.style.height = "auto";
     while(this.provider.hasNextPage()){
       this.appendRestGrid(tailGrid, i++);
     }
