@@ -358,7 +358,7 @@ if(!Nehan){
 	return {imgname:"equal", hscale:1, kind:"img-char"};
       case "ー":
 	return {imgname:"onbiki", hscale:1, kind:"img-char"};
-      case "-": case "―": case "－":
+      case "-": case "―": case "－": case "─":
 	return {data:"｜", kind:"cnv-char"};
       case "↑":
       return {data:"→", kind:"cnv-char"};
