@@ -2296,7 +2296,7 @@ if(!Nehan){
     try {
       var html = this.parser.outputPage(false);
       var percent = this.lexer.getStream().getSeekPercent();
-      var spos = this.parser.context.pageHeadPos;
+      var spos = this.lexer.getStream().isEOF()? this.parser.context.pageHeadPos : this.lexer.getStream().getSeekPos();
       var cpos = this.parser.context.curCharCount;
       if(!this.parser.hasNextPage()){
 	this.pageCount = pageNo + 1;
