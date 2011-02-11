@@ -764,7 +764,7 @@ if(!Nehan){
   };
 
   StreamParser.prototype.isTailConnectiveChar = function(token){
-    return (token.type == "char" && token.data.match(/[、。\.．,，]/));
+    return (token.type == "char" && token.data.match(/[、。\.．,，」]/));
   };
 
   StreamParser.prototype.isKakkoStartChar = function(c1){
