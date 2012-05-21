@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <title>Nehan.Book demo</title>
+    <link charset="utf-8" rel="stylesheet" type="text/css" href="../nehan3.css" />
+    <style type="text/css">
+      body{font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック',sans-serif; }
+      table thead th { background:#c3d9ff; }
+      table th, table td{ padding:4px 10px 4px 5px; }
+      #time{font-size:0.8em; margin-left:1em;}
+    </style>
+
+    <!-- here, we use jquery to use onready event handler. but nehan3 works without any third libraries -->
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script charset="utf-8" type="text/javascript" src="../nehan3.js"></script>
+    <script type="text/javascript">
+      $(function(){
+        Nehan3.Book.start({
+          // with text property, you can set text directly(recommended).
+          //text:"",
+
+          direction: "vertical",
+          //direction: "horizontal",
+          width:640,
+          height:480,
+          fontSize:18,
+          ui:{
+            bookBodyId:"book-body",
+            tocId:"toc",
+            topicPathId:"topic-path",
+            searchInputId:"search-input",
+            searchBtnId:"search-btn",
+            searchResultId:"search-result",
+            bmarkId:"bmark",
+            bmarkBtnId:"bmark-btn"
+          },
+
+          onStart: function(reader){
+            // you can write your own code before parsing.
+          },
+
+          onComplete: function(reader, time){
+            // you can write your own code after parsing.
+            $("#time").html(time + "sec");
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Nehan.Book demo <span id="time"></span></h1>
+    <!-- search box is displayed here -->
+    <div>
+      <input id="search-input" type="text" />
+      <input id="search-btn" type="button" value="Search"/>
+    </div>
+	
+    <hr />
+	
+    <!-- search result is displayed here -->
+    <div id="search-result"></div>
+    
+    <!-- toc UI is displayed here -->
+    <h2>table of contents</h2>
+    <div id="toc"></div>
+
+    <!-- topic-path is displayed here -->
+    <div>topic path:&nbsp;<span id="topic-path"></span></div>
+
+    <!-- main viewer is displayed here -->
+    <pre id="book-body">
+<h1><chapter>第一章</chapter></h1>
+
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+<end-page>
+<h1><section>第一節</section></h1>
+
+<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+<end-page>
+<h1><chapter>第二章</chapter></h1>
+
+国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+    </pre>
+    
+    <!-- bookmark btn and bookmarks are displayed here -->
+    <a href="#bmark" id="bmark-btn">&#9660; bookmark page</a>
+    <div id="bmark"></div>
+  </body>
+</html>

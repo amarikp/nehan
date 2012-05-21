@@ -1,0 +1,239 @@
+@charset "utf-8";
+.nehan-page div{
+  margin:0;
+  padding:0;
+}
+.nehan-text-line-vertical,
+.nehan-ruby-line-vertical{
+  font-family:'IPA明朝', 'ＭＳ 明朝', 'Hiragino Mincho Pro', monospace !important;
+}
+.nehan-text-line-horizontal,
+.nehan-ruby-line-horizontal{
+  font-family:'ＭＳ ゴシック', 'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', monospace;
+}
+.nehan-text-line a{
+  color:#06c;
+  text-decoration:none;
+}
+.nehan-text-line a:hover{
+  color:#06c;
+}
+.nehan-img img{
+  border-color:#aaa;
+  border-style:solid;
+}
+.nehan-caption{
+  font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック',sans-serif;
+}
+.nehan-label-line{
+  background-color:#88b212;
+  -moz-border-radius:0.25em;
+  -khtml-border-radius:0.25em;
+  -webkit-border-radius:0.25em;
+  border-radius:0.25em;
+}
+.nehan-label-line-body{
+  color:#fff;
+  font-weight:bold;
+  font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', sans-serif;
+}
+.nehan-block-element,
+.nehan-page,
+.nehan-forked-page{
+  border-style:solid;
+  border-color:#aaa;
+  border-width:0;
+}
+table.nehan-block-element{
+  border-collapse:collapse;
+  border-spacing:0;
+  font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック',sans-serif;
+}
+table.nehan-block-element,
+table.nehan-block-element th, 
+table.nehan-block-element td{
+  vertical-align:middle;
+}
+table.nehan-block-element thead th {
+  background:#c3d9ff;
+}
+table.nehan-block-element th, 
+table.nehan-block-element td{
+  padding:4px 10px 4px 5px;
+}
+.nehan-page tfoot {
+  font-style:italic;
+}
+table.nehan-block-element tbody tr:nth-child(even) td, 
+table.nehan-block-element tbody tr.even td {
+  background:#e5ecf9;
+}
+
+/* Nehan.Pagerize */
+.nehan-pagerize-screen-wrap{
+  border-width:1px;
+  border-color:#888;
+  border-style:solid;
+  -moz-border-radius:5px;
+  -khtml-border-radius:5px;
+  -webkit-border-radius:5px;
+  border-radius:5px;
+}
+.nehan-text-line-horizontal .kw-cmt{
+  color:darkred;
+}
+.nehan-text-line-horizontal .kw-syntax{
+  color:green;
+  font-weight:bold;
+}
+.nehan-text-line-horizontal .kw-string{
+  color:darkgreen;
+}
+.nehan-text-line-horizontal .kw-symbol{
+  color:purple;
+}
+.nehan-pagerize-pager-total-page{
+  font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
+  font-size:14px;
+}
+.nehan-pagerize-footer{
+  font-size:12px;
+  color:#222;
+  font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+.nehan-pagerize-footer a:focus, a:hover {
+  color:#09f;
+}
+.nehan-pagerize-footer a {
+  color:#06c;
+  text-decoration:underline;
+}
+.nehan-history-link{
+  margin-right:5px;
+}
+.nehan-history-path{
+  margin-right:5px;
+}
+
+/* url:http://www.red-team-design.com/cross-browser-css-gradient-buttons */
+.nehan-button{
+  text-decoration: none;
+  font: bold 14px 'Trebuchet MS',Arial, Helvetica;
+  display: inline-block;
+  text-align: center;
+  color: #fff;
+  border: 1px solid #9c9c9c; /* Fallback style */
+  border: 1px solid rgba(0, 0, 0, 0.3);            
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+  box-shadow: 0 0 .05em rgba(0,0,0,0.4);
+  -moz-box-shadow: 0 0 .05em rgba(0,0,0,0.4);
+  -webkit-box-shadow: 0 0 .05em rgba(0,0,0,0.4);
+}
+.nehan-button, .nehan-button span{
+  color:#fff;
+  -moz-border-radius: .3em;
+  border-radius: .3em;
+}
+.nehan-button span{
+  color:#fff;
+  border-top: 1px solid #fff; /* Fallback style */
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  display: block;
+  background-image: -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.25, rgba(0, 0, 0, 0.05)), color-stop(.25, transparent), to(transparent)),
+                    -webkit-gradient(linear, 0 100%, 100% 0, color-stop(.25, rgba(0, 0, 0, 0.05)), color-stop(.25, transparent), to(transparent)),
+                    -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.75, transparent), color-stop(.75, rgba(0, 0, 0, 0.05))),
+                    -webkit-gradient(linear, 0 100%, 100% 0, color-stop(.75, transparent), color-stop(.75, rgba(0, 0, 0, 0.05)));
+  background-image: -moz-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%, transparent),
+                    -moz-linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%, transparent),
+                    -moz-linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%),
+                    -moz-linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%);
+  -moz-background-size: 3px 3px;
+  -webkit-background-size: 3px 3px;
+}
+.nehan-button:hover{
+  color:#fff;
+  box-shadow: 0 0 .1em rgba(0,0,0,0.4);
+  -moz-box-shadow: 0 0 .1em rgba(0,0,0,0.4);
+  -webkit-box-shadow: 0 0 .1em rgba(0,0,0,0.4);
+}
+.nehan-button:active{
+  color:#fff;
+  position: relative;
+  top: 1px;
+}
+/* button-blue */
+.nehan-button-blue{
+  color:#fff;
+  background: #4477a1;
+  background: -webkit-gradient(linear, left top, left bottom, from(#81a8cb), to(#4477a1) );
+  background: -moz-linear-gradient(-90deg, #81a8cb, #4477a1);
+  filter:  progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#81a8cb', endColorstr='#4477a1');
+}
+.nehan-button-blue:hover{
+  color:#fff;
+  background: #81a8cb;
+  background: -webkit-gradient(linear, left top, left bottom, from(#4477a1), to(#81a8cb) );
+  background: -moz-linear-gradient(-90deg, #4477a1, #81a8cb);
+  filter:  progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#4477a1', endColorstr='#81a8cb');
+}
+.nehan-button-blue:active{
+  color:#fff;
+  background: #4477a1;
+}
+/* button-orange */
+.nehan-button-orange{
+  color:#fff;
+  background:#f09c15;
+  background:-webkit-gradient(linear,lefttop,leftbottom,from(#f8c939),to(#f09c15));
+  background:-moz-linear-gradient(-90deg,#f8c939,#f09c15);
+  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#f8c939',EndColorStr='#f09c15');
+}
+.nehan-button-orange:hover{
+  color:#fff;
+  background:#f8c939;
+  background:-webkit-gradient(linear,lefttop,leftbottom,from(#f09c15),to(#f8c939));
+  background:-moz-linear-gradient(-90deg,#f09c15,#f8c939);
+  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#f09c15',EndColorStr='#f8c939');
+}
+.nehan-button-orange:active{
+  color:#fff;
+  background:#f09c15;
+}
+/* button-silver */
+.nehan-button-silver{
+  background:#8a8a8a;
+  background:-webkit-gradient(linear,lefttop,leftbottom,from(#eaeaea),to(#c5c5c5));
+  background:-moz-linear-gradient(-90deg,#eaeaea,#c5c5c5);
+  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#eaeaea',EndColorStr='#c5c5c5');
+}
+.nehan-button-silver:hover{
+  background:#aaa;
+  background:-webkit-gradient(linear,lefttop,leftbottom,from(#c5c5c5),to(#eaeaea));
+  background:-moz-linear-gradient(-90deg,#c5c5c5,#eaeaea);
+  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#c5c5c5',EndColorStr='#eaeaea');
+}
+.nehan-button-silver:active{
+  background:#c5c5c5;
+}
+
+/*
+from blueprintcss: Blueprint CSS Framework 1.0.1
+http://blueprintcss.org
+*/
+.error, .alert, .notice, .success, .info {
+  -moz-border-radius:0.25em;
+  -khtml-border-radius:0.25em;
+  -webkit-border-radius:0.25em;
+  border-radius:0.25em;
+  padding:0;
+  margin:0;
+}
+.error, .alert {background:#fbe3e4;color:#8a1f11;border-color:#fbc2c4;}
+.notice {background:#fff6bf;color:#514721;border-color:#ffd324;}
+.success {background:#e6efc2;color:#264409;border-color:#c6d880;}
+.info {background:#d5edf8;color:#205791;border-color:#92cae4;}
+.error a, .alert a {color:#8a1f11;}
+.notice a {color:#514721;}
+.success a {color:#264409;}
+.info a {color:#205791;}
+

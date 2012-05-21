@@ -1,0 +1,126 @@
+<h1>日本語デモ</h1>
+
+<label>ブロック要素回り込み</label>
+<img src="http://placehold.it/100x100" width="100" height="100" align="top"/>
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに主権が国民に存することを宣言し、この憲法を確定する。
+<end-page>
+
+<label>引用フレーム</label>
+<blockquote>
+  日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+
+  <blockquote class="notice">
+    日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+    日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+  </blockquote>
+
+  日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+</blockquote>
+<end-page>
+
+
+<label>内部リーダー</label>
+<ireader width="500" height="200" direction="horizontal" align="top">
+  日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+</ireader>
+
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+<end-page>
+
+
+<label>画像の後方押し込み・キャプション付き</label>
+<img src="http://placehold.it/300x400" width="300" height="400" caption-foot="挿絵はpushedで後ろから差し込む" pushed/>
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+
+<label>テーブル要素</label>
+<table width="200" height="200" caption-head="name and age" caption-foot="fugure 1.0.0" align="bottom">
+  <thead>
+    <tr>
+      <th>name</th>
+      <th>age</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>taro</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <td>jiro</td>
+      <td>10</td>
+    </tr>
+  </tbody>
+</table>
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+<end-page>
+
+
+<label>標準ラベル</label>
+<label background-color="darkred">ラベル色違い</label>
+<label background-color="orange" color="black">ラベル色違い</label>
+<end-page>
+
+
+<fieldset>
+  <legend>フィールドセット</legend>
+  日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに<ruby><rb>主権</rb><rt>しゅけん</rt></ruby>が国民に存することを宣言し、この憲法を確定する。
+</fieldset>
+<end-page>
+
+
+<label><pack>ul</pack>リスト</label>
+<ul>
+  <li>一番目のリスト一番目のリスト一番目のリスト一番目のリスト</li>
+  <li>二番目のリスト二番目のリスト二番目のリスト二番目のリスト</li>
+  <li>三番目のリスト三番目のリスト三番目のリスト三番目のリスト</li>
+</ul>
+<end-page>
+
+
+<label><pack>ol</pack>リスト</label>
+<ol>
+  <li>一番目のリスト一番目のリスト一番目のリスト一番目のリスト</li>
+  <li>二番目のリスト二番目のリスト二番目のリスト二番目のリスト</li>
+  <li>三番目のリスト三番目のリスト三番目のリスト三番目のリスト</li>
+</ol>
+<end-page>
+
+<label><pack>dl</pack>リスト</label>
+<dl>
+  <dt>タイトルテキスト</dt>
+  <dd>本文テキスト、本文テキスト、本文テキスト、本文テキスト、本文テキスト</dd>
+  <dt>タイトルテキスト</dt>
+  <dd>本文テキスト、本文テキスト、本文テキスト、本文テキスト、本文テキスト</dd>
+</dl>
+<end-page>
+
+<label>色つきの引用</label>
+色は<a href="http://blueprintcss.org">blueprintcss</a>から貰ってます。
+
+<blockquote class="notice">
+  notice
+</blockquote>
+
+<blockquote class="success">
+  success
+</blockquote>
+
+<blockquote class="error">
+  error
+</blockquote>
+
+<blockquote class="info">
+  info
+</blockquote>
+<end-page>
+
+<label>インラインフレーム</label>
+<iframe width="300" height="220" src="http://www.youtube.com/embed/Diy_CennkRI" frameborder="0" align="left" allowfullscreen></iframe>
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに主権が国民に存することを宣言し、この憲法を確定する。
+<end-page>
+
+<label>横文字</label>
+<img src="http://placehold.it/100x100" width="100" height="100" align="left"/>
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum est laborum est laborum est laborum.
+<end-page>
+お終い。

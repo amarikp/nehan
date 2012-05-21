@@ -1,0 +1,61 @@
+
+
+
+<html>
+  <head>
+    <title>demo / jp</title>
+    <link charset="utf-8" rel="stylesheet" type="text/css" href="../nehan3.css" />
+    <style type="text/css">
+      body{margin:2em 3em; font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック',sans-serif; }
+      hr.space {background:#fff;color:#fff;visibility:hidden;}
+    </style>
+
+    <!-- using jquery for ease, but nehan3 works without any third libraries -->
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script charset="utf-8" type="text/javascript" src="../nehan3.js"></script>
+    <script type="text/javascript">
+      
+$(function(){
+  $.get("demo_jp.txt", function(text){
+    Nehan3.Pagerize.createReader({
+      direction: "vertical",
+      text:text,
+      width:640,
+      height:480,
+      fontSize:18,
+      onStart : function(reader){
+	// hook before parsing
+      },
+      onProgress : function(reader, percent, curPageCount){
+	// hook during parsing
+      },
+      onComplete : function(reader){
+	// hook after parsing
+      },
+      onWritePageStart : function(reader, pageNo){
+	// hook write page before
+      },
+      onWritePageEnd : function(reader, pageNo){
+	// hook write page after
+      }
+    }).start(document.getElementById("demo-target"));
+  });
+});
+
+
+    </script>
+  </head>
+  <body>
+    <h1>demo / jp</h1>
+    <blockquote>
+      document source is <a href="demo_jp.txt">here</a>.
+    </blockquote>
+    <div id="demo-target">
+      <h1>now loading...</h1>
+    </div>
+  </body>
+</html>
+  
+
+
+

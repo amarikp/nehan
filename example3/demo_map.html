@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <title>demo / map</title>
+    <link charset="utf-8" rel="stylesheet" type="text/css" href="../nehan3.css" />
+    <style type="text/css">
+      body{margin:2em 3em; font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック',sans-serif; }
+      hr.space {background:#fff;color:#fff;visibility:hidden;}
+    </style>
+
+    <!-- using jquery for ease, but nehan3 works without any third libraries -->
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script charset="utf-8" type="text/javascript" src="../nehan3.js"></script>
+    <script type="text/javascript">
+$(function(){
+  Nehan3.Pagerize.map({
+    direction: "vertical",
+    width:480,
+    height:320,
+    fontSize:18,
+    onStart : function(reader){
+      // hook before parsing
+    },
+    onProgress : function(reader, percent, curPageCount){
+      // hook during parsing
+    },
+    onComplete : function(reader){
+      // hook after parsing
+    },
+    onWritePageStart : function(reader, pageNo){
+      // hook write page before
+    },
+    onWritePageEnd : function(reader, pageNo){
+      // hook write page after
+    }
+  });
+});
+    </script>
+  </head>
+  <body>
+    <h1>demo / map</h1>
+
+    <!-- map1 -->
+    <pre class="nehan-pagerize">
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに主権が国民に存することを宣言し、この憲法を確定する。
+</pre>
+
+    <!-- map2 -->
+    <pre class="nehan-pagerize lp-horizontal">
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum est laborum est laborum est laborum.
+</pre>
+
+    <!-- map3 -->
+    <pre class="nehan-pagerize">
+日本国民は正当に<ruby>選挙<rt>せんきょ</rt></ruby>された国会における代表者を通じて行動し、われらとわれらの<ruby><rb>子孫</rb><rt>しそん</rt></ruby>のために、諸国民との協和による成果と、わが国全土にわたって自由のもたらす<ruby><rb>恵沢</rb><rt>けいたく</rt></ruby>を確保し、政府の行為によって再び<ruby><rb>戦争</rb><rt>せんそう</rt></ruby>の<ruby><rb>惨禍</rb><rt>さんか</rt></ruby>が起ることのないやうにすることを決意し、ここに主権が国民に存することを宣言し、この憲法を確定する。
+</pre>
+
+    <!-- map4 -->
+    <pre class="nehan-pagerize lp-horizontal">
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum est laborum est laborum est laborum.
+</pre>
+  </body>
+</html>
+  
+
+
+
