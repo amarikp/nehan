@@ -232,6 +232,10 @@ var config = {
     // ignore <BR> tag
     // default: false
     nobr:false,
+
+    // conv <BR> tag to newline
+    // default: false
+    conv_br:false,
     
     // buffer size of BufferedLexer
     lexingBufferLen : 2000,
@@ -970,7 +974,9 @@ var Lexer = (function LexerClosure(){
 	.replace(/([^\n])<ipage/g, "$1\n<ipage")
 	.replace(/([^\n])<ireader/g, "$1\n<ireader")
 
-      if(config.system.nobr){
+      if(config.system.conv_br){
+	text = text.replace(/<br>/gi, "\n").replace(/<br \/>/gi, "\n");
+      } else if(config.system.nobr){
 	text = text.replace(/<br>/gi, "").replace(/<br \/>/gi, "");
       }
       return text;
