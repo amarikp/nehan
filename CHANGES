@@ -6,6 +6,10 @@ Mark "*": bug fixed.
 Mark "!": change that can break compatibility with older version
 ===============================================================================
 
+version 3.0.1, 2012/05/22
+==========================
+o add config.system.conv_br
+
 version 3.0.0, 2012/05/21
 ==========================
 o first release
