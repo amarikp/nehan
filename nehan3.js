@@ -40,6 +40,7 @@ var config = {
   // define layout parametors.
   layout:{
     minFontSize:10,
+    minKerningFontSize:12,
     defFontSize:18,
     tabLength:4,
     defLeadingRate:1.8,
@@ -240,8 +241,8 @@ var config = {
     // buffer size of BufferedLexer
     lexingBufferLen : 2000,
 
-    // true: enable yakumono curning.
-    // false: disable yakumono curning.
+    // true: enable yakumono kerning.
+    // false: disable yakumono kerning.
     // default: true
     enableYakuMetricsCheck : true,
 
@@ -408,7 +409,9 @@ env.init();
 // utilities
 // ------------------------------------------------------------------------
 var debug = function(str){
-  //console.log(str);
+  if(!env.isIE){
+    console.log(str);
+  }
 };
 
 var Util = {
@@ -690,11 +693,11 @@ var Char = {
   },
 
   isKakkoStartChar : function(c1){
-    return /[「『【［（《〈≪＜\[\(]/.test(c1);
+    return /[「『【［（《〈≪＜｛{\[\(]/.test(c1);
   },
 
   isKakkoEndChar : function(c1){
-    return /[」』】］）》〉≫＞\]\)]/.test(c1);
+    return /[」』】］）》〉≫＞｝}\]\)]/.test(c1);
   },
 
   isKutenTouten : function(c1){
@@ -714,7 +717,7 @@ var Char = {
     return List.exists([
       12353, 12355, 12357, 12359, 12361, 12387, 12419, 12421, 12423, 12430, 12449,
       12451, 12453, 12455, 12457, 12483, 12515, 12517, 12519, 12526, 12533, 12534
-    ], function(x){ return x == code });
+    ], Closure.eq(code));
   },
 
   ofImgSrc : function(imgid, color){
@@ -998,17 +1001,21 @@ var Lexer = (function LexerClosure(){
       var ret = {
 	type:"char",
 	data:c1,
-	hscaleImg:1,
+	vscale:1,
+	hscale:1,
 	half:Char.isHankaku(c1),
 	pos:pstart
       };
-      var imgchar = function(img, hscaleImg){
+      var imgchar = function(img, vscale, hscale){
 	ret.img = img;
-	ret.hscaleImg = hscaleImg;
+	ret.vscale = vscale || 1;
+	ret.hscale = hscale || ret.vscale;
 	return ret;
       };
-      var cnvchar = function(cnv){
+      var cnvchar = function(cnv, vscale, hscale){
 	ret.cnv = cnv;
+	ret.vscale = vscale || 1;
+	ret.hscale = hscale || ret.vscale;
 	return ret;
       };
       if(Char.isSmallKana(c1)){
@@ -1084,9 +1091,9 @@ var Lexer = (function LexerClosure(){
       case 12305:
 	return imgchar("kakko18", 0.5);
       case 65306:
-	return imgchar("tenten", 0.5);
+	return imgchar("tenten", 0.5, 1);
       case 58:
-	return imgchar("tenten", 0.5);
+	return imgchar("tenten", 0.5, 1);
       case 12290:
 	return imgchar("kuten", 0.5);
       case 65377:
@@ -1260,7 +1267,7 @@ var Lexer = (function LexerClosure(){
 	return ret;
       } else {
 	this.pos += spchar.length;
-	return {type:"char", data:spchar, hscaleImg:1, half:true, pos:pstart};
+	return {type:"char", data:spchar, vscale:1, half:true, pos:pstart};
       }
     },
 
@@ -1883,10 +1890,10 @@ var Layout = (function LayoutClosure(){
       "ruby-line-text-align": "left",
 
       // margin
-      "margin-before":"margin-top",
-      "margin-after":"margin-bottom",
-      "margin-prev":"margin-right",
-      "margin-next":"margin-left",
+      "margin-start":"margin-top",
+      "margin-end":"margin-bottom",
+      "margin-before":"margin-right",
+      "margin-after":"margin-left",
       
       // border
       "border-before":"border-top",
@@ -1903,10 +1910,10 @@ var Layout = (function LayoutClosure(){
       "ruby-line-text-align": "left",
 
       // margin
-      "margin-before":"margin-left",
-      "margin-after":"margin-right",
-      "margin-prev":"margin-top",
-      "margin-next":"margin-bottom",
+      "margin-start":"margin-left",
+      "margin-end":"margin-right",
+      "margin-before":"margin-top",
+      "margin-after":"margin-bottom",
 
       // border
       "border-before":"border-left",
@@ -2229,7 +2236,7 @@ var DocumentParser = (function DocumentParserClosure() {
       if(token.type == "char" || token.type == "rb"){
 	if(token.src){
 	  this.parseMetricsIconChar(lexer, layout, ctx, token);
-	} else if(layout.isVertical && token.img){
+	} else if(token.img){
 	  this.parseMetricsImgChar(lexer, layout, ctx, token);
 	} else {
 	  this.parseMetricsChar(lexer, layout, ctx, token);
@@ -2242,14 +2249,13 @@ var DocumentParser = (function DocumentParserClosure() {
     },
 
     parseMetricsChar : function(lexer, layout, ctx, token){
+      var stepScale = layout.isVertical? token.vscale : token.hscale;
       token.fontSize = ctx.fontSize;
-      token.stepSize = ctx.fontSize;
+      token.stepSize = (stepScale != 1)? Math.floor(ctx.fontSize * stepScale) : ctx.fontSize;
 
       if(layout.isVertical){
 	if(token.cnv && token.cnv == "&nbsp;"){
 	  token.stepSize = ctx.fontSize2;
-	} else if(token.hscaleImg != 1){
-	  token.stepSize = Math.floor(ctx.fontSize * token.hscaleImg);
 	}
       } else if(token.half){
 	token.stepSize = ctx.fontSize2;
@@ -2295,26 +2301,48 @@ var DocumentParser = (function DocumentParserClosure() {
 	}
       }
 
-      // some special char needs curnning.
+      if(layout.isVertical){
+	this.parseMetricsMarginVert(lexer, layout, ctx, token, prevText, nextText);
+      } else {
+	this.parseMetricsMarginHori(lexer, layout, ctx, token, prevText, nextText);
+      }
+    },
+
+    parseMetricsMarginVert : function(lexer, layout, ctx, token, prevText, nextText){
       if(Char.isKakkoStartChar(token.data) && prevText != ""){
 	if(!Char.isKakkoStartChar(prevText) && !Char.isKutenTouten(prevText)){
-	  token["margin-before"] = ctx.fontSize2;
+	  token["margin-start"] = ctx.fontSize2;
 	  token.stepSize = ctx.fontSize;
 	}
       } else if(Char.isKakkoEndChar(token.data) && nextText != ""){
 	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
-	  token["margin-after"] = ctx.fontSize2;
+	  token["margin-end"] = ctx.fontSize2;
 	  token.stepSize = ctx.fontSize;
 	}
-      } else if(token.img == "touten" && nextText != ""){
-	if(!Char.isKakkoEndChar(nextText)){
-	  token["margin-after"] = ctx.fontSize2;
+      } else if(Char.isKutenTouten(token.data)){
+	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
+	  token["margin-end"] = ctx.fontSize2;
 	  token.stepSize = ctx.fontSize;
 	}
-      } else if(token.img == "kuten" && nextText != ""){
-	if(!Char.isKakkoEndChar(nextText)){
-	  token["margin-after"] = ctx.fontSize2;
-	  token.stepSize = ctx.fontSize;
+      }
+    },
+
+    parseMetricsMarginHori : function(lexer, layout, ctx, token, prevText, nextText){
+      if(env.isIE || token.fontSize <= config.layout.minKerningFontSize){
+	token.hscale = 1; // too small, so maybe can't be displayed correctly.
+	return;
+      }
+      if(Char.isKakkoStartChar(token.data) && nextText != ""){
+	if(!Char.isKakkoStartChar(nextText)){
+	  token.hscale = 1;
+	}
+      } else if(Char.isKakkoEndChar(token.data) && nextText != ""){
+	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
+	  token.hscale = 1;
+	}
+      } else if(Char.isKutenTouten(token.data) && nextText != ""){
+	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
+	  token.hscale = 1;
 	}
       }
     },
@@ -2747,7 +2775,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var push_size = layout.isVertical? block.width + push_margin : block.height + push_margin;
       if(ctx.seekNextLine + push_size < layout.maxNextLine){
 	ctx.seekNextLine += push_size;
-	block["margin-prev"] = push_margin;
+	block["margin-before"] = push_margin;
 	block.push_size = push_size;
 	this.pushBlocks.push(block);
       }
@@ -2772,7 +2800,7 @@ var DocumentParser = (function DocumentParserClosure() {
       aligned_parser.parent = this;
       aligned_parser.offset = backup_next_line;
       var parser_args = new Object;
-      parser_args[is_block_first? "margin-before" : "margin-after"] = layout.blockMargin;
+      parser_args[is_block_first? "margin-start" : "margin-end"] = layout.blockMargin;
       var aligned_page = aligned_parser.parsePage(parser_args); // output aligned page
       ctx.seekNextLine = backup_next_line; // restore parent next line
       aligned_page.aligned = true;
@@ -2816,8 +2844,8 @@ var DocumentParser = (function DocumentParserClosure() {
 	attr.count = attr.before = attr.after = parseInt(attr.count);
       }
       attr.border = parseInt(attr.border || 0);
-      attr["margin-before"] = layout.fontSize * attr.before;
-      attr["margin-after"] = layout.fontSize * attr.after;
+      attr["margin-start"] = layout.fontSize * attr.before;
+      attr["margin-end"] = layout.fontSize * attr.after;
       return this.parseSingleForkPage(lexer, layout, ctx, token);
     },
 
@@ -2902,16 +2930,16 @@ var DocumentParser = (function DocumentParserClosure() {
       var text = token.data.content;
       var attr = token.data.attr;
       Args.init(attr, {
-	"margin-before": 0,
-	"margin-after": 0,
+	"margin-start": 0,
+	"margin-end": 0,
 	"border": 0,
 	"font-size": layout.fontSize
       }, attr);
       attr["border"] = parseInt(attr.border);
-      attr["margin-before"] = parseInt(attr["margin-before"]);
-      attr["margin-after"] = parseInt(attr["margin-after"]);
+      attr["margin-start"] = parseInt(attr["margin-start"]);
+      attr["margin-end"] = parseInt(attr["margin-end"]);
       var rest_next_line = ctx.getRestLineSpace(layout);
-      var fork_extra = attr["margin-before"] + attr["margin-after"];
+      var fork_extra = attr["margin-start"] + attr["margin-end"];
       var fork_width = layout.isVertical? rest_next_line : layout.maxNextChar - fork_extra;
       var fork_height = layout.isVertical? layout.maxNextChar - fork_extra : rest_next_line;
       var fork_theme = attr.theme? Theme[attr.theme] : null;
@@ -3036,8 +3064,8 @@ var DocumentParser = (function DocumentParserClosure() {
 	    var margin = Math.floor(layout.fontSize * sconf.sbody.marginRate);
 	    attr.scale = parseFloat(attr.scale || sconf[name].fontSizeRate);
 	    data.args = {};
-	    data.args["margin-before"] = margin;
-	    data.args["margin-after"] = margin;
+	    data.args["margin-start"] = margin;
+	    data.args["margin-end"] = margin;
 	    child[name] = data;
 	    break;
 	  case "shead":
@@ -3094,8 +3122,8 @@ var DocumentParser = (function DocumentParserClosure() {
       for(var i = 0, len = childs.length; i < len; i++)(function(child){
 	var size = parseInt(child.attr.size || unsized_avg);
 	child.args = child.args || {};
-	size -= child.args["margin-before"] || 0;
-	size -= child.args["margin-after"] || 0;
+	size -= child.args["margin-start"] || 0;
+	size -= child.args["margin-end"] || 0;
 	var fontSize = Math.floor(parseFloat(child.attr.scale || 1.0) * layout.fontSize);
 	var text = child.content;
 	self.forkset.add(gen_parser(text, size, fontSize, child.args));
@@ -3159,7 +3187,7 @@ var DocumentParser = (function DocumentParserClosure() {
 	ctx.seekTextPos = token.pos;
 	token = this.onParseElementBefore(lexer, layout, ctx, token);
       } catch (e){
-	//debug(e);
+	debug(e);
 	return null;
       }
       if(Token.isEndPageToken(token)){
@@ -3320,7 +3348,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     return css;
   };
 
-  var cssCharImgWrap = function(layout, text){
+  var cssCharImgVertWrap = function(layout, text){
     var height = text.stepSize;
     var css = {
       "clear": "both",
@@ -3330,19 +3358,26 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     return css;
   };
 
-  var cssCharImg = function(layout, text){
-    var height = Math.floor(text.fontSize * text.hscaleImg);
+  var cssCharImgVert = function(layout, text){
+    var height = Math.floor(text.fontSize * text.vscale);
     var css = {
       "width": text.fontSize + "px",
       "height": height + "px",
       "line-height": height + "px"
     };
-    if(typeof text["margin-before"] != "undefined"){
-      css[layout.getCssProp("margin-before")] = text["margin-before"] + "px";
+    if(typeof text["margin-start"] != "undefined"){
+      css[layout.getCssProp("margin-start")] = text["margin-start"] + "px";
     }
-    if(typeof text["margin-after"] != "undefined"){
-      css[layout.getCssProp("margin-after")] = text["margin-after"] + "px";
+    if(typeof text["margin-end"] != "undefined"){
+      css[layout.getCssProp("margin-end")] = text["margin-end"] + "px";
     }
+    return css;
+  };
+
+  var cssCharImgHori = function(layout, text){
+    var css = {
+      "letter-spacing": (text.stepSize - text.fontSize) + "px"
+    };
     return css;
   };
 
@@ -3363,24 +3398,30 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
   var cssWordVert = function(layout, text){
     var word = text.data;
     var fontSize2 = Math.floor(text.fontSize / 2);
-    var marginBefore = (typeof text["margin-before"] != "undefined")? text["margin-before"] : 0;
-    var marginAfter = (typeof text["margin-after"] != "undefined")? text["margin-after"] : 0;
+    var marginBefore = (typeof text["margin-start"] != "undefined")? text["margin-start"] : 0;
+    var marginAfter = (typeof text["margin-end"] != "undefined")? text["margin-end"] : 0;
     if(word.length > 2){
       marginAfter += fontSize2 * (word.length - 2);
     }
-    var css = {
-      //"width" : maxFontSize + "px",
-      //"line-height" : maxFontSize + "px",
-      "margin-top": marginBefore + "px",
-      "margin-bottom" : marginAfter + "px",
-      "-webkit-transform" : "rotate(90deg)",
-      "-webkit-transform-origin" : "50% 50%",
-      "-moz-transform" : "rotate(90deg)",
-      "-moz-transform-origin" : "50% 50%",
-      "-o-transform" : "rotate(90deg)",
-      "-o-transform-origin" : "50% 50%"
-    };
+    var css = cssRotate(layout, 90);
+    //css["width"] = maxFontSize + "px";
+    //css["line-height"] = maxFontSize + "px";
+    css["margin-top"] = marginBefore + "px";
+    css["margin-bottom"] = marginAfter + "px";
     return css;
+  };
+
+  var cssRotate = function(layout, rotate){
+    return {
+      "-webkit-transform" : "rotate(" + rotate + "deg)",
+      "-webkit-transform-origin" : "50% 50%",
+      "-moz-transform" : "rotate(" +  rotate + "deg)",
+      "-moz-transform-origin" : "50% 50%",
+      "-o-transform" : "rotate(" + rotate + "deg)",
+      "-o-transform-origin" : "50% 50%",
+      "transform" : "rotate(" + rotate + "deg)",
+      "transform-origin" : "50% 50%"
+    };
   };
 
   var cssImg = function(layout, img){
@@ -3391,8 +3432,8 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       "margin": 0,
       "padding": 0
     };
-    if(img["margin-prev"]){
-      css[layout.getCssProp("margin-prev")] = img["margin-prev"] + "px";
+    if(img["margin-before"]){
+      css[layout.getCssProp("margin-before")] = img["margin-before"] + "px";
     }
     return css;
   };
@@ -3414,8 +3455,8 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       "margin": 0,
       "padding": 0
     };
-    if(block["margin-prev"]){
-      css[layout.getCssProp("margin-prev")] = block["margin-prev"] + "px";
+    if(block["margin-before"]){
+      css[layout.getCssProp("margin-before")] = block["margin-before"] + "px";
     }
     return css;
   };
@@ -3518,8 +3559,8 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     if(!layout.isVertical){
       css["height"] = line.fontSize + "px";
     }
-    css[layout.getCssProp("margin-before")] = line.textSpaceBefore + "px";
-    css[layout.getCssProp("margin-after")] = line.textSpaceAfter + "px";
+    css[layout.getCssProp("margin-start")] = line.textSpaceBefore + "px";
+    css[layout.getCssProp("margin-end")] = line.textSpaceAfter + "px";
     if(!layout.isVertical){
       css["margin-top"] = Math.floor((line.height - line.fontSize) / 2) + "px";
     }
@@ -3550,14 +3591,14 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     if(page.size){
       css[layout.getCssProp("page-size")] = page.size + "px";
     }
+    if(page["margin-start"]){
+      css[layout.getCssProp("margin-start")] = page["margin-start"] + "px";
+    }
+    if(page["margin-end"]){
+      css[layout.getCssProp("margin-end")] = page["margin-end"] + "px";
+    }
     if(page["margin-before"]){
       css[layout.getCssProp("margin-before")] = page["margin-before"] + "px";
-    }
-    if(page["margin-after"]){
-      css[layout.getCssProp("margin-after")] = page["margin-after"] + "px";
-    }
-    if(page["margin-prev"]){
-      css[layout.getCssProp("margin-prev")] = page["margin-prev"] + "px";
     }
     if(page.border){
       css["border-width"] = page.border + "px";
@@ -3594,12 +3635,10 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       if(text.src){
 	return this.evalCharIcon(layout, ctx, parent, text);
       } else if(layout.isVertical){
-	if(text.img){
-	  return this.evalCharImgVertical(layout, ctx, parent, text);
-	}
 	return this.evalCharVertical(layout, ctx, parent, text);
+      } else {
+	return this.evalCharHorizontal(layout, ctx, parent, text);
       }
-      return this.evalCharHorizontal(layout, ctx, parent, text);
     },
 
     evalWord : function(layout, ctx, parent, text){
@@ -3617,6 +3656,9 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     },
 
     evalCharVertical : function(layout, ctx, parent, text){
+      if(text.img){
+	return this.evalCharImgVertical(layout, ctx, parent, text);
+      }
       var c1 = (typeof text.cnv != "undefined")? text.cnv : text.data;
       if(text.skana){
 	return Tag.wrap("div", {
@@ -3632,9 +3674,11 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     },
 
     evalCharHorizontal : function(layout, ctx, parent, text){
-      var c1 = text.data;
-      if(c1 == " "){
-	return "&nbsp;";
+      var c1 = (text.data == " ")? "&nbsp;" : text.data;
+      if(text.img && text.hscale < 1){
+	return Tag.wrap("span", {
+	  "style": Attr.css(cssCharImgHori(layout, text))
+	}, c1);
       }
       return c1;
     },
@@ -3653,10 +3697,10 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     evalCharImgVertical : function(layout, ctx, parent, text){
       return Tag.wrap("div",{
 	"class": config.className.charImg,
-	"style": Attr.css(cssCharImgWrap(layout, text))
+	"style": Attr.css(cssCharImgVertWrap(layout, text))
       }, Tag.start("img", {
 	"src": Char.ofImgSrc(text.img, text.color),
-	"style": Attr.css(cssCharImg(layout, text))
+	"style": Attr.css(cssCharImgVert(layout, text))
       }));
     },
 
@@ -5057,7 +5101,7 @@ var Book = (function BookClosure(){
 // ------------------------------------------------------------------------
 // export (always)
 // ------------------------------------------------------------------------
-Nehan3.version = "3.0.0";
+Nehan3.version = "3.0.2";
 Nehan3.env = env;
 Nehan3.config = config;
 Nehan3.Pagerize = Pagerize;
