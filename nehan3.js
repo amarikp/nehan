@@ -4119,7 +4119,11 @@ var Pagerize = (function PagerizeClosure(){
       marginVert:5,
       btnWidth:80,
       statusWidth:140,
-      curPageInputWidth:30
+      curPageInputWidth:30,
+      nextLinkTextVert:"<span>&laquo; NEXT</span>",
+      prevLinkTextVert:"<span>PREV &raquo;</span>",
+      nextLinkTextHori:"<span>NEXT &raquo;</span>",
+      prevLinkTextHori:"<span>&laquo; PREV</span>"
     },
     footer:{
       height:20,
@@ -4271,8 +4275,8 @@ var Pagerize = (function PagerizeClosure(){
     // btn order(vertical document)
     // NEXT - status - PREV
     if(direction.indexOf("vertical") >= 0){
-      btnNext.innerHTML = wrapSpan("&laquo; NEXT");
-      btnPrev.innerHTML = wrapSpan("PREV &raquo;");
+      btnNext.innerHTML = pgconfig.pager.nextLinkTextVert;
+      btnPrev.innerHTML = pgconfig.pager.prevLinkTextVert;
       btnNext_s.marginRight = "16px";
       btnPrev_s.marginLeft = "16px";
 
@@ -4283,8 +4287,8 @@ var Pagerize = (function PagerizeClosure(){
     // btn order(horizontal document)
     // PREV - status - NEXT
     else {
-      btnNext.innerHTML = wrapSpan("NEXT &raquo;");
-      btnPrev.innerHTML = wrapSpan("&laquo; PREV");
+      btnNext.innerHTML = pgconfig.pager.nextLinkTextHori;
+      btnPrev.innerHTML = pgconfig.pager.prevLinkTextHori;
       btnPrev_s.marginRight = "16px";
       btnNext_s.marginLeft = "16px";
 

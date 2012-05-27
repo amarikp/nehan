@@ -5,7 +5,7 @@
 }
 .nehan-text-line-vertical,
 .nehan-ruby-line-vertical{
-  font-family:'IPA明朝', 'ＭＳ 明朝', 'Hiragino Mincho Pro', monospace !important;
+  font-family:'IPA明朝','Meiryo','メイリオ','ＭＳ 明朝','Hiragino Mincho Pro',monospace !important;
 }
 .nehan-text-line-horizontal,
 .nehan-ruby-line-horizontal{

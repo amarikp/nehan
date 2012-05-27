@@ -6,6 +6,10 @@ Mark "*": bug fixed.
 Mark "!": change that can break compatibility with older version
 ===============================================================================
 
+version 3.0.3
+=========================
+* add new config(Pagerize.pgconfig.pager.nextLinkTextVert etc)
+
 version 3.0.2, 2012/05/26
 =========================
 * fix logical param name(margin-before -> margin-start etc).
