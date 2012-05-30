@@ -37,6 +37,8 @@ if(!Nehan3){
 // config
 // ------------------------------------------------------------------------
 var config = {
+  debug: false, // enable to display exception
+
   // define layout parametors.
   layout:{
     minFontSize:10,
@@ -409,7 +411,7 @@ env.init();
 // utilities
 // ------------------------------------------------------------------------
 var debug = function(str){
-  if(!env.isIE){
+  if(config.debug && !env.isIE){
     console.log(str);
   }
 };
@@ -558,6 +560,12 @@ var List = {
 
   exists : function(lst, fn){
     return this.find(lst, fn) != null;
+  },
+
+  sum : function(lst){
+    return this.fold(lst, 0, function(ret, obj){
+      return ret + obj;
+    });
   }
 };
 
@@ -862,6 +870,73 @@ var CharImgColor = {
     var sb = zerofix(nb.toString(16));
 
     return (sr + sg + sb).toUpperCase();
+  }
+};
+
+var BoxModel = {
+  baseProps: [
+    "padding", "border", "margin"
+  ],
+
+  partProps: [
+    "prev-char", "prev-line", "next-char", "next-line"
+  ],
+
+  setEdgeProps : function(block, edge){
+    var self = this;
+    List.iter(this.baseProps, function(base){
+      List.iteri(self.partProps, function(i, part){
+	if(edge[base][i] > 0){ // to minimize obj size, copy only when available.
+	  var prop = [base, part].join("-");
+	  block[prop] = edge[base][i];
+	}
+      });
+    });
+    return block;
+  },
+
+  parseEdge : function(attr){
+    var self = this;
+    var edge = {
+      padding:[0, 0, 0, 0],
+      border:[0, 0, 0, 0],
+      margin:[0, 0, 0, 0],
+      sizeCharStep: 0,
+      sizeLineStep: 0
+    };
+    var init4 = function(ary, val){
+      ary[0] = ary[1] = ary[2] = ary[3] = val;
+    };
+    List.iter(this.baseProps, function(base){
+      if(attr[base]){
+	init4(edge[base], parseInt(attr[base]));
+      }
+      List.iteri(self.partProps, function(i, part){
+	var prop = [base, part].join("-");
+	if(attr[prop]){
+	  var val = parseInt(attr[prop]);
+	  edge[base][i] = val;
+	}
+      });
+    });
+    for(var i = 0; i < 4; i++){
+      var val = edge.padding[i] + edge.border[i] + edge.margin[i];
+      if(i % 2 == 0){
+	edge.sizeCharStep += val;
+      } else {
+	edge.sizeLineStep += val;
+      }
+    }
+    return edge;
+  },
+
+  parseBox : function(attr){
+    var box = this.parseEdge(attr);
+    box.width = parseInt(attr.width || 0);
+    box.height = parseInt(attr.height || 0);
+    box.wrapWidth = box.width + box.sizeCharStep;
+    box.wrapHeight = box.height + box.sizeLineStep;
+    return box;
   }
 };
 
@@ -1463,8 +1538,8 @@ var ParserContext = (function ParserContextClosure(){
     this.seekPageNo = 0;
     this.seekCharCount = 0;
     this.seekTextPos = 0;
-    this.textSpaceBefore = 0;
-    this.textSpaceAfter = 0;
+    this.textSpacePrevChar = 0;
+    this.textSpaceNextChar = 0;
     this.lineChars = [];
     this.rubyList = [];
     this.inlinePages = [];
@@ -1478,13 +1553,13 @@ var ParserContext = (function ParserContextClosure(){
   var snapProps =
     
   ParserContext.prototype = {
-    snap : function(){
+    getSnap : function(){
       var ret = new Object;
       var clone = Util.clone;
       var props = [
 	"tags", "tocs", "topicPath", "lastTopicPath",
 	"seekNextChar", "seekNextLine", "seekCharCount",
-	"seekTextPos", "textSpaceBefore", "textSpaceAfter",
+	"seekTextPos", "textSpaceBefore", "textSpaceNextChar",
 	"lineChars", "rubyList", "inlinePages", "curToc",
 	"greedyMode", "labelAttr", "fontSize", "fontSize2", "fontSize4",
 	"fontColor"
@@ -1507,11 +1582,13 @@ var ParserContext = (function ParserContextClosure(){
 	name: "",
 	width: 0,
 	height: 0,
+	wrapWidth: 0,
+	wrapHeight: 0,
 	content:""
       }, args);
     },
 
-    createImage : function(layout, args){
+    createImg : function(layout, args){
       return Args.init(this.createBlock(layout, args), {
 	src: ""
       }, args);
@@ -1552,8 +1629,8 @@ var ParserContext = (function ParserContextClosure(){
     createLine : function(layout){
       if(this.labelAttr != null){
 	var line = this.createLabelLine(layout, this.labelAttr);
-	this.textSpaceBefore = Math.max(0, this.textSpaceBefore - layout.labelSpace * 2);
-	this.textSpaceAfter = Math.max(0, this.textSpaceAfter - layout.labelSpace * 2);
+	this.textSpacePrevChar = Math.max(0, this.textSpacePrevChar - layout.labelSpace * 2);
+	this.textSpaceNextChar = Math.max(0, this.textSpaceNextChar - layout.labelSpace * 2);
 	this.labelAttr = null;
       } else {
 	var line = this.createTextLine(layout);
@@ -1609,8 +1686,8 @@ var ParserContext = (function ParserContextClosure(){
 	textLineSize:{width: width, height:height},
 	rubyLineSize:{width:0, height:0},
 	childs:this.lineChars,
-	textSpaceBefore:layout.labelSpace,
-	textSpaceAfter:layout.labelSpace,
+	textSpacePrevChar:layout.labelSpace,
+	textSpaceNextChar:layout.labelSpace,
 	rubyList:[],
 	attr:attr
       };
@@ -1646,6 +1723,8 @@ var ParserContext = (function ParserContextClosure(){
 	direction:layout.direction,
 	width:0,
 	height:0,
+	wrapWidth: 0,
+	wrapHeight: 0,
 	border:config.layout.readerBorder,
 	fontSize:layout.fontSize,
 	theme:"",
@@ -1762,8 +1841,8 @@ var ParserContext = (function ParserContextClosure(){
     },
 
     startLabel : function(layout, token){
-      this.textSpaceBefore += layout.labelSpace * 2;
-      this.textSpaceAfter += layout.labelSpace * 2;
+      this.textSpacePrevChar += layout.labelSpace * 2;
+      this.textSpaceNextChar += layout.labelSpace * 2;
       this.labelAttr = token.data.attr;
     },
 
@@ -1772,7 +1851,7 @@ var ParserContext = (function ParserContextClosure(){
     },
 
     getTextSpaceSize : function(){
-      return this.textSpaceBefore + this.textSpaceAfter;
+      return this.textSpacePrevChar + this.textSpaceNextChar;
     },
 
     getRestCharSpace : function(layout){
@@ -1882,55 +1961,42 @@ var Theme = {
 // layout
 // ------------------------------------------------------------------------
 var Layout = (function LayoutClosure(){
-  var cssProps = {
-    "vertical":{
+  var cssPropMatrix = {
+    "vertical-rl":{
       "page-size":"width",
       "block-float":"right",
       "line-text-align":"center",
       "ruby-line-text-align": "left",
-
-      // margin
-      "margin-start":"margin-top",
-      "margin-end":"margin-bottom",
-      "margin-before":"margin-right",
-      "margin-after":"margin-left",
-      
-      // border
-      "border-before":"border-top",
-      "border-after":"border-bottom",
-      "border-prev":"border-right",
-      "border-next":"border-left",
-
-      "dummy": ""
+      "padding-prev-char":"padding-top",
+      "padding-next-char":"padding-bottom",
+      "padding-prev-line":"padding-right",
+      "padding-next-line":"padding-left",
+      "border-prev-char":"border-top",
+      "border-next-char":"border-bottom",
+      "border-prev-line":"border-right",
+      "border-next-line":"border-left",
+      "margin-prev-char":"margin-top",
+      "margin-next-char":"margin-bottom",
+      "margin-prev-line":"margin-right",
+      "margin-next-line":"margin-left"
     },
-    "horizontal":{
+    "horizontal-lr":{
       "page-size":"height",
       "block-float":"left",
       "line-text-align":"left",
       "ruby-line-text-align": "left",
-
-      // margin
-      "margin-start":"margin-left",
-      "margin-end":"margin-right",
-      "margin-before":"margin-top",
-      "margin-after":"margin-bottom",
-
-      // border
-      "border-before":"border-left",
-      "border-after":"border-right",
-      "border-prev":"border-top",
-      "border-next":"border-bottom",
-
-      "dummy": ""
-    }
-  };
-
-  var objProps = {
-    "vertical": {
-      "max-next-line": "width"
-    },
-    "horizontal": {
-      "max-next-line": "height"
+      "padding-prev-char":"padding-left",
+      "padding-next-char":"padding-right",
+      "padding-prev-line":"padding-top",
+      "padding-next-line":"padding-bottom",
+      "border-prev-char":"border-left",
+      "border-next-char":"border-right",
+      "border-prev-line":"border-top",
+      "border-next-line":"border-bottom",
+      "margin-prev-char":"margin-left",
+      "margin-next-char":"margin-right",
+      "margin-prev-line":"margin-top",
+      "margin-next-line":"margin-bottom"
     }
   };
 
@@ -1958,6 +2024,10 @@ var Layout = (function LayoutClosure(){
 	this.leadingRate = this.theme.leadingRate || this.leadingRate;
       }
       this.isVertical = this.direction.match(/vertical/)? true : false;
+      this.directionX = this.isVertical? "rl" : "lr"; // TODO
+      this.directionY = "tb"; // TODO
+      var matrixName = [this.direction, this.directionX].join("-");
+      this.cssPropMap = cssPropMatrix[matrixName];
       this.lineSpaceRate = this.leadingRate - 1.0;
       this.blockMargin = Math.floor(this.fontSize * config.layout.blockMarginRate);
       this.labelSpace = Math.floor(this.fontSize * this.lineSpaceRate / 2);
@@ -1968,33 +2038,25 @@ var Layout = (function LayoutClosure(){
 	this.spaceForHeadNG = this.disableTailSpace? 0 : Math.floor(this.fontSize / 2);
 	this.maxNextChar = this.height - this.spaceForHeadNG;
 	this.maxNextLine = this.width;
-	this.maxBlockWidth = this.width;
-	this.maxBlockHeight = this.maxNextChar - this.blockMargin;
       } else {
 	// in horizontal mode, stepSize of character always same size
 	// so spaceForHeadNg equals to fontSize.
 	this.spaceForHeadNG = this.disableTailSpace? 0 : this.fontSize;
 	this.maxNextChar = this.width - this.spaceForHeadNG;
 	this.maxNextLine = this.height;
-	this.maxBlockWidth = this.maxNextChar - this.blockMargin;
-	this.maxBlockHeight = this.height;
       }
     },
 
     getCssProp : function(name){
-      return cssProps[this.direction][name];
-    },
-
-    getProp : function(name){
-      return objProps[this.direction][name];
+      return this.cssPropMap[name];
     },
 
     getBlockRestWidth : function(blockWidth){
-      return this.isVertical? blockWidth : this.maxBlockWidth - blockWidth;
+      return this.isVertical? blockWidth : this.width - blockWidth;
     },
 
     getBlockRestHeight : function(blockHeight){
-      return this.isVertical? this.maxBlockHeight - blockHeight : blockHeight;
+      return this.isVertical? this.height - blockHeight : blockHeight;
     }
   };
 
@@ -2007,18 +2069,15 @@ var Layout = (function LayoutClosure(){
 // ------------------------------------------------------------------------
 var DocumentParser = (function DocumentParserClosure() {
   var sizeOfElement = function(layout, element){
-    if(layout.isVertical){
-      var size = element.width || 0;
-    } else {
-      var size = element.height || 0;
+    switch(element.type){
+    case "block":
+    case "ireader":
+      return layout.isVertical? element.wrapWidth : element.wrapHeight;
+    case "page":
+      return layout.isVertical? (element.wrapWidth || element.width) : (element.wrapHeight || element.height);
+    default:
+      return layout.isVertical? element.width : element.height;
     }
-    if(element.type == "page" && element.tail){
-      size = element.size;
-    }
-    if(typeof element.border != "undefined"){
-      size += element.border * 2;
-    }
-    return size;
   };
 
   var sizeOfParentRest = function(parent_layout, cur_layout, cur_offset){
@@ -2050,9 +2109,9 @@ var DocumentParser = (function DocumentParserClosure() {
 	var size = sizeOfElement(layout, page);
 	return (size > max)? size : max;
       });
-      var max_prop = layout.getProp("max-next-line");
+      var max_line_prop = layout.isVertical? "width" : "height";
       List.iter(pages, function(page){
-	page[max_prop] = page.size = max_size;
+	page[max_line_prop] = page.size = max_size;
       });
       var wrap_page_width = layout.isVertical? max_size : layout.width;
       var wrap_page_height = layout.isVertical? layout.height : max_size;
@@ -2060,19 +2119,16 @@ var DocumentParser = (function DocumentParserClosure() {
     },
 
     yieldPage : function(layout, ctx){
-      var max_prop = layout.getProp("max-next-line");
-      var max_next_line = (this.rest_size_list.length > 0)? this.rest_size_list.shift() : layout[max_prop];
+      var max_line_prop = layout.isVertical? "width" : "height";
+      var max_next_line = (this.rest_size_list.length > 0)? this.rest_size_list.shift() : layout[max_line_prop];
       var pages = List.map(this.forks, function(fork){
-	var orig_max = fork.layout[max_prop];
-	fork.args = fork.args || {};
-	fork.layout[max_prop] = max_next_line;
-	if(fork.args.border){
-	  fork.layout[max_prop] -= fork.args.border * 2;
-	}
-	if(orig_max != fork.layout[max_prop]){
+	var orig_max = fork.layout[max_line_prop];
+	var fix_size = fork.edge? fork.edge.sizeLineStep : 0;
+	fork.layout[max_line_prop] = max_next_line - fix_size;
+	if(orig_max != fork.layout[max_line_prop]){
 	  fork.layout.update();
 	}
-	var page = fork.parsePage(fork.args);
+	var page = fork.parsePage();
 	page.forked = true;
 	return page;
       });
@@ -2219,19 +2275,6 @@ var DocumentParser = (function DocumentParserClosure() {
       throw "LineEnd";
     },
 
-    pushElementToPage : function(lexer, layout, ctx, page, element){
-      var element_size = sizeOfElement(layout, element);
-      if(ctx.seekNextLine + element_size > layout.maxNextLine){
-	throw "Overflow";
-      }
-      ctx.seekNextLine += element_size;
-      page.size += element_size;
-      page.childs.push(element);
-      if(ctx.seekNextLine == layout.maxNextLine){
-	throw "EndPage";
-      }
-    },
-
     parseMetrics : function(lexer, layout, ctx, token){
       if(token.type == "char" || token.type == "rb"){
 	if(token.src){
@@ -2311,17 +2354,17 @@ var DocumentParser = (function DocumentParserClosure() {
     parseMetricsMarginVert : function(lexer, layout, ctx, token, prevText, nextText){
       if(Char.isKakkoStartChar(token.data) && prevText != ""){
 	if(!Char.isKakkoStartChar(prevText) && !Char.isKutenTouten(prevText)){
-	  token["margin-start"] = ctx.fontSize2;
+	  token["margin-prev-char"] = ctx.fontSize2;
 	  token.stepSize = ctx.fontSize;
 	}
       } else if(Char.isKakkoEndChar(token.data) && nextText != ""){
 	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
-	  token["margin-end"] = ctx.fontSize2;
+	  token["margin-next-char"] = ctx.fontSize2;
 	  token.stepSize = ctx.fontSize;
 	}
       } else if(Char.isKutenTouten(token.data)){
 	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
-	  token["margin-end"] = ctx.fontSize2;
+	  token["margin-next-char"] = ctx.fontSize2;
 	  token.stepSize = ctx.fontSize;
 	}
       }
@@ -2423,7 +2466,7 @@ var DocumentParser = (function DocumentParserClosure() {
     },
 
     parseHeaderStart : function(lexer, layout, ctx, token){
-      var level = parseInt(token.data.name.substring(1)) - 1;
+      var level = parseInt(token.data.name.substring(1)) - 1; // H1 -> 0, H2 -> 1
       token.data.name = "font";
       token.data.attr.family = "Meiryo";
       token.data.attr.scale = config.layout.headerScales[level];
@@ -2550,7 +2593,6 @@ var DocumentParser = (function DocumentParserClosure() {
       } catch (e){
 	if(e != "LineEnd"){
 	  debug(e);
-	  //alert(e);
 	}
 	return ctx.createLine(layout);
       }
@@ -2571,21 +2613,7 @@ var DocumentParser = (function DocumentParserClosure() {
       return capts;
     },
 
-    parseBlockSizeAttr : function(layout, ctx, attr){
-      var defsize = {
-	"width": 0,
-	"height": 0,
-	"border": 0,
-	"font-size": layout.fontSize
-      };
-      for(prop in defsize){
-	attr[prop] = parseInt((typeof attr[prop] == "undefined")? defsize[prop] : attr[prop]);
-      }
-      return attr;
-    },
-
     parseBlockSize : function(layout, ctx, block, capts){
-      var b2 = block.border * 2;
       var rest_width = ctx.getRestWidth(layout);
       var rest_height = ctx.getRestHeight(layout);
       var capt_height = List.fold(capts, 0, function(ret, capt){
@@ -2597,10 +2625,11 @@ var DocumentParser = (function DocumentParserClosure() {
 	return block;
       }
 
-      // get actual block size(with margin size)
-      // NOTICE: block margin is added to only one side.
-      var act_width = (layout.isVertical? block.width : block.width + layout.blockMargin) + b2;
-      var act_height = (layout.isVertical? block.height + layout.blockMargin: block.height) + b2 + capt_height;
+      // get actual block size(with caption height)
+      var edge_width = block.wrapWidth - block.width;
+      var edge_height = block.wrapHeight - block.height;
+      var act_width = block.wrapWidth;
+      var act_height = block.wrapHeight + capt_height;
 
       // if enough space is left, just put it.
       if(act_width < rest_width && act_height < rest_height){
@@ -2630,48 +2659,53 @@ var DocumentParser = (function DocumentParserClosure() {
 	act_height = Math.floor(act_height2);
       }
 
-      var enable_width = config.layout.acceptableResizeRate * block.width;
-      var enable_height = config.layout.acceptableResizeRate * block.height;
-      block.width = Math.max(0, (layout.isVertical? act_width : act_width - layout.blockMargin) - b2);
-      block.height = Math.max(0, (layout.isVertical? act_height - layout.blockMargin : act_height) - b2 - capt_height);
-
-      if(block.width < enable_width || block.height < enable_height){
-	block.error = "try to resize block, but not acceptable for this layout(" + block.width + "," + block.height + ")";
-      }
+      block.wrapWidth = act_width;
+      block.wrapHeight = Math.max(0, act_height - capt_height);
+      block.width = Math.max(0, block.wrapWidth - edge_width);
+      block.height = Math.max(0, block.wrapHeight - edge_height);
       return block;
     },
     
     parseImg : function(lexer, layout, ctx, token){
-      var attr = this.parseBlockSizeAttr(layout, ctx, token.data.attr);
-      var block = ctx.createImage(layout, {
+      var attr = token.data.attr;
+      var box = BoxModel.parseBox(attr);
+      var block = BoxModel.setEdgeProps(ctx.createImg(layout, {
 	name:"img",
-	width:attr.width,
-	height:attr.height,
-	border:attr.border,
+	width:box.width,
+	height:box.height,
+	wrapWidth: box.wrapWidth,
+	wrapHeight: box.wrapHeight,
+	border:box.border,
 	src:attr.src
-      });
+      }), box);
       return this.parseBlockElement(lexer, layout, ctx, block, attr);
     },
 
     parseTable : function(lexer, layout, ctx, token){
-      var attr = this.parseBlockSizeAttr(layout, ctx, token.data.attr);
-      var block = ctx.createBlock(layout, {
-	width: attr.width,
-	height: attr.height,
+      var attr = token.data.attr;
+      var box = BoxModel.parseBox(attr);
+      var block = BoxModel.setEdgeProps(ctx.createBlock(layout, {
+	width: box.width,
+	height: box.height,
+	wrapWidth: box.wrapWidth,
+	wrapHeight: box.wrapHeight,
 	content: token.data.content,
 	name: token.data.name
-      });
+      }), box);
       return this.parseBlockElement(lexer, layout, ctx, block, attr);
     },
 
     parseTextarea : function(lexer, layout, ctx, token){
-      var attr = this.parseBlockSizeAttr(layout, ctx, token.data.attr);
-      var block = ctx.createBlock(layout, {
-	width: attr.width,
-	height: attr.height,
+      var attr = token.data.attr;
+      var box = BoxModel.parseBox(attr);
+      var block = BoxModel.setEdgeProps(ctx.createBlock(layout, {
+	width: box.width,
+	height: box.height,
+	wrapWidth: box.wrapWidth,
+	wrapHeight: box.wrapHeight,
 	content: token.data.content,
 	name: token.data.name
-      });
+      }), box);
       block = this.parseBlockElement(lexer, layout, ctx, block, attr);
       return Args.copy(block, {
 	"onclick": attr.onclick || ""
@@ -2679,41 +2713,44 @@ var DocumentParser = (function DocumentParserClosure() {
     },
 
     parseInlineFrame : function(lexer, layout, ctx, token){
-      var attr = this.parseBlockSizeAttr(layout, ctx, token.data.attr);
-      var block = ctx.createInlineFrame(layout, {
-	width: attr.width,
-	height: attr.height,
+      var attr = token.data.attr;
+      var box = BoxModel.parseBox(attr);
+      var block = BoxModel.setEdgeProps(ctx.createInlineFrame(layout, {
+	width: box.width,
+	height: box.height,
+	wrapWidth: box.wrapWidth,
+	wrapHeight: box.wrapHeight,
 	content: token.data.content,
 	name: token.data.name,
 	src: (attr.src || ""),
 	frameborder: parseInt(attr.frameborder || 0)
-      });
+      }), box);
+      
       return this.parseBlockElement(lexer, layout, ctx, block, attr);
     },
 
     parseInlinePage : function(lexer, layout, ctx, token){
-      Args.copy(token.data.attr, {
-	nopager: true
-      });
+      token.data.attr.nopager = true;
       return this.parseInlineReader(lexer, layout, ctx, token);
     },
 
     parseInlineReader : function(lexer, layout, ctx, token){
       var attr = token.data.attr;
-      attr.border = (typeof attr.border != "undefined")? parseInt(attr.border) : config.layout.readerBorder;
-      attr = this.parseBlockSizeAttr(layout, ctx, attr);
-      var block = ctx.createInlineReader(layout, {
+      attr.border = parseInt(attr.border || config.layout.readerBorder);
+      var box = BoxModel.parseBox(attr);
+      var block = BoxModel.setEdgeProps(ctx.createInlineReader(layout, {
 	"class": (attr["class"] || ""),
 	direction:(attr.direction || layout.direction),
-	width:attr.width,
-	height:attr.height,
-	border:attr.border,
+	width:box.width,
+	height:box.height,
+	wrapWidth: box.wrapWidth,
+	wrapHeight: box.wrapHeight,
 	fontSize:parseInt(attr["font-size"] || layout.fontSize),
 	theme:(attr.theme || ""),
 	syntax:(attr.syntax || ""),
-	nopager:attr.nopager,
+	nopager:(attr.nopager || false),
 	content:Util.cutHeadCRLF(token.data.content)
-      });
+      }), box);
       return this.parseBlockElement(lexer, layout, ctx, block, attr);
     },
 
@@ -2721,7 +2758,6 @@ var DocumentParser = (function DocumentParserClosure() {
       // setup common props for block element
       Args.init(block, {
 	"class": attr["class"] || "",
-	"border": attr.border,
 	"align": "",
 	"direction": layout.direction
       }, attr);
@@ -2744,8 +2780,8 @@ var DocumentParser = (function DocumentParserClosure() {
 
     parseBlockWithCaption : function(lexer, layout, ctx, block, capts){
       var childs = [block];
-      var page_width = block.width;
-      var page_height = block.height;
+      var page_width = block.wrapWidth;
+      var page_height = block.wrapHeight;
 
       List.iter(capts, function(capt){
 	page_height += capt.height;
@@ -2761,22 +2797,25 @@ var DocumentParser = (function DocumentParserClosure() {
       Args.copy(page, {
 	"class": block["class"] || "",
 	direction: block.direction,
-	align: block.align
+	align: block.align,
+	width: page_width,
+	height: page_height,
+	wrapWidth: page_width,
+	wrapHeight: page_height
       });
 
       delete block.align;
       delete block["class"];
-
       return page;
     },
 
     parseBlockWithPush : function(lexer, layout, ctx, block){
       var push_margin = layout.blockMargin;
-      var push_size = layout.isVertical? block.width + push_margin : block.height + push_margin;
+      var push_size = (layout.isVertical? block.wrapWidth : block.wrap_heigh) + push_margin;
       if(ctx.seekNextLine + push_size < layout.maxNextLine){
 	ctx.seekNextLine += push_size;
-	block["margin-before"] = push_margin;
 	block.push_size = push_size;
+	block["margin-prev-line"] = push_margin;
 	this.pushBlocks.push(block);
       }
       return this.parseElement(lexer, layout, ctx);
@@ -2784,9 +2823,12 @@ var DocumentParser = (function DocumentParserClosure() {
 
     parseBlockWithAlign : function(lexer, layout, ctx, block){
       var is_block_first = (block.align == "top" || block.align == "left");
-      var disable_tail_space = block.direction == layout.direction; // if same direction, share rest space with parent layout.
-      var aligned_width = layout.getBlockRestWidth(block.width);
-      var aligned_height = layout.getBlockRestHeight(block.height);
+      var disable_tail_space = block.direction? (block.direction == layout.direction) : true; // if same direction, share rest space with parent layout.
+      var aligned_edge_args = new Object;
+      aligned_edge_args[is_block_first? "margin-prev-char" : "margin-next-char"] = layout.blockMargin;
+      aligned_edge = BoxModel.parseEdge(aligned_edge_args);
+      var aligned_width = layout.getBlockRestWidth(block.wrapWidth) - (layout.isVertical? aligned_edge.sizeLineStep : aligned_edge.sizeCharStep);
+      var aligned_height = layout.getBlockRestHeight(block.wrapHeight) - (layout.isVertical? aligned_edge.sizeCharStep : aligned_edge.sizeLineStep);
       var backup_next_line = ctx.seekNextLine; // backup parent next line
       ctx.seekNextLine = 0; // temporary set zero
       var aligned_parser = new DocumentParser(lexer, new Layout({
@@ -2796,17 +2838,16 @@ var DocumentParser = (function DocumentParserClosure() {
 	direction:layout.direction,
 	disableTailSpace:disable_tail_space
       }), ctx);
+      aligned_parser.edge = aligned_edge;
       aligned_parser.aligned = true;
       aligned_parser.parent = this;
       aligned_parser.offset = backup_next_line;
-      var parser_args = new Object;
-      parser_args[is_block_first? "margin-start" : "margin-end"] = layout.blockMargin;
-      var aligned_page = aligned_parser.parsePage(parser_args); // output aligned page
+      var aligned_page = aligned_parser.parsePage(); // output aligned page
       ctx.seekNextLine = backup_next_line; // restore parent next line
       aligned_page.aligned = true;
       this.forkset = aligned_parser.forkset; // inherit forks
-      var page_width = layout.isVertical? block.width : layout.width;
-      var page_height = layout.isVertical? layout.height : block.height;
+      var page_width = layout.isVertical? block.wrapWidth : layout.width;
+      var page_height = layout.isVertical? layout.height : block.wrapHeight;
       var page_childs = is_block_first? [block, aligned_page] : [aligned_page, block];
       return ctx.createPage(layout.direction, page_width, page_height, page_childs);
     },
@@ -2841,11 +2882,11 @@ var DocumentParser = (function DocumentParserClosure() {
       attr.before = parseInt(attr.before || conf.indentBefore);
       attr.after = parseInt(attr.after || conf.indentAfter);
       if(attr.count){
-	attr.count = attr.before = attr.after = parseInt(attr.count);
+	attr.before = attr.after = parseInt(attr.count);
       }
       attr.border = parseInt(attr.border || 0);
-      attr["margin-start"] = layout.fontSize * attr.before;
-      attr["margin-end"] = layout.fontSize * attr.after;
+      attr["margin-prev-char"] = layout.fontSize * attr.before;
+      attr["margin-next-char"] = layout.fontSize * attr.after;
       return this.parseSingleForkPage(lexer, layout, ctx, token);
     },
 
@@ -2853,7 +2894,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var attr = token.data.attr;
       var conf = config.layout.blockquote;
       attr["font-size"] = parseInt(attr["font-size"] || Math.floor(layout.fontSize * conf.fontSizeRate));
-      attr["border"] = (typeof attr.border != "undefined")? parseInt(attr.border) : conf.border;
+      attr.border = parseInt(attr.border || conf.border);
       token.data.content = Tag.wrap("indent", {
 	before:conf.indentBefore,
 	after:conf.indentAfter,
@@ -2929,19 +2970,11 @@ var DocumentParser = (function DocumentParserClosure() {
     parseSingleForkPage : function(lexer, layout, ctx, token){
       var text = token.data.content;
       var attr = token.data.attr;
-      Args.init(attr, {
-	"margin-start": 0,
-	"margin-end": 0,
-	"border": 0,
-	"font-size": layout.fontSize
-      }, attr);
-      attr["border"] = parseInt(attr.border);
-      attr["margin-start"] = parseInt(attr["margin-start"]);
-      attr["margin-end"] = parseInt(attr["margin-end"]);
+      var edge = BoxModel.parseEdge(attr);
       var rest_next_line = ctx.getRestLineSpace(layout);
-      var fork_extra = attr["margin-start"] + attr["margin-end"];
-      var fork_width = layout.isVertical? rest_next_line : layout.maxNextChar - fork_extra;
-      var fork_height = layout.isVertical? layout.maxNextChar - fork_extra : rest_next_line;
+      var fork_font_size = parseInt(attr["font-size"] || layout.fontSize);
+      var fork_width = layout.isVertical? rest_next_line - edge.sizeLineStep : layout.maxNextChar - edge.sizeCharStep;
+      var fork_height = layout.isVertical? layout.maxNextChar - edge.sizeCharStep : rest_next_line - edge.sizeLineStep;
       var fork_theme = attr.theme? Theme[attr.theme] : null;
       var fork_lexer = new BufferedLexer(text);
       var fork_layout = new Layout({
@@ -2949,13 +2982,13 @@ var DocumentParser = (function DocumentParserClosure() {
 	width: fork_width,
 	height: fork_height,
 	theme: fork_theme,
-	fontSize: parseInt(attr["font-size"])
+	fontSize: fork_font_size
       });
       var fork_parser = new DocumentParser(fork_lexer, fork_layout);
       fork_parser.args = attr;
+      fork_parser.edge = edge;
       fork_parser.forked = true;
       fork_parser.parent = this;
-      var max_prop = layout.getProp("max-next-line");
       var fork_rest_size_list = [rest_next_line];
       if(this.aligned){
 	var parent_rest_size = sizeOfParentRest(this.parent.layout, layout, this.offset);
@@ -3064,8 +3097,8 @@ var DocumentParser = (function DocumentParserClosure() {
 	    var margin = Math.floor(layout.fontSize * sconf.sbody.marginRate);
 	    attr.scale = parseFloat(attr.scale || sconf[name].fontSizeRate);
 	    data.args = {};
-	    data.args["margin-start"] = margin;
-	    data.args["margin-end"] = margin;
+	    data.args["margin-prev-char"] = margin;
+	    data.args["margin-next-char"] = margin;
 	    child[name] = data;
 	    break;
 	  case "shead":
@@ -3122,8 +3155,8 @@ var DocumentParser = (function DocumentParserClosure() {
       for(var i = 0, len = childs.length; i < len; i++)(function(child){
 	var size = parseInt(child.attr.size || unsized_avg);
 	child.args = child.args || {};
-	size -= child.args["margin-start"] || 0;
-	size -= child.args["margin-end"] || 0;
+	size -= child.args["margin-prev-char"] || 0;
+	size -= child.args["margin-next-char"] || 0;
 	var fontSize = Math.floor(parseFloat(child.attr.scale || 1.0) * layout.fontSize);
 	var text = child.content;
 	self.forkset.add(gen_parser(text, size, fontSize, child.args));
@@ -3204,10 +3237,11 @@ var DocumentParser = (function DocumentParserClosure() {
     },
 
     // page is a list of elements.
-    parsePage : function(args){
+    parsePage : function(){
       var page = this.ctx.createPage(this.layout.direction, this.layout.width, this.layout.height, []);
+      var args = this.args || {};
+      var size = 0;
       Args.copy(page, {
-	size:0,
 	no: this.ctx.seekPageNo,
 	head: (this.ctx.seekPageNo == 0),
 	spos: this.ctx.seekTextPos,
@@ -3218,15 +3252,25 @@ var DocumentParser = (function DocumentParserClosure() {
       try {
 	while(true){
 	  var rollback_lexpos = this.lexer.getPos();
-	  var rollback_context = this.ctx.snap();
+	  var rollback_context = this.ctx.getSnap();
 	  var element = this.parseElement(this.lexer, this.layout, this.ctx);
 	  if(element == null){
 	    page.tail = true;
+	    page[this.layout.isVertical? "width" : "height"] = size;
 	    this.finish = true;
 	    //this.finish = this.lexer.isEnd();
 	    throw "EndPage";
 	  } else {
-	    this.pushElementToPage(this.lexer, this.layout, this.ctx, page, element);
+	    var element_size = sizeOfElement(this.layout, element);
+	    if(this.ctx.seekNextLine + element_size > this.layout.maxNextLine){
+	      throw "Overflow";
+	    }
+	    this.ctx.seekNextLine += element_size;
+	    size += element_size;
+	    page.childs.push(element);
+	    if(this.ctx.seekNextLine == this.layout.maxNextLine){
+	      throw "EndPage";
+	    }
 	  }
 	}
       } catch (e){
@@ -3241,7 +3285,7 @@ var DocumentParser = (function DocumentParserClosure() {
 	}
 	if(this.pushBlocks.length > 0){
 	  page.childs = page.childs.concat(this.pushBlocks);
-	  page.size += List.fold(this.pushBlocks, 0, function(ret, block){
+	  page[this.layout.isVertical? "width" : "height"] += List.fold(this.pushBlocks, 0, function(ret, block){
 	    return ret + block.push_size;
 	  });
 	  this.pushBlocks = [];
@@ -3251,6 +3295,11 @@ var DocumentParser = (function DocumentParserClosure() {
 	if(typeof this.aligned == "undefined"){
 	  page.topicPath = Util.clone(this.ctx.topicPath);
 	  this.ctx.seekPageNo++;
+	}
+	if(this.edge){
+	  page.wrapWidth = page.width + (this.layout.isVertical? this.edge.sizeLineStep : this.edge.sizeCharStep);
+	  page.wrapHeight = page.height + (this.layout.isVertical? this.edge.sizeCharStep : this.edge.sizeLineStep);
+	  BoxModel.setEdgeProps(page, this.edge);
 	}
 	return page;
       }
@@ -3365,11 +3414,11 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       "height": height + "px",
       "line-height": height + "px"
     };
-    if(typeof text["margin-start"] != "undefined"){
-      css[layout.getCssProp("margin-start")] = text["margin-start"] + "px";
+    if(typeof text["margin-prev-char"] != "undefined"){
+      css[layout.getCssProp("margin-prev-char")] = text["margin-prev-char"] + "px";
     }
-    if(typeof text["margin-end"] != "undefined"){
-      css[layout.getCssProp("margin-end")] = text["margin-end"] + "px";
+    if(typeof text["margin-next-char"] != "undefined"){
+      css[layout.getCssProp("margin-next-char")] = text["margin-next-char"] + "px";
     }
     return css;
   };
@@ -3398,8 +3447,8 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
   var cssWordVert = function(layout, text){
     var word = text.data;
     var fontSize2 = Math.floor(text.fontSize / 2);
-    var marginBefore = (typeof text["margin-start"] != "undefined")? text["margin-start"] : 0;
-    var marginAfter = (typeof text["margin-end"] != "undefined")? text["margin-end"] : 0;
+    var marginBefore = (typeof text["margin-prev-char"] != "undefined")? text["margin-prev-char"] : 0;
+    var marginAfter = (typeof text["margin-next-char"] != "undefined")? text["margin-next-char"] : 0;
     if(word.length > 2){
       marginAfter += fontSize2 * (word.length - 2);
     }
@@ -3432,16 +3481,16 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       "margin": 0,
       "padding": 0
     };
-    if(img["margin-before"]){
-      css[layout.getCssProp("margin-before")] = img["margin-before"] + "px";
+    if(img["margin-prev-line"]){
+      css[layout.getCssProp("margin-prev-line")] = img["margin-prev-line"] + "px";
     }
     return css;
   };
 
   var cssImgBody = function(layout, img){
     var css = {
-      "border-width": img.border + "px"
-    }
+      "border-width": (img.border || 0) + "px"
+    };
     return css;
   };
 
@@ -3451,12 +3500,12 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       //"display": "block", // firefox has some trouble about it(especially in table).
       "width": block.width + "px",
       "height": block.height + "px",
-      "border-width": block["border"] + "px",
+      "border-width": (block.border || 0) + "px",
       "margin": 0,
       "padding": 0
     };
-    if(block["margin-before"]){
-      css[layout.getCssProp("margin-before")] = block["margin-before"] + "px";
+    if(block["margin-prev-line"]){
+      css[layout.getCssProp("margin-prev-line")] = block["margin-prev-line"] + "px";
     }
     return css;
   };
@@ -3559,8 +3608,8 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     if(!layout.isVertical){
       css["height"] = line.fontSize + "px";
     }
-    css[layout.getCssProp("margin-start")] = line.textSpaceBefore + "px";
-    css[layout.getCssProp("margin-end")] = line.textSpaceAfter + "px";
+    css[layout.getCssProp("margin-prev-char")] = line.textSpacePrevChar + "px";
+    css[layout.getCssProp("margin-next-char")] = line.textSpaceNextChar + "px";
     if(!layout.isVertical){
       css["margin-top"] = Math.floor((line.height - line.fontSize) / 2) + "px";
     }
@@ -3570,40 +3619,35 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     return css;
   };
 
-  var cssForkBorder = function(layout, page){
-    var css = {};
-    if(!page.head){
-      css[layout.getCssProp("border-prev")] = "none";
-    }
-    if(!page.tail){
-      css[layout.getCssProp("border-next")] = "none";
-    }
-    return css;
-  };
-
   var cssPage = function(layout, page){
     var css = {
       "display": "block",
       "float": page["float"] || layout.getCssProp("block-float"),
       "width": page.width + "px",
+      "border-width": (page.border || 0) + "px",
       "height": page.height + "px"
     };
     if(page.size){
       css[layout.getCssProp("page-size")] = page.size + "px";
     }
-    if(page["margin-start"]){
-      css[layout.getCssProp("margin-start")] = page["margin-start"] + "px";
+    if(page["margin-prev-char"]){
+      css[layout.getCssProp("margin-prev-char")] = page["margin-prev-char"] + "px";
     }
-    if(page["margin-end"]){
-      css[layout.getCssProp("margin-end")] = page["margin-end"] + "px";
+    if(page["margin-next-char"]){
+      css[layout.getCssProp("margin-next-char")] = page["margin-next-char"] + "px";
     }
-    if(page["margin-before"]){
-      css[layout.getCssProp("margin-before")] = page["margin-before"] + "px";
+    if(page["margin-prev-line"]){
+      css[layout.getCssProp("margin-prev-line")] = page["margin-prev-line"] + "px";
     }
-    if(page.border){
-      css["border-width"] = page.border + "px";
-      if(page.forked){
-	Args.copy(css, cssForkBorder(layout, page));
+    if(page["margin-next-line"]){
+      css[layout.getCssProp("margin-next-line")] = page["margin-next-line"] + "px";
+    }
+    if(page.forked){
+      if(!page.head){
+	css[layout.getCssProp("border-prev-line")] = "none";
+      }
+      if(!page.tail){
+	css[layout.getCssProp("border-next-line")] = "none";
       }
     }
     return css;
@@ -4064,8 +4108,8 @@ var PageGenerator = (function PageGeneratorClosure(){
     },
 
     // yield json layout tree
-    parsePage : function(args){
-      return this.parser.parsePage(args);
+    parsePage : function(){
+      return this.parser.parsePage();
     },
 
     // eval json layout tree
@@ -4075,7 +4119,7 @@ var PageGenerator = (function PageGeneratorClosure(){
 
     // yield + eval
     yieldPage : function(args){
-      var page = this.parsePage(args);
+      var page = this.parsePage();
       return this.evalPage(page, args);
     }
   };
@@ -4615,6 +4659,7 @@ var Pagerize = (function PagerizeClosure(){
     },
 
     parsePageBg : function(){
+      var prev = null;
       var latest = null;
       var looplen = env.isIE? pgconfig.system.parsingLoopIE : pgconfig.system.parsingLoop;
       for(var i = 0; i < looplen; i++){
@@ -4624,7 +4669,11 @@ var Pagerize = (function PagerizeClosure(){
 	  this.onComplete(this);
 	  return;
 	}
+	prev = latest;
 	latest = this.addPage(this.parsePage());
+	if(prev != null && latest != null && prev.no == latest.no){
+	  return; // avoid infinite loop
+	}
       }
       if(latest){
 	this.progress = Math.floor(100 * (latest.spos || 0) / this.text.length);
@@ -5105,7 +5154,7 @@ var Book = (function BookClosure(){
 // ------------------------------------------------------------------------
 // export (always)
 // ------------------------------------------------------------------------
-Nehan3.version = "3.0.2";
+Nehan3.version = "3.0.3";
 Nehan3.env = env;
 Nehan3.config = config;
 Nehan3.Pagerize = Pagerize;
