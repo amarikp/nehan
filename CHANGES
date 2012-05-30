@@ -8,7 +8,8 @@ Mark "!": change that can break compatibility with older version
 
 version 3.0.3
 =========================
-* add new config(Pagerize.pgconfig.pager.nextLinkTextVert etc)
+o support padding
+o add new config(Pagerize.pgconfig.pager.nextLinkTextVert etc)
 
 version 3.0.2, 2012/05/26
 =========================
