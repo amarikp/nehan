@@ -112,107 +112,6 @@ table.nehan-block-element tbody tr.even td {
   margin-right:5px;
 }
 
-/* url:http://www.red-team-design.com/cross-browser-css-gradient-buttons */
-.nehan-button{
-  text-decoration: none;
-  font: bold 14px 'Trebuchet MS',Arial, Helvetica;
-  display: inline-block;
-  text-align: center;
-  color: #fff;
-  border: 1px solid #9c9c9c; /* Fallback style */
-  border: 1px solid rgba(0, 0, 0, 0.3);            
-  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
-  box-shadow: 0 0 .05em rgba(0,0,0,0.4);
-  -moz-box-shadow: 0 0 .05em rgba(0,0,0,0.4);
-  -webkit-box-shadow: 0 0 .05em rgba(0,0,0,0.4);
-}
-.nehan-button, .nehan-button span{
-  color:#fff;
-  -moz-border-radius: .3em;
-  border-radius: .3em;
-}
-.nehan-button span{
-  color:#fff;
-  border-top: 1px solid #fff; /* Fallback style */
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
-  display: block;
-  background-image: -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.25, rgba(0, 0, 0, 0.05)), color-stop(.25, transparent), to(transparent)),
-                    -webkit-gradient(linear, 0 100%, 100% 0, color-stop(.25, rgba(0, 0, 0, 0.05)), color-stop(.25, transparent), to(transparent)),
-                    -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.75, transparent), color-stop(.75, rgba(0, 0, 0, 0.05))),
-                    -webkit-gradient(linear, 0 100%, 100% 0, color-stop(.75, transparent), color-stop(.75, rgba(0, 0, 0, 0.05)));
-  background-image: -moz-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%, transparent),
-                    -moz-linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%, transparent),
-                    -moz-linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%),
-                    -moz-linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.05) 75%);
-  -moz-background-size: 3px 3px;
-  -webkit-background-size: 3px 3px;
-}
-.nehan-button:hover{
-  color:#fff;
-  box-shadow: 0 0 .1em rgba(0,0,0,0.4);
-  -moz-box-shadow: 0 0 .1em rgba(0,0,0,0.4);
-  -webkit-box-shadow: 0 0 .1em rgba(0,0,0,0.4);
-}
-.nehan-button:active{
-  color:#fff;
-  position: relative;
-  top: 1px;
-}
-/* button-blue */
-.nehan-button-blue{
-  color:#fff;
-  background: #4477a1;
-  background: -webkit-gradient(linear, left top, left bottom, from(#81a8cb), to(#4477a1) );
-  background: -moz-linear-gradient(-90deg, #81a8cb, #4477a1);
-  filter:  progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#81a8cb', endColorstr='#4477a1');
-}
-.nehan-button-blue:hover{
-  color:#fff;
-  background: #81a8cb;
-  background: -webkit-gradient(linear, left top, left bottom, from(#4477a1), to(#81a8cb) );
-  background: -moz-linear-gradient(-90deg, #4477a1, #81a8cb);
-  filter:  progid:DXImageTransform.Microsoft.gradient(GradientType=0,startColorstr='#4477a1', endColorstr='#81a8cb');
-}
-.nehan-button-blue:active{
-  color:#fff;
-  background: #4477a1;
-}
-/* button-orange */
-.nehan-button-orange{
-  color:#fff;
-  background:#f09c15;
-  background:-webkit-gradient(linear,lefttop,leftbottom,from(#f8c939),to(#f09c15));
-  background:-moz-linear-gradient(-90deg,#f8c939,#f09c15);
-  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#f8c939',EndColorStr='#f09c15');
-}
-.nehan-button-orange:hover{
-  color:#fff;
-  background:#f8c939;
-  background:-webkit-gradient(linear,lefttop,leftbottom,from(#f09c15),to(#f8c939));
-  background:-moz-linear-gradient(-90deg,#f09c15,#f8c939);
-  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#f09c15',EndColorStr='#f8c939');
-}
-.nehan-button-orange:active{
-  color:#fff;
-  background:#f09c15;
-}
-/* button-silver */
-.nehan-button-silver{
-  background:#8a8a8a;
-  background:-webkit-gradient(linear,lefttop,leftbottom,from(#eaeaea),to(#c5c5c5));
-  background:-moz-linear-gradient(-90deg,#eaeaea,#c5c5c5);
-  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#eaeaea',EndColorStr='#c5c5c5');
-}
-.nehan-button-silver:hover{
-  background:#aaa;
-  background:-webkit-gradient(linear,lefttop,leftbottom,from(#c5c5c5),to(#eaeaea));
-  background:-moz-linear-gradient(-90deg,#c5c5c5,#eaeaea);
-  filter:progid:DXImageTransform.Microsoft.Gradient(GradientType=0,StartColorStr='#c5c5c5',EndColorStr='#eaeaea');
-}
-.nehan-button-silver:active{
-  background:#c5c5c5;
-}
-
 /*
 from blueprintcss: Blueprint CSS Framework 1.0.1
 http://blueprintcss.org
@@ -239,3 +138,131 @@ http://blueprintcss.org
 .nehan-page .notice a {color:#514721;}
 .nehan-page .success a {color:#264409;}
 .nehan-page .info a {color:#205791;}
+
+/*!
+ * CSS3 Google Buttons
+ *
+ * Heavily inspired by css3-github-buttons, Twitter Bootstrap, and
+ * of course, Google. I don't claim ownership over any of this.
+ *
+ * Constructed by Tim O'Donnell (http://github.com/todc)
+ */
+html {
+  font-size: 100%;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+a:focus {
+  outline: thin dotted;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+a:hover, a:active {
+  outline: 0;
+}
+.gn-button {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+  margin: 0;
+  padding: 8px 12px;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid #cccccc;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+
+  background-color: #f5f5f5;
+  *background-color: #e6e6e6;
+  background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -ms-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
+  background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: linear-gradient(top, #ffffff, #e6e6e6);
+
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e6e6e6', GradientType=0);
+  -webkit-background-clip: padding;
+  -moz-background-clip: padding;
+  background-clip: padding;
+  /* IE hacks */
+
+  zoom: 1;
+  z-index: 1;
+  *display: inline;
+  font: bold 12px Helvetica, Arial, sans-serif;
+  line-height: 12px;
+  color: #444444;
+  min-width: 42px;
+  text-align: center;
+  text-shadow: 0 1px 0 #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.gn-button:hover,
+.gn-button:focus,
+.gn-button:active,
+.gn-button.active {
+  color: #333;
+  text-decoration: none;
+  border-color: #c6c6c6;
+  background-color: #e6e6e6;
+  *background-color: #d9d9d9;
+  background-image: -moz-linear-gradient(top, #f8f8f8, #f1f1f1);
+  background-image: -ms-linear-gradient(top, #f8f8f8, #f1f1f1);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#f8f8f8), to(#f1f1f1));
+  background-image: -webkit-linear-gradient(top, #f8f8f8, #f1f1f1);
+  background-image: -o-linear-gradient(top, #f8f8f8, #f1f1f1);
+  background-image: linear-gradient(top, #f8f8f8, #f1f1f1);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f8f8f8', endColorstr='#f1f1f1', GradientType=0);
+  -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  outline: none;
+}
+
+.gn-button:active, .gn-button.active {
+  background-color: #f4f4f4;
+  background-image: -moz-linear-gradient(top, #f6f6f6, #f1f1f1);
+  background-image: -ms-linear-gradient(top, #f6f6f6, #f1f1f1);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#f6f6f6), to(#f1f1f1));
+  background-image: -webkit-linear-gradient(top, #f6f6f6, #f1f1f1);
+  background-image: -o-linear-gradient(top, #f6f6f6, #f1f1f1);
+  background-image: linear-gradient(top, #f6f6f6, #f1f1f1);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f6f6f6', endColorstr='#f1f1f1', GradientType=0);
+  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.gn-button:focus {
+  /* Blue border on button focus. */
+
+  border-color: #4D90FE;
+}
+.gn-button.checked {
+  color: #333;
+  text-shadow: none;
+  border: 1px solid #ccc;
+  background-color: #e8e8e8;
+  background-image: -moz-linear-gradient(top, #eeeeee, #e0e0e0);
+  background-image: -ms-linear-gradient(top, #eeeeee, #e0e0e0);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#eeeeee), to(#e0e0e0));
+  background-image: -webkit-linear-gradient(top, #eeeeee, #e0e0e0);
+  background-image: -o-linear-gradient(top, #eeeeee, #e0e0e0);
+  background-image: linear-gradient(top, #eeeeee, #e0e0e0);
+  background-repeat: repeat-x;
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eeeeee', endColorstr='#e0e0e0', GradientType=0);
+  -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+/* overrides extra padding on button elements in Firefox */
+.gn-button::-moz-focus-inner {
+  padding: 0;
+  border: 0;
+}

@@ -4163,8 +4163,8 @@ var Pagerize = (function PagerizeClosure(){
       pagerStatus: "nehan-pagerize-pager-status",
       pagerCurPage: "nehan-pagerize-pager-cur-page",
       pagerTotalPage: "nehan-pagerize-pager-total-page",
-      pagerNext: ["nehan-button", "nehan-button-orange", "nehan-pagerize-pager-next"],
-      pagerPrev: ["nehan-button", "nehan-button-blue", "nehan-pagerize-pager-prev"],
+      pagerNext: ["gn-button", "nehan-pagerize-pager-next"],
+      pagerPrev: ["gn-button", "nehan-pagerize-pager-prev"],
       loadingText: "nehan-pagerize-loading-text"
     },
     pager:{
@@ -4174,10 +4174,10 @@ var Pagerize = (function PagerizeClosure(){
       btnWidth:80,
       statusWidth:140,
       curPageInputWidth:30,
-      nextLinkTextVert:"<span>&laquo; NEXT</span>",
-      prevLinkTextVert:"<span>PREV &raquo;</span>",
-      nextLinkTextHori:"<span>NEXT &raquo;</span>",
-      prevLinkTextHori:"<span>&laquo; PREV</span>"
+      nextLinkTextVert:"&laquo; NEXT",
+      prevLinkTextVert:"PREV &raquo;",
+      nextLinkTextHori:"NEXT &raquo;",
+      prevLinkTextHori:"&laquo; PREV"
     },
     footer:{
       height:20,
