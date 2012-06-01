@@ -12,11 +12,7 @@
   font-family:'ＭＳ ゴシック', 'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', monospace;
 }
 .nehan-text-line a{
-  color:#06c;
   text-decoration:none;
-}
-.nehan-text-line a:hover{
-  color:#06c;
 }
 .nehan-img img{
   border-color:#aaa;
@@ -101,7 +97,8 @@ table.nehan-block-element tbody tr.even td {
   color:#222;
   font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
 }
-.nehan-pagerize-footer a:focus, a:hover {
+.nehan-pagerize-footer a:focus,
+.nehan-pagerize-footer a:hover {
   color:#09f;
 }
 .nehan-pagerize-footer a {
@@ -220,7 +217,11 @@ table.nehan-block-element tbody tr.even td {
 from blueprintcss: Blueprint CSS Framework 1.0.1
 http://blueprintcss.org
 */
-.error, .alert, .notice, .success, .info {
+.nehan-page .error,
+.nehan-page .alert,
+.nehan-page .notice,
+.nehan-page .success,
+.nehan-page .info {
   -moz-border-radius:0.25em;
   -khtml-border-radius:0.25em;
   -webkit-border-radius:0.25em;
@@ -228,12 +229,13 @@ http://blueprintcss.org
   padding:0;
   margin:0;
 }
-.error, .alert {background:#fbe3e4;color:#8a1f11;border-color:#fbc2c4;}
-.notice {background:#fff6bf;color:#514721;border-color:#ffd324;}
-.success {background:#e6efc2;color:#264409;border-color:#c6d880;}
-.info {background:#d5edf8;color:#205791;border-color:#92cae4;}
-.error a, .alert a {color:#8a1f11;}
-.notice a {color:#514721;}
-.success a {color:#264409;}
-.info a {color:#205791;}
-
+.nehan-page .error,
+.nehan-page .alert {background:#fbe3e4;color:#8a1f11;border-color:#fbc2c4;}
+.nehan-page .notice {background:#fff6bf;color:#514721;border-color:#ffd324;}
+.nehan-page .success {background:#e6efc2;color:#264409;border-color:#c6d880;}
+.nehan-page .info {background:#d5edf8;color:#205791;border-color:#92cae4;}
+.nehan-page .error a,
+.nehan-page .alert a {color:#8a1f11;}
+.nehan-page .notice a {color:#514721;}
+.nehan-page .success a {color:#264409;}
+.nehan-page .info a {color:#205791;}

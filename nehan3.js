@@ -450,6 +450,14 @@ var Util = {
     return text.replace(/^[\s]+/, "");
   },
 
+  cutTailSpace : function(text){
+    return text.replace(/[\s]+$/g, "");
+  },
+
+  cutEdgeSpace : function(text){
+    return this.cutTailSpace(this.cutHeadSpace(text));
+  },
+
   cutHeadCRLF : function(text){
     return text.replace(/^\n+/g, "");
   },
@@ -1043,6 +1051,7 @@ var Lexer = (function LexerClosure(){
 	.replace(/<\/([\w\-]+)/g, function(all, grp){
 	  return "</" + grp.toLowerCase();
 	})
+	.replace(/<rp>[^<]+<\/rp>/gi, "")
 	.replace(/([^\n])<img/g, "$1\n<img") 
 	.replace(/([^\n])<table/g, "$1\n<table")
 	.replace(/([^\n])<end-page/g, "$1\n<end-page")
@@ -3072,7 +3081,7 @@ var DocumentParser = (function DocumentParserClosure() {
 
     // scenario tag is constructed with tree parts.
     //
-    // <shead>: scenario header scape(like <thead> in table tag).
+    // <shead>: scenario header space(like <thead> in table tag).
     // <sbody>: scenario body space(like <tbody> in table tag).
     // <sfoot>: scenario footer space(like <tfoot> in table tag).
     //
@@ -3630,6 +3639,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     if(page.size){
       css[layout.getCssProp("page-size")] = page.size + "px";
     }
+    // mainly we use margin for IE padding trouble.
     if(page["margin-prev-char"]){
       css[layout.getCssProp("margin-prev-char")] = page["margin-prev-char"] + "px";
     }
