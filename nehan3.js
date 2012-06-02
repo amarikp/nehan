@@ -2162,6 +2162,11 @@ var DocumentParser = (function DocumentParserClosure() {
       return this.ctx;
     },
 
+    getPercent : function(page){
+      var total = this.lexer.lexer.text.length;
+      return 100 * page.spos / total;
+    },
+
     hasNext : function(){
       return !this.finish;
     },
@@ -4687,7 +4692,7 @@ var Pagerize = (function PagerizeClosure(){
 	}
       }
       if(latest){
-	this.progress = Math.floor(100 * (latest.spos || 0) / this.text.length);
+	this.progress = Math.floor(this.generator.getParser().getPercent(latest));
 	this.setPageCount("(" + this.progress + "%)");
 	this.onProgress(this, this.progress, this.pages.length);
       }
