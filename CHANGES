@@ -6,6 +6,10 @@ Mark "*": bug fixed.
 Mark "!": change that can break compatibility with older version
 ===============================================================================
 
+version 3.0.4
+=========================
+* fix vertical alphabet bug in IE when non transitional mode is selected.
+
 version 3.0.3
 =========================
 o update default button design(use google-buttons)

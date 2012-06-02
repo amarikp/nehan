@@ -3448,7 +3448,8 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     var css = {
       //"line-height" : maxFontSize, // TODO
       "writing-mode": "tb-rl",
-      "line-height": text.fontSize + "px"
+      "line-height": text.fontSize + "px",
+      "float": "left"
     };
     return css;
   };
@@ -5164,7 +5165,7 @@ var Book = (function BookClosure(){
 // ------------------------------------------------------------------------
 // export (always)
 // ------------------------------------------------------------------------
-Nehan3.version = "3.0.3";
+Nehan3.version = "3.0.4";
 Nehan3.env = env;
 Nehan3.config = config;
 Nehan3.Pagerize = Pagerize;
