@@ -3488,7 +3488,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     };
   };
 
-  var cssImg = function(layout, img){
+  var cssImgWrap = function(layout, img){
     var css = {
       "float": layout.getCssProp("block-float"),
       "width": img.width + "px",
@@ -3504,7 +3504,9 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
 
   var cssImgBody = function(layout, img){
     var css = {
-      "border-width": (img.border || 0) + "px"
+      "border-width": (img.border || 0) + "px",
+      "width": img.width + "px",
+      "height": img.height + "px"
     };
     return css;
   };
@@ -3906,7 +3908,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       // so wrap with div and set css to it.
       return Tag.wrap("div", {
 	"class": config.className.img,
-	"style": Attr.css(cssImg(layout, img))
+	"style": Attr.css(cssImgWrap(layout, img))
       }, this.evalImgBody(layout, ctx, parent, img));
     },
 
@@ -4486,10 +4488,13 @@ var Pagerize = (function PagerizeClosure(){
     });
     this.generator = new PageGenerator(this.text, this.pageLayout);
     this.onStart = opt.onStart || function(reader){};
+    this.onReady = opt.onReady || function(reader){};
     this.onProgress = opt.onProgress || function(reader, percent, curPageCount){};
     this.onComplete = opt.onComplete || function(reader){};
     this.onWritePageStart = opt.onWritePageStart || function(reader, pageNo){};
     this.onWritePageEnd = opt.onWritePageEnd || function(reader, pageNo){};
+    this.onWriteLastNext = opt.onWriteLastNext || function(reader){};
+    this.onWriteFirstPrev = opt.onWriteFirstPrev || function(reader){};
   }
 
   Reader.prototype = {
@@ -4500,6 +4505,7 @@ var Pagerize = (function PagerizeClosure(){
       this.onStart(this);
       this.addPage(this.parsePage());
       this.writePage(0);
+      this.onReady(this);
       if(this.pager){
 	this.parsePageBg();
       } else {
@@ -4806,12 +4812,16 @@ var Pagerize = (function PagerizeClosure(){
     writeNext : function(){
       if(this.pageNo < this.pages.length - 1){
 	this.writePage(this.pageNo + 1);
+      } else {
+	this.onWriteLastNext(this);
       }
     },
 
     writePrev : function(){
       if(this.pageNo > 0){
 	this.writePage(this.pageNo - 1);
+      } else {
+	this.onWriteFirstPrev(this);
       }
     }
   };

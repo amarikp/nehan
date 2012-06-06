@@ -8,8 +8,11 @@ Mark "!": change that can break compatibility with older version
 
 version 3.0.4
 =========================
-o new function(Nehan3.DocumentParser.getPercent)
-* fix vertical alphabet bug in IE when non transitional mode is selected.
+o Nehan3.Reader.onReady supported.
+o Nehan3.Reader.onWriteLastNext supported.
+o Nehan3.Reader.onWriteFirstPrev supported.
+o Nehan3.DocumentParser.getPercent added.
+* fix IE vertical alphabet bug in transitional mode.
 
 version 3.0.3
 =========================
