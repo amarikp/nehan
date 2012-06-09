@@ -168,22 +168,22 @@ a:hover, a:active {
   padding: 8px 12px;
   cursor: pointer;
   outline: none;
-  border: 1px solid #cccccc;
+  border: 1px solid #aaaaaa;
   -webkit-border-radius: 2px;
   -moz-border-radius: 2px;
   border-radius: 2px;
 
-  background-color: #f5f5f5;
+  background-color: #ececec;
   *background-color: #e6e6e6;
-  background-image: -moz-linear-gradient(top, #ffffff, #e6e6e6);
-  background-image: -ms-linear-gradient(top, #ffffff, #e6e6e6);
-  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), to(#e6e6e6));
-  background-image: -webkit-linear-gradient(top, #ffffff, #e6e6e6);
-  background-image: -o-linear-gradient(top, #ffffff, #e6e6e6);
-  background-image: linear-gradient(top, #ffffff, #e6e6e6);
+  background-image: -moz-linear-gradient(top, #fafafa, #e1e1e1);
+  background-image: -ms-linear-gradient(top, #fafafa, #e1e1e1);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#fafafa), to(#e1e1e1));
+  background-image: -webkit-linear-gradient(top, #fafafa, #e1e1e1);
+  background-image: -o-linear-gradient(top, #fafafa, #e1e1e1);
+  background-image: linear-gradient(top, #fafafa, #e1e1e1);
 
   background-repeat: repeat-x;
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e6e6e6', GradientType=0);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fafafa', endColorstr='#e1e1e1', GradientType=0);
   -webkit-background-clip: padding;
   -moz-background-clip: padding;
   background-clip: padding;
@@ -207,7 +207,7 @@ a:hover, a:active {
 .gn-button.active {
   color: #333;
   text-decoration: none;
-  border-color: #c6c6c6;
+  border-color: #9a9a9a;
   background-color: #e6e6e6;
   *background-color: #d9d9d9;
   background-image: -moz-linear-gradient(top, #f8f8f8, #f1f1f1);

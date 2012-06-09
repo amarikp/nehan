@@ -2225,7 +2225,7 @@ var DocumentParser = (function DocumentParserClosure() {
 	return;
       }
 
-      if(restSpace - token.stepSize >= next.token.stepSize){
+      if(restSpace - token.stepSize >= next.token.stepSize || next.token.stepSize >= layout.maxNextChar){
 	ctx.pushTextToken(token);
 	return;
       }
