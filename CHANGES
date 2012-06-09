@@ -6,6 +6,11 @@ Mark "*": bug fixed.
 Mark "!": change that can break compatibility with older version
 ===============================================================================
 
+version 3.0.5
+=========================
+o update button color scheme a little.
+* fix tail check bug.
+
 version 3.0.4
 =========================
 o Nehan3.Reader.onReady supported.
