@@ -5180,7 +5180,7 @@ var Book = (function BookClosure(){
 // ------------------------------------------------------------------------
 // export (always)
 // ------------------------------------------------------------------------
-Nehan3.version = "3.0.4";
+Nehan3.version = "3.0.5";
 Nehan3.env = env;
 Nehan3.config = config;
 Nehan3.Pagerize = Pagerize;
