@@ -9,7 +9,9 @@ Mark "!": change that can break compatibility with older version
 version 3.0.5
 =========================
 o update button color scheme a little.
-* fix tail check bug.
+o now enable to set id property to all blocks.
+o add new tag(ibox).
+* fix tail check bug for a long word.
 
 version 3.0.4
 =========================

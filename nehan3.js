@@ -146,6 +146,7 @@ var config = {
     forkedPage:"nehan-forked-page",
     alignedPage:"nehan-aligned-page",
     inlineReader:"nehan-inline-reader",
+    inlineBox:"nehan-inline-box",
     errorMsg:"nehan-error-msg",
     textLine:"nehan-text-line",
     rubyLine:"nehan-ruby-line",
@@ -158,7 +159,7 @@ var config = {
   },
   // define regexp pattern that makes lexing tokens.
   rex:{
-    word:/[\w!\.\?\/\_:#;]+/,
+    word:/[\w!\.\?\/\_:#;"',]+/,
     nvAttr:/(?:\S+)=["']?(?:(?:.(?!["']?\s+(?:\S+)=|["']))+.)["']?/g
   },
   // define tag categories.
@@ -179,6 +180,7 @@ var config = {
       "img",
       "table",
       "iframe",
+      "ibox",
       "textarea",
       "ireader",
       "ipage"
@@ -208,6 +210,7 @@ var config = {
       "table",
       "textarea",
       "iframe",
+      "ibox",
       "ipage",
       "ireader",
       "shead",
@@ -581,9 +584,9 @@ var Attr = {
   html : function(attr){
     var ret = [];
     for(prop in attr){
-      var value = attr[prop] + "";
-      value = Util.escape(value);
-      if(attr[prop] != ""){
+      if(attr[prop]){
+	var value = attr[prop] + "";
+	value = Util.escape(value);
 	ret.push(prop + "='" + value + "'");
       }
     }
@@ -1588,6 +1591,7 @@ var ParserContext = (function ParserContextClosure(){
     createBlock : function(layout, args){
       return Args.init(new Object, {
 	"type": "block",
+	id:void(0),
 	name: "",
 	width: 0,
 	height: 0,
@@ -1762,7 +1766,7 @@ var ParserContext = (function ParserContextClosure(){
     },
 
     pushCharToken : function(token){
-      this.seekNextChar += token.stepSize;
+      this.seekNextChar += token.advanceSize;
       this.lineChars.push(token);
       if(Token.isCharCountableToken(token)){
 	this.seekCharCount++;
@@ -1775,7 +1779,7 @@ var ParserContext = (function ParserContextClosure(){
     },
 
     pushWordToken : function(token){
-      this.seekNextChar += token.stepSize;
+      this.seekNextChar += token.advanceSize;
       this.lineChars.push(token);
       this.seekCharCount += token.data.length;
 
@@ -2048,8 +2052,6 @@ var Layout = (function LayoutClosure(){
 	this.maxNextChar = this.height - this.spaceForHeadNG;
 	this.maxNextLine = this.width;
       } else {
-	// in horizontal mode, stepSize of character always same size
-	// so spaceForHeadNg equals to fontSize.
 	this.spaceForHeadNG = this.disableTailSpace? 0 : this.fontSize;
 	this.maxNextChar = this.width - this.spaceForHeadNG;
 	this.maxNextLine = this.height;
@@ -2225,7 +2227,7 @@ var DocumentParser = (function DocumentParserClosure() {
 	return;
       }
 
-      if(restSpace - token.stepSize >= next.token.stepSize || next.token.stepSize >= layout.maxNextChar){
+      if(restSpace - token.advanceSize >= next.token.advanceSize || next.token.advanceSize >= layout.maxNextChar){
 	ctx.pushTextToken(token);
 	return;
       }
@@ -2308,14 +2310,14 @@ var DocumentParser = (function DocumentParserClosure() {
     parseMetricsChar : function(lexer, layout, ctx, token){
       var stepScale = layout.isVertical? token.vscale : token.hscale;
       token.fontSize = ctx.fontSize;
-      token.stepSize = (stepScale != 1)? Math.floor(ctx.fontSize * stepScale) : ctx.fontSize;
+      token.advanceSize = (stepScale != 1)? Math.floor(ctx.fontSize * stepScale) : ctx.fontSize;
 
       if(layout.isVertical){
 	if(token.cnv && token.cnv == "&nbsp;"){
-	  token.stepSize = ctx.fontSize2;
+	  token.advanceSize = ctx.fontSize2;
 	}
       } else if(token.half){
-	token.stepSize = ctx.fontSize2;
+	token.advanceSize = ctx.fontSize2;
       }
     },
 
@@ -2369,17 +2371,17 @@ var DocumentParser = (function DocumentParserClosure() {
       if(Char.isKakkoStartChar(token.data) && prevText != ""){
 	if(!Char.isKakkoStartChar(prevText) && !Char.isKutenTouten(prevText)){
 	  token["margin-prev-char"] = ctx.fontSize2;
-	  token.stepSize = ctx.fontSize;
+	  token.advanceSize = ctx.fontSize;
 	}
       } else if(Char.isKakkoEndChar(token.data) && nextText != ""){
 	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
 	  token["margin-next-char"] = ctx.fontSize2;
-	  token.stepSize = ctx.fontSize;
+	  token.advanceSize = ctx.fontSize;
 	}
       } else if(Char.isKutenTouten(token.data)){
 	if(!Char.isKakkoEndChar(nextText) && !Char.isKutenTouten(nextText)){
 	  token["margin-next-char"] = ctx.fontSize2;
-	  token.stepSize = ctx.fontSize;
+	  token.advanceSize = ctx.fontSize;
 	}
       }
     },
@@ -2407,17 +2409,17 @@ var DocumentParser = (function DocumentParserClosure() {
     parseMetricsIconChar : function(lexer, layout, ctx, token){
       var size = layout.isVertical? token.height : token.width;
       token.fontSize = size;
-      token.stepSize = size;
+      token.advanceSize = size;
     },
 
     parseMetricsTcy : function(lexer, layout, ctx, token){
       token.fontSize = ctx.fontSize;
-      token.stepSize = ctx.fontSize;
+      token.advanceSize = ctx.fontSize;
     },
 
     parseMetricsWord : function(lexer, layout, ctx, token){
       token.fontSize = ctx.fontSize;
-      token.stepSize = token.data.length * ctx.fontSize2;
+      token.advanceSize = token.data.length * ctx.fontSize2;
     },
 
     parseChar : function(lexer, layout, ctx, token){
@@ -2437,11 +2439,11 @@ var DocumentParser = (function DocumentParserClosure() {
     },
 
     parseWord : function(lexer, layout, ctx, token){
-      if(typeof token.stepSize == "undefined"){
+      if(typeof token.advanceSize == "undefined"){
 	this.parseMetrics(lexer, layout, ctx, token);
       }
       // if word is longer than layout max, split it
-      if(token.stepSize > layout.maxNextChar){
+      if(token.advanceSize > layout.maxNextChar){
 	this.pushLongWordToLine(lexer, layout, ctx, token);
       } else {
 	// word is short enough to push as normal text token.
@@ -2685,6 +2687,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var box = BoxModel.parseBox(attr);
       var block = BoxModel.setEdgeProps(ctx.createImg(layout, {
 	name:"img",
+	id:attr.id,
 	width:box.width,
 	height:box.height,
 	wrapWidth: box.wrapWidth,
@@ -2699,6 +2702,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var attr = token.data.attr;
       var box = BoxModel.parseBox(attr);
       var block = BoxModel.setEdgeProps(ctx.createBlock(layout, {
+	id:attr.id,
 	width: box.width,
 	height: box.height,
 	wrapWidth: box.wrapWidth,
@@ -2713,6 +2717,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var attr = token.data.attr;
       var box = BoxModel.parseBox(attr);
       var block = BoxModel.setEdgeProps(ctx.createBlock(layout, {
+	id:attr.id,
 	width: box.width,
 	height: box.height,
 	wrapWidth: box.wrapWidth,
@@ -2730,6 +2735,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var attr = token.data.attr;
       var box = BoxModel.parseBox(attr);
       var block = BoxModel.setEdgeProps(ctx.createInlineFrame(layout, {
+	id:attr.id,
 	width: box.width,
 	height: box.height,
 	wrapWidth: box.wrapWidth,
@@ -2743,6 +2749,21 @@ var DocumentParser = (function DocumentParserClosure() {
       return this.parseBlockElement(lexer, layout, ctx, block, attr);
     },
 
+    parseInlineBox : function(lexer, layout, ctx, token){
+      var attr = token.data.attr;
+      var box = BoxModel.parseBox(attr);
+      var block = BoxModel.setEdgeProps(ctx.createBlock(layout, {
+	id:attr.id,
+	width: box.width,
+	height: box.height,
+	wrapWidth: box.wrapWidth,
+	wrapHeight: box.wrapHeight,
+	content: token.data.content,
+	name: token.data.name
+      }), box);
+      return this.parseBlockElement(lexer, layout, ctx, block, attr);
+    },
+
     parseInlinePage : function(lexer, layout, ctx, token){
       token.data.attr.nopager = true;
       return this.parseInlineReader(lexer, layout, ctx, token);
@@ -2753,6 +2774,7 @@ var DocumentParser = (function DocumentParserClosure() {
       attr.border = parseInt(attr.border || config.layout.readerBorder);
       var box = BoxModel.parseBox(attr);
       var block = BoxModel.setEdgeProps(ctx.createInlineReader(layout, {
+	id:attr.id,
 	"class": (attr["class"] || ""),
 	direction:(attr.direction || layout.direction),
 	width:box.width,
@@ -2882,6 +2904,8 @@ var DocumentParser = (function DocumentParserClosure() {
 	return this.parseTextarea(lexer, layout, ctx, token);
       case "iframe":
 	return this.parseInlineFrame(lexer, layout, ctx, token);
+      case "ibox":
+	return this.parseInlineBox(lexer, layout, ctx, token);
       case "ipage":
 	return this.parseInlinePage(lexer, layout, ctx, token);
       case "ireader":
@@ -3405,14 +3429,14 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
       "position": "relative",
       "top": "-0.2em",
       "right": "-0.12em",
-      "height": text.stepSize + "px",
-      "line-height": text.stepSize + "px"
+      "height": text.advanceSize + "px",
+      "line-height": text.advanceSize + "px"
     };
     return css;
   };
 
   var cssCharImgVertWrap = function(layout, text){
-    var height = text.stepSize;
+    var height = text.advanceSize;
     var css = {
       "clear": "both",
       "height": height + "px",
@@ -3439,7 +3463,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
 
   var cssCharImgHori = function(layout, text){
     var css = {
-      "letter-spacing": (text.stepSize - text.fontSize) + "px"
+      "letter-spacing": (text.advanceSize - text.fontSize) + "px"
     };
     return css;
   };
@@ -3895,6 +3919,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     evalImgBody : function(layout, ctx, parent, img){
       var link = ctx.findTag("a");
       var body = Tag.start("img", {
+	"id":img.id,
 	"src":img.src,
 	"width":img.width,
 	"height":img.height,
@@ -3917,6 +3942,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
 	return this.evalImg(layout, ctx, parent, block);
       }
       var attr = {
+	"id": block.id,
 	"class": config.className.blockElement,
 	"style": Attr.css(cssBlockElement(layout, block))
       };
@@ -3927,6 +3953,9 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
 	attr["height"] = block.height;
       } else if(block.name == "textarea"){
 	attr["onclick"] = block.onclick;
+      } else if(block.name == "ibox"){
+	block.name = "div";
+	attr["class"] = [attr["class"], config.className.inlineBox].join(" ");
       }
       return Tag.wrap(block.name, attr, block.content);
     },
@@ -3936,6 +3965,7 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     evalInlineReader : function(layout, ctx, parent, block){
       var ireaderNo = ctx.pushInlineReader(block);
       return Tag.wrap("div", {
+	"id": block.id,
 	"class": [config.className.inlineReader, "ireader-" + ireaderNo].join(" "),
 	"style": Attr.css(cssBlockElement(layout, block))
       }, "");
@@ -4158,7 +4188,6 @@ var Pagerize = (function PagerizeClosure(){
     defLeadingRate:1.8,
     screenSpaceTB:20,
     screenSpaceLR:32,
-    borderWidth:1,
     maxSearchResult: 10,
     maxSearchExcerptLen: 20,
     className:{
@@ -5154,14 +5183,23 @@ var Book = (function BookClosure(){
 	},
 
 	onProgress:function(reader, percent, curPageCount){
+	  if(opt.onProgress){
+	    opt.onProgress(reader, percent, curPageCount);
+	  }
 	},
 
 	onWritePageStart:function(reader, pageNo){
 	  window.scroll(0,0);
+	  if(opt.onWritePageStart){
+	    opt.onWritePageStart(reader, pageNo);
+	  }
 	},
 
 	onWritePageEnd:function(reader, pageNo){
 	  setupTopicPath(topicPathDom, reader, pageNo);
+	  if(opt.onWritePageEnd){
+	    opt.onWritePageEnd(reader, pageNo);
+	  }
 	}
       });
 
