@@ -12,6 +12,7 @@ o update button color scheme a little.
 o now enable to set id property to all blocks.
 o add new tag(ibox).
 * fix tail check bug for a long word.
+! rename className prefix('nehan-' to 'nehan3-').
 
 version 3.0.4
 =========================
