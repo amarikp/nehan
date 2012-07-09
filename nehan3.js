@@ -52,13 +52,13 @@ var config = {
     blockMarginRate: 0.8,
     readerBorder: 1,
     acceptableResizeRate: 0.6,
-    headerScales:[
-      2.4, // H1
-      2.0, // H2
-      1.6, // H3
-      1.4, // H4
-      1.0, // H5
-      1.0  // H6
+    header:[
+      {scale:2.4}, // H1
+      {scale:2.0}, // H2
+      {scale:1.6}, // H3
+      {scale:1.4}, // H4
+      {scale:1.0}, // H5
+      {scale:1.0}  // H6
     ],
     indent:{
       indentBefore: 2,
@@ -137,25 +137,26 @@ var config = {
   },
   // define class name of generated layout elements(line, img, page ..etc)
   className:{
-    img:"nehan-img",
-    line:"nehan-line",
-    page:"nehan-page",
-    wrap:"nehan-wrap",
-    charImg:"nehan-char-img",
-    charIcon:"nehan-char-icon",
-    forkedPage:"nehan-forked-page",
-    alignedPage:"nehan-aligned-page",
-    inlineReader:"nehan-inline-reader",
-    inlineBox:"nehan-inline-box",
-    errorMsg:"nehan-error-msg",
-    textLine:"nehan-text-line",
-    rubyLine:"nehan-ruby-line",
-    labelLine:"nehan-label-line",
-    labelLineBody:"nehan-label-line-body",
-    rubyText:"nehan-ruby-text",
-    caption:"nehan-caption",
-    blockElement:"nehan-block-element",
-    tocLink:"nehan-toc-link"
+    img:"nehan3-img",
+    line:"nehan3-line",
+    page:"nehan3-page",
+    wrap:"nehan3-wrap",
+    charImg:"nehan3-char-img",
+    charIcon:"nehan3-char-icon",
+    forkedPage:"nehan3-forked-page",
+    alignedPage:"nehan3-aligned-page",
+    inlineReader:"nehan3-inline-reader",
+    inlineBox:"nehan3-inline-box",
+    errorMsg:"nehan3-error-msg",
+    textLine:"nehan3-text-line",
+    rubyLine:"nehan3-ruby-line",
+    labelLine:"nehan3-label-line",
+    labelLineBody:"nehan3-label-line-body",
+    rubyText:"nehan3-ruby-text",
+    caption:"nehan3-caption",
+    blockElement:"nehan3-block-element",
+    tocLink:"nehan3-toc-link",
+    header:"nehan3-header"
   },
   // define regexp pattern that makes lexing tokens.
   rex:{
@@ -700,11 +701,11 @@ var Word = {
 
 var Char = {
   isHeadNg : function(c1){
-    return /[）\)」】〕］\]。』＞〉》、．\.,]/.test(c1);
+    return /[）\)」】〕］\]。』＞〉》、．\.,”〟]/.test(c1);
   },
 
   isTailNg : function(c1){
-    return /[（\(「【［〔『＜〈《]/.test(c1);
+    return /[（\(「【［〔『＜〈《“〝]/.test(c1);
   },
 
   isTailConnectiveChar : function(c1){
@@ -712,11 +713,11 @@ var Char = {
   },
 
   isKakkoStartChar : function(c1){
-    return /[「『【［（《〈≪＜｛{\[\(]/.test(c1);
+    return /[｢「『【［（《〈≪＜｛{\[\(]/.test(c1);
   },
 
   isKakkoEndChar : function(c1){
-    return /[」』】］）》〉≫＞｝}\]\)]/.test(c1);
+    return /[」｣』】］）》〉≫＞｝}\]\)]/.test(c1);
   },
 
   isKutenTouten : function(c1){
@@ -1054,6 +1055,7 @@ var Lexer = (function LexerClosure(){
 	.replace(/<\/([\w\-]+)/g, function(all, grp){
 	  return "</" + grp.toLowerCase();
 	})
+	.replace(/“([^”]+)”/g, "〝$1〟")
 	.replace(/<rp>[^<]+<\/rp>/gi, "")
 	.replace(/([^\n])<img/g, "$1\n<img") 
 	.replace(/([^\n])<table/g, "$1\n<table")
@@ -2483,9 +2485,11 @@ var DocumentParser = (function DocumentParserClosure() {
 
     parseHeaderStart : function(lexer, layout, ctx, token){
       var level = parseInt(token.data.name.substring(1)) - 1; // H1 -> 0, H2 -> 1
+      var hconf = config.layout.header[level];
       token.data.name = "font";
-      token.data.attr.family = "Meiryo";
-      token.data.attr.scale = config.layout.headerScales[level];
+      //token.data.attr.family = hconf.fontFamily;
+      token.data.attr.scale = hconf.scale;
+      token.data["class"] = config.className.header;
       this.parseFontStart(lexer, layout, ctx, token);
     },
 
@@ -4004,9 +4008,13 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     },
 
     evalFontStartBody : function(layout, ctx, parent, tag){
-      return Tag.start(layout.isVertical? "div" : "span", {
+      var attr = {
 	"style":Attr.css(cssFont(layout, tag.attr))
-      });
+      };
+      if(tag.attr["class"]){
+	attr["class"] = tag.attr["class"];
+      }
+      return Tag.start(layout.isVertical? "div" : "span", attr);
     },
 
     evalFontEnd : function(layout, ctx, parent, tag){
@@ -4191,18 +4199,18 @@ var Pagerize = (function PagerizeClosure(){
     maxSearchResult: 10,
     maxSearchExcerptLen: 20,
     className:{
-      targetMarkup: "nehan-pagerize",
-      screenWrap: "nehan-pagerize-screen-wrap",
-      screen: "nehan-pagerize-screen",
-      pager: "nehan-pagerize-pager",
-      footer: "nehan-pagerize-footer",
-      copy: "nehan-pagerize-copyright",
-      pagerStatus: "nehan-pagerize-pager-status",
-      pagerCurPage: "nehan-pagerize-pager-cur-page",
-      pagerTotalPage: "nehan-pagerize-pager-total-page",
-      pagerNext: ["gn-button", "nehan-pagerize-pager-next"],
-      pagerPrev: ["gn-button", "nehan-pagerize-pager-prev"],
-      loadingText: "nehan-pagerize-loading-text"
+      targetMarkup: "nehan3-pagerize",
+      screenWrap: "nehan3-pagerize-screen-wrap",
+      screen: "nehan3-pagerize-screen",
+      pager: "nehan3-pagerize-pager",
+      footer: "nehan3-pagerize-footer",
+      copy: "nehan3-pagerize-copyright",
+      pagerStatus: "nehan3-pagerize-pager-status",
+      pagerCurPage: "nehan3-pagerize-pager-cur-page",
+      pagerTotalPage: "nehan3-pagerize-pager-total-page",
+      pagerNext: ["gn-button", "nehan3-pagerize-pager-next"],
+      pagerPrev: ["gn-button", "nehan3-pagerize-pager-prev"],
+      loadingText: "nehan3-pagerize-loading-text"
     },
     pager:{
       fontSize:16,

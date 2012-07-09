@@ -1,72 +1,74 @@
 @charset "utf-8";
-.nehan-page div{
+.nehan3-page div{
   margin:0;
   padding:0;
 }
-.nehan-text-line-vertical,
-.nehan-ruby-line-vertical{
+.nehan3-text-line-vertical,
+.nehan3-ruby-line-vertical{
   font-family:'IPA明朝','Meiryo','メイリオ','ＭＳ 明朝','Hiragino Mincho Pro',monospace !important;
 }
-.nehan-text-line-horizontal,
-.nehan-ruby-line-horizontal{
+.nehan3-text-line-horizontal,
+.nehan3-ruby-line-horizontal{
   font-family:'ＭＳ ゴシック', 'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', monospace;
 }
-.nehan-text-line a{
+.nehan3-text-line a{
   text-decoration:none;
 }
-.nehan-img img{
+.nehan3-img img{
   border-color:#aaa;
   border-style:solid;
 }
-.nehan-caption{
+
+.nehan3-header,
+.nehan3-caption{
   font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック',sans-serif;
 }
-.nehan-label-line{
+.nehan3-label-line{
   background-color:#88b212;
   -moz-border-radius:0.25em;
   -khtml-border-radius:0.25em;
   -webkit-border-radius:0.25em;
   border-radius:0.25em;
 }
-.nehan-label-line-body{
+.nehan3-label-line-body{
   color:#fff;
   font-weight:bold;
   font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', sans-serif;
 }
-.nehan-block-element,
-.nehan-page,
-.nehan-forked-page{
+.nehan3-block-element,
+.nehan3-page,
+.nehan3-forked-page{
   border-style:solid;
   border-color:#aaa;
   border-width:0;
 }
-table.nehan-block-element{
+table.nehan3-block-element{
   border-collapse:collapse;
   border-spacing:0;
   font-family:'Meiryo','メイリオ', 'Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック',sans-serif;
 }
-table.nehan-block-element,
-table.nehan-block-element th, 
-table.nehan-block-element td{
+table.nehan3-block-element,
+table.nehan3-block-element th, 
+table.nehan3-block-element td{
   vertical-align:middle;
 }
-table.nehan-block-element thead th {
+table.nehan3-block-element thead th {
   background:#c3d9ff;
 }
-table.nehan-block-element th, 
-table.nehan-block-element td{
+table.nehan3-block-element th, 
+table.nehan3-block-element td{
   padding:4px 10px 4px 5px;
 }
-.nehan-page tfoot {
+.nehan3-page tfoot {
   font-style:italic;
 }
-table.nehan-block-element tbody tr:nth-child(even) td, 
-table.nehan-block-element tbody tr.even td {
+table.nehan3-block-element tbody tr:nth-child(even) td, 
+table.nehan3-block-element tbody tr.even td {
   background:#e5ecf9;
 }
 
 /* Nehan.Pagerize */
-.nehan-pagerize-screen-wrap{
+.nehan3-pagerize-screen-wrap{
   border-width:1px;
   border-color:#888;
   border-style:solid;
@@ -75,40 +77,40 @@ table.nehan-block-element tbody tr.even td {
   -webkit-border-radius:5px;
   border-radius:5px;
 }
-.nehan-text-line-horizontal .kw-cmt{
+.nehan3-text-line-horizontal .kw-cmt{
   color:darkred;
 }
-.nehan-text-line-horizontal .kw-syntax{
+.nehan3-text-line-horizontal .kw-syntax{
   color:green;
   font-weight:bold;
 }
-.nehan-text-line-horizontal .kw-string{
+.nehan3-text-line-horizontal .kw-string{
   color:darkgreen;
 }
-.nehan-text-line-horizontal .kw-symbol{
+.nehan3-text-line-horizontal .kw-symbol{
   color:purple;
 }
-.nehan-pagerize-pager-total-page{
+.nehan3-pagerize-pager-total-page{
   font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
   font-size:14px;
 }
-.nehan-pagerize-footer{
+.nehan3-pagerize-footer{
   font-size:12px;
   color:#222;
   font-family:"Helvetica Neue", Arial, Helvetica, sans-serif;
 }
-.nehan-pagerize-footer a:focus,
-.nehan-pagerize-footer a:hover {
+.nehan3-pagerize-footer a:focus,
+.nehan3-pagerize-footer a:hover {
   color:#09f;
 }
-.nehan-pagerize-footer a {
+.nehan3-pagerize-footer a {
   color:#06c;
   text-decoration:underline;
 }
-.nehan-history-link{
+.nehan3-history-link{
   margin-right:5px;
 }
-.nehan-history-path{
+.nehan3-history-path{
   margin-right:5px;
 }
 
@@ -116,11 +118,11 @@ table.nehan-block-element tbody tr.even td {
 from blueprintcss: Blueprint CSS Framework 1.0.1
 http://blueprintcss.org
 */
-.nehan-page .error,
-.nehan-page .alert,
-.nehan-page .notice,
-.nehan-page .success,
-.nehan-page .info {
+.nehan3-page .error,
+.nehan3-page .alert,
+.nehan3-page .notice,
+.nehan3-page .success,
+.nehan3-page .info {
   -moz-border-radius:0.25em;
   -khtml-border-radius:0.25em;
   -webkit-border-radius:0.25em;
@@ -128,16 +130,16 @@ http://blueprintcss.org
   padding:0;
   margin:0;
 }
-.nehan-page .error,
-.nehan-page .alert {background:#fbe3e4;color:#8a1f11;border-color:#fbc2c4;}
-.nehan-page .notice {background:#fff6bf;color:#514721;border-color:#ffd324;}
-.nehan-page .success {background:#e6efc2;color:#264409;border-color:#c6d880;}
-.nehan-page .info {background:#d5edf8;color:#205791;border-color:#92cae4;}
-.nehan-page .error a,
-.nehan-page .alert a {color:#8a1f11;}
-.nehan-page .notice a {color:#514721;}
-.nehan-page .success a {color:#264409;}
-.nehan-page .info a {color:#205791;}
+.nehan3-page .error,
+.nehan3-page .alert {background:#fbe3e4;color:#8a1f11;border-color:#fbc2c4;}
+.nehan3-page .notice {background:#fff6bf;color:#514721;border-color:#ffd324;}
+.nehan3-page .success {background:#e6efc2;color:#264409;border-color:#c6d880;}
+.nehan3-page .info {background:#d5edf8;color:#205791;border-color:#92cae4;}
+.nehan3-page .error a,
+.nehan3-page .alert a {color:#8a1f11;}
+.nehan3-page .notice a {color:#514721;}
+.nehan3-page .success a {color:#264409;}
+.nehan3-page .info a {color:#205791;}
 
 /*!
  * CSS3 Google Buttons
