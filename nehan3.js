@@ -2333,6 +2333,11 @@ var DocumentParser = (function DocumentParserClosure() {
 	return;
       }
 
+      if(token.img == "tenten"){
+	token.advanceSize += token.advanceSize;
+	return;
+      }
+
       if(token.img.indexOf("kakko") < 0 && token.img != "touten" && token.img != "kuten"){
 	return;
       }
