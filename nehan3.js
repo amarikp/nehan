@@ -1552,6 +1552,7 @@ var ParserContext = (function ParserContextClosure(){
     this.seekPageNo = 0;
     this.seekCharCount = 0;
     this.seekTextPos = 0;
+    this.seekTokenIndex = 0;
     this.textSpacePrevChar = 0;
     this.textSpaceNextChar = 0;
     this.lineChars = [];
@@ -1563,8 +1564,6 @@ var ParserContext = (function ParserContextClosure(){
     this.fontColor = config.color.defCharImgColor;
     this.updateFontSize(layout.fontSize); // this.fontSize, this.fontSize2, this.fontSize4
   }
-
-  var snapProps =
     
   ParserContext.prototype = {
     getSnap : function(){
@@ -1573,7 +1572,7 @@ var ParserContext = (function ParserContextClosure(){
       var props = [
 	"tags", "tocs", "topicPath", "lastTopicPath",
 	"seekNextChar", "seekNextLine", "seekCharCount",
-	"seekTextPos", "textSpaceBefore", "textSpaceNextChar",
+	"seekTextPos", "seekTokenIndex", "textSpaceBefore", "textSpaceNextChar",
 	"lineChars", "rubyList", "inlinePages", "curToc",
 	"greedyMode", "labelAttr", "fontSize", "fontSize2", "fontSize4",
 	"fontColor"
@@ -3265,6 +3264,7 @@ var DocumentParser = (function DocumentParserClosure() {
       try {
 	var token = lexer.lookToken();
 	ctx.seekTextPos = token.pos;
+	ctx.seekTokenIndex = token.index;
 	token = this.onParseElementBefore(lexer, layout, ctx, token);
       } catch (e){
 	debug(e);
@@ -3292,6 +3292,7 @@ var DocumentParser = (function DocumentParserClosure() {
 	no: this.ctx.seekPageNo,
 	head: (this.ctx.seekPageNo == 0),
 	spos: this.ctx.seekTextPos,
+	ipos: this.ctx.seekTokenIndex,
 	cpos: this.ctx.seekCharCount
       });
       Args.copy(page, args || {});
