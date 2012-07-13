@@ -13,6 +13,7 @@ o now enable to set id property to all blocks.
 o add new tag(ibox).
 * fix tail check bug for a long word.
 * fix tenten vertical position.
+* wrap rotate element with block element(to propagate background color to rotated element).
 ! rename className prefix from 'nehan' to 'nehan3'(for version compatibility).
 
 version 3.0.4
