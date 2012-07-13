@@ -3492,7 +3492,15 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     return css;
   };
 
-  var cssWordVert = function(layout, text){
+  var cssWordVertRotateWrap = function(layout, text){
+    return {
+      "width": text.fontSize + "px",
+      "height": Math.floor(text.data.length * text.fontSize / 2) + "px",
+      "overflow": "visible"
+    };
+  };
+
+  var cssWordVertRotate = function(layout, text){
     var word = text.data;
     var fontSize2 = Math.floor(text.fontSize / 2);
     var marginBefore = (typeof text["margin-prev-char"] != "undefined")? text["margin-prev-char"] : 0;
@@ -3800,9 +3808,16 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     },
 
     evalWordVertical : function(layout, ctx, parent, text){
+      if(env.isIE){
+	return Tag.wrap("div", {
+	  "style": Attr.css(cssWordVertIE(layout, text))
+	}, text.data);
+      }
       return Tag.wrap("div", {
-	"style": Attr.css(env.isIE? cssWordVertIE(layout, text) : cssWordVert(layout, text))
-      }, text.data);
+	"style": Attr.css(cssWordVertRotateWrap(layout, text))
+      }, Tag.wrap("div", {
+	"style": Attr.css(cssWordVertRotate(layout, text))
+      }, text.data));
     },
 
     evalRubyBodyVert : function(layout, ctx, parent, ruby){
