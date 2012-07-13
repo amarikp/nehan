@@ -1,6 +1,6 @@
 /*
  source : nehan2.js
- version : 1.23
+ version : 1.24
  site : http://tategakibunko.mydns.jp/
  blog : http://tategakibunko.blog83.fc2.com/
 
@@ -1727,6 +1727,12 @@ if(!Nehan){
     } else {
       return Util.tagWrap("div", {
 	style : Util.inlineCss({
+	  "width": maxFontSize + "px",
+	  "height": Math.floor(token.data.length * token.fontSize / 2) + "px",
+	  "overflow":"visible"
+	})
+      }, Util.tagWrap("div", {
+	style : Util.inlineCss({
 	  "width" : maxFontSize + "px",
 	  "line-height" : maxFontSize + "px",
 	  "margin-bottom" : mb + "px",
@@ -1737,7 +1743,7 @@ if(!Nehan){
 	  "-o-transform" : "rotate(90deg)",
 	  "-o-transform-origin" : "50% 50%"
 	})
-      }, token.data);
+      }, token.data));
     }
   };
 
