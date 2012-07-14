@@ -6,16 +6,13 @@ Mark "*": bug fixed.
 Mark "!": change that can break compatibility with older version
 ===============================================================================
 
-version 3.0.5.1
-=========================
-o add ipos to page object to indicate pos in BufferedLexer.
-* fix some typo.
-
 version 3.0.5
 =========================
 o update button color scheme a little.
 o now enable to set id property to all blocks.
 o add new tag(ibox).
+o add ipos to page object to indicate pos in BufferedLexer.
+* fix some typo.
 * fix tail check bug for a long word.
 * fix tenten vertical position.
 * wrap rotate element with block element(to propagate background color to rotated element).
