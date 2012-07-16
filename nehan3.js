@@ -1037,6 +1037,10 @@ var Lexer = (function LexerClosure(){
 
   Lexer.prototype = {
 
+    getText : function(){
+      return this.text;
+    },
+
     // 1. confirm that all tag names are lowercased.
     // 2. confirm that all block elements(such as img, table etc) are prepended by newline.
     // 3. remove br if config.system.nobr is true.
@@ -1449,6 +1453,10 @@ var BufferedLexer = (function BufferedLexerClosure(){
       return this.pos;
     },
 
+    getText : function(){
+      return this.lexer.getText();
+    },
+
     isEnd : function(){
       return (this.eof && (this.pos >= this.tokens.length - 1));
     },
@@ -1460,6 +1468,10 @@ var BufferedLexer = (function BufferedLexerClosure(){
 
     lookToken : function(offset){
       return this.lookTokenByIndex(this.pos + (offset || 0));
+    },
+
+    lookLastToken : function(){
+      return this.lookTokenByIndex(this.tokens.length - 1);
     },
 
     lookTokenByIndex : function(index){
@@ -2491,9 +2503,8 @@ var DocumentParser = (function DocumentParserClosure() {
       var level = parseInt(token.data.name.substring(1)) - 1; // H1 -> 0, H2 -> 1
       var hconf = config.layout.header[level];
       token.data.name = "font";
-      //token.data.attr.family = hconf.fontFamily;
       token.data.attr.scale = hconf.scale;
-      token.data["class"] = config.className.header;
+      token.data.attr["class"] = config.className.header;
       this.parseFontStart(lexer, layout, ctx, token);
     },
 
@@ -3284,7 +3295,7 @@ var DocumentParser = (function DocumentParserClosure() {
     },
 
     // page is a list of elements.
-    parsePage : function(){
+    parsePage : function(opt){
       var page = this.ctx.createPage(this.layout.direction, this.layout.width, this.layout.height, []);
       var args = this.args || {};
       var size = 0;
@@ -3306,7 +3317,6 @@ var DocumentParser = (function DocumentParserClosure() {
 	    page.tail = true;
 	    page[this.layout.isVertical? "width" : "height"] = size;
 	    this.finish = true;
-	    //this.finish = this.lexer.isEnd();
 	    throw "EndPage";
 	  } else {
 	    var element_size = sizeOfElement(this.layout, element);
@@ -3348,6 +3358,11 @@ var DocumentParser = (function DocumentParserClosure() {
 	  page.wrapWidth = page.width + (this.layout.isVertical? this.edge.sizeLineStep : this.edge.sizeCharStep);
 	  page.wrapHeight = page.height + (this.layout.isVertical? this.edge.sizeCharStep : this.edge.sizeLineStep);
 	  BoxModel.setEdgeProps(page, this.edge);
+	}
+	if(opt && opt.capturePageText){
+	  var start = page.spos;
+	  var end = this.lexer.isEnd()? this.lexer.lookLastToken().pos : this.ctx.seekTextPos;
+	  page.text = this.lexer.getText().substring(start, end);
 	}
 	return page;
       }
