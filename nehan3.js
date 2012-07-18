@@ -4908,6 +4908,15 @@ var Pagerize = (function PagerizeClosure(){
 // book
 // ------------------------------------------------------------------------
 var Book = (function BookClosure(){
+
+  var bconfig = {
+    className:{
+      tocRoot:"nehan3-book-toc-root",
+      tocLevel:"nehan3-book-toc-level",
+      bookmarkTable:"nehan3-book-bmark-table"
+    }
+  };
+
   var createPageLink = function(pageNo, title, reader){
     var link = document.createElement("a");
     link.href = "#" + pageNo;
@@ -4925,7 +4934,7 @@ var Book = (function BookClosure(){
     var parent = root;
     var prev = null;
 
-    root.className = "nehan-toc-root";
+    root.className = bconfig.className.tocRoot;
 
     var levelNameOf = function(level){
       var map = config.tags.toc;
@@ -4934,7 +4943,7 @@ var Book = (function BookClosure(){
 
     var createUL = function(level){
       var ul = document.createElement("ul");
-      ul.className = "nehan-toc-level-" + levelNameOf(level);
+      ul.className = [bconfig.className.tocLevel, levelNameOf(level)].join("-");
       return ul;
     };
 
@@ -4974,7 +4983,7 @@ var Book = (function BookClosure(){
     var th2 = document.createElement("th");
     var th3 = document.createElement("th");
     var tbody = document.createElement("tbody");
-    table.className = "nehan-book-bmark-table";
+    table.className = bconfig.className.bookmarkTable;
     table.style.borderCollapse = "collapse";
     th1.innerHTML = "topic path";
     th2.innerHTML = "page";
@@ -5253,6 +5262,7 @@ var Book = (function BookClosure(){
       reader.start(bookBodyDom);
     }
   };
+
   return Book;
 })();
 
