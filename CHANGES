@@ -9,6 +9,7 @@ Mark "!": change that can break compatibility with older version
 version 3.0.6
 =========================
 o support new parser option(opt.capturePageText).
+* fix search result bug(last page no is not included in search result).
 
 version 3.0.5
 =========================

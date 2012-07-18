@@ -4733,7 +4733,7 @@ var Pagerize = (function PagerizeClosure(){
 	  return i;
 	}
       }
-      return -1;
+      return Math.max(0, len - 1);
     },
 
     searchKeyword : function(keyword){
