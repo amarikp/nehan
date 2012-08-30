@@ -1060,7 +1060,9 @@ var Lexer = (function LexerClosure(){
 	  return "</" + grp.toLowerCase();
 	})
 	.replace(/“([^”]+)”/g, "〝$1〟")
-	.replace(/<rp>[^<]+<\/rp>/gi, "")
+	.replace(/<rp>[^<]*<\/rp>/gi, "") // ignore rp
+	.replace(/<rb><\/rb>/gi, "") // empty rb
+	.replace(/<rt><\/rt>/gi, "") // empty rt
 	.replace(/([^\n])<img/g, "$1\n<img") 
 	.replace(/([^\n])<table/g, "$1\n<table")
 	.replace(/([^\n])<end-page/g, "$1\n<end-page")
@@ -1078,7 +1080,7 @@ var Lexer = (function LexerClosure(){
       return text;
     },
 
-    _lookChar : function(offset){
+    _peekChar : function(offset){
       var pos = this.pos + (offset || 0);
       if(pos == this.text.length){
 	return "\n";
@@ -1391,12 +1393,12 @@ var Lexer = (function LexerClosure(){
       if(this.rb != ""){
 	return this._readRbChar(pstart);
       } else {
-	var c1 = this._lookChar();
+	var c1 = this._peekChar();
       }
 
       if(c1 == "<"){
 	try {
-	  var c2 = this._lookChar(1);
+	  var c2 = this._peekChar(1);
 	  if(c2 == "!"){
 	    this._skipComment(pstart);
 	    return this.getToken();
@@ -1466,15 +1468,15 @@ var BufferedLexer = (function BufferedLexerClosure(){
       this.pos += count;
     },
 
-    lookToken : function(offset){
-      return this.lookTokenByIndex(this.pos + (offset || 0));
+    peekToken : function(offset){
+      return this.peekTokenByIndex(this.pos + (offset || 0));
     },
 
-    lookLastToken : function(){
-      return this.lookTokenByIndex(this.tokens.length - 1);
+    peekLastToken : function(){
+      return this.peekTokenByIndex(this.tokens.length - 1);
     },
 
-    lookTokenByIndex : function(index){
+    peekTokenByIndex : function(index){
       if(this.eof && index >= this.tokens.length){
 	throw "BufferEnd";
       }
@@ -1494,7 +1496,7 @@ var BufferedLexer = (function BufferedLexerClosure(){
 	} else if(index >= this.tokens.length){
 	  break;
 	} else {
-	  var token = this.lookTokenByIndex(index);
+	  var token = this.peekTokenByIndex(index);
 	  if(fn(token)){
 	    return token;
 	  }
@@ -1505,7 +1507,7 @@ var BufferedLexer = (function BufferedLexerClosure(){
     },
 
     getToken : function(){
-      var token = this.lookToken();
+      var token = this.peekToken();
       this.pos++;
       return token;
     },
@@ -1516,7 +1518,7 @@ var BufferedLexer = (function BufferedLexerClosure(){
 
     skipUntil : function(fn){
       while(true){
-	var token = this.lookToken();
+	var token = this.peekToken();
 	if(!fn(token)){
 	  break;
 	}
@@ -1534,7 +1536,7 @@ var BufferedLexer = (function BufferedLexerClosure(){
     },
 
     skipCRLF : function(){
-      var token = this.lookToken();
+      var token = this.peekToken();
       if(!Token.isTextToken(token)){
 	return;
       }
@@ -2197,7 +2199,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var ret = {token:null, tags:[]};
       var lookahead = 50;
       for(var i = start; i < start + lookahead; i++){
-	var token = lexer.lookTokenByIndex(i);
+	var token = lexer.peekTokenByIndex(i);
 
 	// by lexing preprocessor, never happen but if found, it means there is no next char,
 	// because block element is to be displayed AFTER newline.
@@ -2543,6 +2545,7 @@ var DocumentParser = (function DocumentParserClosure() {
       var attr = token.data.attr;
       token.width = parseInt(attr.width || ctx.fontSize);
       token.height = parseInt(attr.height || ctx.fontSize);
+      token["class"] = attr["class"] || "";
       token.src = attr.src;
       token.type = "char";
       delete token.data;
@@ -3273,7 +3276,7 @@ var DocumentParser = (function DocumentParserClosure() {
       }
 
       try {
-	var token = lexer.lookToken();
+	var token = lexer.peekToken();
 	ctx.seekTextPos = token.pos;
 	ctx.seekTokenIndex = token.index;
 	token = this.onParseElementBefore(lexer, layout, ctx, token);
@@ -3361,7 +3364,7 @@ var DocumentParser = (function DocumentParserClosure() {
 	}
 	if(opt && opt.capturePageText){
 	  var start = page.spos;
-	  var end = this.lexer.isEnd()? this.lexer.lookLastToken().pos : this.ctx.seekTextPos;
+	  var end = this.lexer.isEnd()? this.lexer.peekLastToken().pos : this.ctx.seekTextPos;
 	  page.text = this.lexer.getText().substring(start, end);
 	}
 	return page;
@@ -3803,8 +3806,12 @@ var NehanEvaluator = (function NehanEvaluatorClosure(){
     },
 
     evalCharIcon : function(layout, ctx, parent, text){
+      var classNames = [config.className.charIcon];
+      if(text["class"]){
+	classNames.push(text["class"]);
+      }
       var img =  Tag.start("img", {
-	"class": config.className.charIcon,
+	"class": classNames.join(" "),
 	"width": text.width + "px",
 	"height": text.height + "px",
 	"style": Attr.css(cssCharIcon(layout, text)),
