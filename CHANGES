@@ -10,6 +10,7 @@ version 3.0.6
 =========================
 o support new parser option(opt.capturePageText).
 * fix search result bug(last page no is not included in search result).
+! rename some functions(lookToken -> peekToken).
 
 version 3.0.5
 =========================
