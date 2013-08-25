@@ -6,47 +6,6 @@ Mark "*": bug fixed.
 Mark "!": change that can break compatibility with older version
 ===============================================================================
 
-version 3.0.6
-=========================
-o support new parser option(opt.capturePageText).
-* fix search result bug(last page no is not included in search result).
-! rename some functions(lookToken -> peekToken).
-
-version 3.0.5
-=========================
-o update button color scheme a little.
-o now enable to set id property to all blocks.
-o add new tag(ibox).
-o add ipos to page object to indicate pos in BufferedLexer.
-* fix some typo.
-* fix tail check bug for a long word.
-* fix tenten vertical position.
-* wrap rotate element with block element(to propagate background color to rotated element).
-! rename className prefix from 'nehan' to 'nehan3'(for version compatibility).
-
-version 3.0.4
-=========================
-o Nehan3.Reader.onReady supported.
-o Nehan3.Reader.onWriteLastNext supported.
-o Nehan3.Reader.onWriteFirstPrev supported.
-o Nehan3.DocumentParser.getPercent added.
-* fix IE vertical alphabet bug in transitional mode.
-
-version 3.0.3
-=========================
-o update default button design(use google-buttons)
-o enable padding property(but not used yet, because IE has trouble about it)
-o add new config(Pagerize.pgconfig.pager.nextLinkTextVert etc)
-
-version 3.0.2, 2012/05/26
-=========================
-* fix logical param name(margin-before -> margin-start etc).
-* disable kerning when base font size is too small.
-
-version 3.0.1, 2012/05/22
-==========================
-o add config.system.conv_br
-
-version 3.0.0, 2012/05/21
+version 4.0.0, 2012/??/??
 ==========================
 o first release

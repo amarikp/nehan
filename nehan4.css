@@ -1,0 +1,67 @@
+@charset "utf-8";
+
+/*
+   Important Notice of 'nehan-' prefix classes.
+
+   You can't define 'sizing' value that affect 'size' of target in css class starts with 'nehan-' prefix.
+   Because in nehan.js, all the layouting values associated with box sizes are under control of nehan layout engine.
+   So you can define only color, font-family or some styles that doesn't affect size of box in classes started with 'nehan-' prefix.
+ */
+
+/* reset */
+div, span{
+  vertical-align:baseline;
+  font-size:100%;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.nehan-text-line{
+  overflow:visible;
+}
+.nehan-text-line-vert,
+.nehan-empha-char{
+  font-family:'ヒラギノ明朝 Pro W3','Hiragino Mincho Pro','HiraMinProN-W3','IPA明朝','IPA Mincho', 'Meiryo','メイリオ','ＭＳ 明朝','MS Mincho', monospace;
+}
+.nehan-text-line-vert{
+  line-height:1em;
+}
+.nehan-text-line-vert a,
+.nehan-text-line-vert a:hover{
+  text-decoration:none !important;
+}
+.nehan-header .nehan-text-line,
+.nehan-header .nehan-vert-alpha,
+.nehan-li-marker,
+.nehan-li-marker .nehan-text-line-vert{
+  font-family:'Meiryo','メイリオ','Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', monospace !important;
+}
+.nehan-body a{
+  word-wrap:normal !important;
+}
+.nehan-text-line-hori .nehan-char-kakko-start{
+  margin-left:-0.5em;
+}
+.nehan-text-line-hori .nehan-char-kakko-end{
+  margin-right:-0.5em;
+}
+.nehan-text-line-hori .nehan-char-kuto{
+  margin-right:-0.5em;
+}
+.nehan-vert-alpha{
+  font-family:'ヒラギノ明朝 Pro W3','Hiragino Mincho Pro','HiraMinProN-W3','IPA明朝','IPA Mincho', 'ＭＳ 明朝','MS Mincho', monospace;
+  word-break:normal;
+  overflow:visible;
+  -webkit-transform : rotate(90deg);
+  -webkit-transform-origin : 50% 50%;
+  -moz-transform : rotate(90deg);
+  -moz-transform-origin : 50% 50%;
+  -o-transform : rotate(90deg);
+  -o-transform-origin : 50% 50%;
+  transform : rotate(90deg);
+  transform-origin : 50% 50%;
+}
+.nehan-vert-alpha-ie{
+  writing-mode:tb-rl;
+  float:left;
+}

@@ -571,7 +571,12 @@ var List = {
   },
 
   exists : function(lst, fn){
-    return this.find(lst, fn) != null;
+    for(var i = 0, len = lst.length; i < len; i++){
+      if(fn(lst[i])){
+	return true;
+      }
+    }
+    return false;
   },
 
   sum : function(lst){
@@ -1222,8 +1227,8 @@ var Lexer = (function LexerClosure(){
       case 61:
 	return imgchar("equal", 1);
       case 12540:
-	//return imgchar("onbiki", 1);
-	return cnvchar("｜");
+	return imgchar("onbiki", 1);
+	//return cnvchar("｜");
       case 45:
 	return cnvchar("｜");
       case 8213:
