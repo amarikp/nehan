@@ -1158,7 +1158,10 @@ var Style = {
   // other utility classes
   //-------------------------------------------------------
   ".nehan-drop-caps::first-letter":{
-    "display":"inline-block",
+    // TODO:
+    // in current status(ver 5.0.2), iblock with float has some trouble...
+    //"display":"inline-block",
+    "display":"block",
     "box-sizing":"content-box",
     "measure":"1em",
     "extent":"1em",
@@ -1994,7 +1997,10 @@ var PseudoSelector = (function(){
    4. attribute selector
      div[name=value]{font-size:xxx}
 
-   5. pseudo-element, pseudo-class selector
+   5. pseudo-class selector
+     li:first-child{font-weight:bold}
+
+   6. pseudo-element selector
      div::first-line{font-size:xxx}
 */
 var TypeSelector = (function(){
@@ -2669,7 +2675,13 @@ var Tag = (function (){
       return new Tag(this.src, this.content);
     },
     setContent : function(content){
+      if(this._fixed){
+	return;
+      }
       this.content = content;
+    },
+    setContentImmutable : function(status){
+      this._fixed = status;
     },
     setAlias : function(name){
       this.alias = name;
@@ -7657,6 +7669,7 @@ var LayoutGenerator = (function(){
   function LayoutGenerator(style, stream){
     this.style = style;
     this.stream = stream;
+    this._parentLayout = null;
     this._childLayout = null;
     this._cachedElements = [];
     this._terminate = false; // used to force terminate generator.
@@ -7677,8 +7690,15 @@ var LayoutGenerator = (function(){
     this._terminate = status;
   };
 
+  LayoutGenerator.prototype.setParentChildLayout = function(generator){
+    if(this._parentLayout){
+      this._parentLayout.setChildLayout(generator);
+    }
+  };
+
   LayoutGenerator.prototype.setChildLayout = function(generator){
     this._childLayout = generator;
+    generator._parentLayout = this;
   };
 
   LayoutGenerator.prototype.hasNext = function(){
@@ -7769,11 +7789,115 @@ var LayoutGenerator = (function(){
     } 
   };
 
-  LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, outline_context){
+  LayoutGenerator.prototype._createFloatGenerator = function(context, outline_context, first_float_gen){
+    var self = this, parent_style = this.style;
+    var rest_float_gens = this.stream.mapWhile(function(token){
+      if(!Token.isTag(token)){
+	return null;
+      }
+      var child_style = new StyleContext(token, parent_style, {layoutContext:context});
+      if(!child_style.isFloated()){
+	parent_style.removeChild(child_style);
+	return null;
+      }
+      var child_stream = self._createStream(child_style);
+      return self._createChildBlockGenerator(child_style, child_stream, context, outline_context);
+    });
+    var floated_generators = [first_float_gen].concat(rest_float_gens);
+    return new FloatGenerator(this.style, this.stream, outline_context, floated_generators);
+  };
+
+  LayoutGenerator.prototype._createChildBlockGenerator = function(style, stream, context, outline_context){
+    if(style.hasFlipFlow()){
+      return new FlipGenerator(style, stream, outline_context, context);
+    }
+
+    // if child style with 'pasted' attribute, yield block with direct content by LazyGenerator.
+    // notice that this is nehan.js original attribute,
+    // is required to show some html(like form, input etc) that can't be handled by nehan.js.
+    if(style.isPasted()){
+      return new LazyGenerator(style, style.createBlock({content:style.getContent()}));
+    }
+
+    // switch generator by display
+    switch(style.display){
+    case "list-item":
+      return new ListItemGenerator(style, stream, outline_context);
+
+    case "table":
+      return new TableGenerator(style, stream, outline_context);
+
+    case "table-header-group":
+    case "table-row-group":
+    case "table-footer-group":
+      return new TableRowGroupGenerator(style, stream, outline_context);
+
+    case "table-row":
+      return new TableRowGenerator(style, stream, outline_context);
+
+    case "table-cell":
+      return new TableCellGenerator(style, stream);
+    }
+
+    // switch generator by markup name
     switch(style.getMarkupName()){
+    case "img":
+      return new LazyGenerator(style, style.createImage());
+
+    case "hr":
+      // create block with no elements, but with edge(border).
+      return new LazyGenerator(style, style.createBlock());
+
+    case "page-break": case "end-page": case "pbr":
+      // to penetrate layout-break to parent layout,
+      // breaking-flag is set to block-context.
+      context.setBreakAfter(true);
+
+      // break-generator always yields null to break parent loop.
+      return new LazyGenerator(style, null);
+
+    case "first-line":
+      return new FirstLineGenerator(style, stream, outline_context);
+
+    case "details":
+    case "blockquote":
+    case "figure":
+    case "fieldset":
+      return new SectionRootGenerator(style, stream);
+
+    case "section":
+    case "article":
+    case "nav":
+    case "aside":
+      return new SectionContentGenerator(style, stream, outline_context);
+
+    case "h1":
+    case "h2":
+    case "h3":
+    case "h4":
+    case "h5":
+    case "h6":
+      return new HeaderGenerator(style, stream, outline_context);
+
+    case "ul":
+    case "ol":
+      return new ListGenerator(style, stream, outline_context);
+
+    default:
+      return new BlockGenerator(style, stream, outline_context);
+    }
+  };
+
+  LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, outline_context){
+    if(style.isInlineBlock()){
+      return new InlineBlockGenerator(style, stream, outline_context);
+    }
+    switch(style.getMarkupName()){
+    case "img":
+      // if inline img, no content text is included in img tag, so we yield it by lazy generator.
+      return new LazyGenerator(style, style.createImage());
     case "a":
       return new LinkGenerator(style, stream, outline_context);
-
     default:
       return new InlineGenerator(style, stream, outline_context);
     }
@@ -7857,131 +7981,29 @@ var BlockGenerator = (function(){
 
     // if disabled style, just skip
     if(child_style.isDisabled()){
+      this.style.removeChild(child_style);
       return this._getNext(context);
-    }
-
-    // if child style(both inline or block) is floated,
-    // push back stream and delegate current style and stream to FloatGenerator
-    if(child_style.isFloated()){
-      this.stream.prev();
-      this.setChildLayout(new FloatGenerator(this.style, this.stream, context, this.outlineContext));
-      return this.yieldChildLayout(context);
-    }
-
-    // if child inline-block, start child inline generator with first iblock generator.
-    if(child_style.isInlineBlock()){
-      var iblock_stream = this._createStream(child_style);
-      var iblock_generator = new InlineBlockGenerator(child_style, iblock_stream, this.outlineContext);
-      this.setChildLayout(new InlineGenerator(this.style, this.stream, this.outlineContext, iblock_generator));
-      return this.yieldChildLayout(context);
-    }
-
-    // if child style with 'pasted' attribute,
-    // yield immediatelly with pasted content.
-    // notice that this is nehan.js original attribute,
-    // to show some html(like form, input etc) that nehan.js can't layout.
-    if(child_style.isPasted()){
-      return child_style.createBlock({
-	content:child_style.getContent()
-      });
     }
 
     var child_stream = this._createStream(child_style);
 
-    // if child inline, delegate current style and stream to child inline-generator with first_generator.
-    if(child_style.isInline()){
-      var first_generator;
-      // if inline img, no content text is included in img tag, so we yield it by lazy generator.
-      if(child_style.getMarkupName() === "img"){
-	first_generator = new LazyGenerator(child_style, child_style.createImage());
-      } else {
-	//first_generator = new InlineGenerator(child_style, child_stream, this.outlineContext);
-	first_generator = this._createChildInlineGenerator(child_style, child_stream, this.outlineContext);
-      }
-      this.setChildLayout(new InlineGenerator(this.style, this.stream, this.outlineContext, first_generator));
+    if(child_style.isFloated()){
+      var first_float_gen = this._createChildBlockGenerator(child_style, child_stream, context, this.outlineContext);
+      this.setChildLayout(this._createFloatGenerator(context, this.outlineContext, first_float_gen));
       return this.yieldChildLayout(context);
     }
 
-    // if child_style has flip flow
-    if(child_style.hasFlipFlow()){
-      this.setChildLayout(new FlipGenerator(child_style, child_stream, this.outlineContext, context));
+    // if child inline or child inline-block,
+    // delegate current style and stream to child inline-generator with first child inline generator.
+    if(child_style.isInlineBlock() || child_style.isInline()){
+      var first_inline_gen = this._createChildInlineGenerator(child_style, child_stream, this.outlineContext);
+      this.setChildLayout(new InlineGenerator(this.style, this.stream, this.outlineContext, first_inline_gen));
       return this.yieldChildLayout(context);
     }
 
-    // switch generator by display
-    switch(child_style.display){
-    case "list-item":
-      this.setChildLayout(new ListItemGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-      
-    case "table":
-      this.setChildLayout(new TableGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-
-    case "table-header-group":
-    case "table-row-group":
-    case "table-footer-group":
-      this.setChildLayout(new TableRowGroupGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-
-    case "table-row":
-      this.setChildLayout(new TableRowGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-
-    case "table-cell":
-      this.setChildLayout(new TableCellGenerator(child_style, child_stream));
-      return this.yieldChildLayout(context);
-    }
-
-    // switch generator by markup name
-    switch(child_style.getMarkupName()){
-    case "img":
-      return child_style.createImage();
-
-    case "hr":
-      // create block with no elements, but with edge(border).
-      return child_style.createBlock();
-
-    case "page-break": case "end-page": case "pbr":
-      context.setBreakAfter(true);
-      return null; // page-break
-
-    case "first-line":
-      this.setChildLayout(new FirstLineGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-
-    case "details":
-    case "blockquote":
-    case "figure":
-    case "fieldset":
-      this.setChildLayout(new SectionRootGenerator(child_style, child_stream));
-      return this.yieldChildLayout(context);
-
-    case "section":
-    case "article":
-    case "nav":
-    case "aside":
-      this.setChildLayout(new SectionContentGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-
-    case "h1":
-    case "h2":
-    case "h3":
-    case "h4":
-    case "h5":
-    case "h6":
-      this.setChildLayout(new HeaderGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-
-    case "ul":
-    case "ol":
-      this.setChildLayout(new ListGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-
-    default:
-      this.setChildLayout(new BlockGenerator(child_style, child_stream, this.outlineContext));
-      return this.yieldChildLayout(context);
-    }
+    // other case, start child block generator
+    this.setChildLayout(this._createChildBlockGenerator(child_style, child_stream, context, this.outlineContext));
+    return this.yieldChildLayout(context);
   };
 
   BlockGenerator.prototype._addElement = function(context, element, extent){
@@ -8169,9 +8191,15 @@ var InlineGenerator = (function(){
       return this._getNext(context); // just skip
     }
 
-    // if inline -> block, force terminate inline
-    if(child_style.isBlock()){
-      this.stream.prev();
+    var child_stream = this._createStream(child_style);
+
+    // if inline -> block(or floated layout), force terminate inline
+    if(child_style.isBlock() || child_style.isFloated()){
+      var child_gen = this._createChildBlockGenerator(child_style, child_stream, context, this.outlineContext);
+      if(child_style.isFloated()){
+	child_gen = this._createFloatGenerator(context, this.outlineContext, child_gen);
+      }
+      this.setParentChildLayout(child_gen);
       this.setTerminate(true);
 
       // add line-break to avoid empty-line.
@@ -8181,13 +8209,10 @@ var InlineGenerator = (function(){
       return null;
     }
 
-    var child_stream = this._createStream(child_style);
-
     // if inline-block, yield immediately, and return as child inline element.
     if(child_style.isInlineBlock()){
       return (new InlineBlockGenerator(child_style, child_stream, this.outlineContext)).yield(context);
     }
-
 
     // inline child
     switch(child_style.getMarkupName()){
@@ -8509,9 +8534,9 @@ var FloatGenerator = (function(){
   // caution: constructor argument 'style' is the style of parent.
   // so if <body><float1>..</float1><float2>...</float2></body>,
   // style of this contructor is 'body.style'
-  function FloatGenerator(style, stream, layout_context, outline_context){
+  function FloatGenerator(style, stream, outline_context, floated_generators){
     BlockGenerator.call(this, style, stream, outline_context);
-    this.generators = this._getFloatedGenerators(layout_context);
+    this.generators = floated_generators;
 
     // create child generator to yield rest-space of float-elements with logical-float "start".
     // notice that this generator uses 'clone' of original style, because content size changes by position,
@@ -8643,33 +8668,6 @@ var FloatGenerator = (function(){
       }
     });
     return new FloatGroupStack(this.style.flow, start_blocks, end_blocks);
-  };
-
-  FloatGenerator.prototype._getFloatedGenerators = function(context){
-    var self = this, parent_style = this.style;
-    return this.stream.mapWhile(function(token){
-      if(!Token.isTag(token)){
-	return null;
-      }
-      var child_style = new StyleContext(token, parent_style, {layoutContext:context});
-      if(child_style.isFloated()){
-	return self._createFloatBlockGenerator(child_style, context);
-      }
-      parent_style.removeChild(child_style);
-      return null;
-    });
-  };
-
-  FloatGenerator.prototype._createFloatBlockGenerator = function(style, context){
-    // image tag not having stream(single tag), so use lazy-generator.
-    // lazy generator already holds output result in construction time, but yields it later.
-    if(style.getMarkupName() === "img"){
-      return new LazyGenerator(style, style.createImage());
-    }
-    if(style.display === "inline-block"){
-      return new InlineBlockGenerator(style, this._createStream(style), this.outlineContext);
-    }
-    return new BlockGenerator(style, this._createStream(style), this.outlineContext);
   };
 
   return FloatGenerator;
