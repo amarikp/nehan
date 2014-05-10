@@ -95,6 +95,7 @@ var Layout = {
   rubyRate:0.5, // used when Style.rt["font-size"] is not defined.
   boldRate:0.5, // used to calculate sketchy bold metrics in the environment with no canvas element.
   lineRate: 2.0, // in nehan.js, extent size of line is specified by [lineRate] * [max-font-size of current-line].
+  vertWordSpaceRate: 0.25, // extra space rate for vertical word in vertical mode.
 
   // we need to specify these values(color,font-image-root) to display vertical font-images for browsers not supporting vert writing-mode.
   fontColor:"000000",
@@ -2783,8 +2784,10 @@ var Char = (function(){
     this.data = c1;
     this._type = "char";
     this.isRef = is_ref || false;
-    if(!this.isRef){
-      this._setup(c1.charCodeAt(0));
+    if(this.isRef){
+      this._setupRef(c1);
+    } else {
+      this._setupNormal(c1.charCodeAt(0));
     }
   }
   var kuten = ["\u3002","."];
@@ -2944,7 +2947,15 @@ var Char = (function(){
     _setRotate : function(angle){
       this.rotate = angle;
     },
-    _setup : function(code){
+    _setupRef : function(c1){
+      switch(c1){
+      case "&lt;":
+	Env.isTransformEnable? this._setRotate(90) : this._setImg("kakko7", 0.5); break;
+      case "&gt;":
+	Env.isTransformEnable? this._setRotate(90) : this._setImg("kakko8", 0.5); break;
+      }
+    },
+    _setupNormal : function(code){
       switch(code){
       case 32: // half scape char
 	this._setCnv("&nbsp;", 0.5, 0.5); break;
@@ -2978,13 +2989,9 @@ var Char = (function(){
 	this._setImg("kakko6", 0.5); break;
       case 65308:
 	this._setImg("kakko7", 0.5); break;
-      case 60:
-	this._setImg("kakko7", 0.5); break;
       case 12296:
 	this._setImg("kakko7", 0.5); break;
       case 65310:
-	this._setImg("kakko8", 0.5); break;
-      case 62:
 	this._setImg("kakko8", 0.5); break;
       case 12297:
 	this._setImg("kakko8", 0.5); break;
@@ -3108,7 +3115,7 @@ var Char = (function(){
       return (typeof this.paddingStart != "undefined" || typeof this.paddingEnd != "undefined");
     },
     isVertGlyphEnable : function(){
-      return !this.isTenten() && Config.useVerticalGlyphIfEnable && Env.isVerticalGlyphEnable;
+      return Config.useVerticalGlyphIfEnable && Env.isVerticalGlyphEnable;
     },
     isTenten : function(){
       return this.img && this.img === "tenten";
@@ -3168,16 +3175,19 @@ var Word = (function(){
       css.height = this.bodySize + "px";
       css["margin-left"] = "auto";
       css["margin-right"] = "auto";
+      css["font-family"] = "monospace";
       return css;
     },
     getCssVertTransBody : function(line){
       var css = {};
-      css["font-family"] = line.style.getFontFamily();
+      //css["font-family"] = line.style.getFontFamily();
+      css["font-family"] = "monospace";
       return css;
     },
     getCssVertTransBodyTrident : function(line){
       var css = {};
-      css["font-family"] = line.style.getFontFamily();
+      css["font-family"] = "monospace";
+      //css["font-family"] = line.style.getFontFamily();
       css.width = line.style.getFontSize() + "px";
       css.height = this.bodySize + "px";
       css["transform-origin"] = "50% 50%";
@@ -3193,6 +3203,7 @@ var Word = (function(){
     },
     getCssVertTransIE : function(line){
       var css = {}, font_size = line.style.getFontSize();
+      css["font-family"] = "monospace";
       css["float"] = "left";
       css["writing-mode"] = "tb-rl";
       css["letter-spacing"] = (line.style.letterSpacing || 0) + "px";
@@ -3708,7 +3719,8 @@ var TextMetrics = (function(){
     },
     getMeasure : function(font, text){
       var metrics = this.getMetrics(font, text);
-      return metrics.width;
+      var space = Math.floor(Layout.vertWordSpaceRate * font.size);
+      return metrics.width + space;
     }
   };
 })();
