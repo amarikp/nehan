@@ -926,13 +926,13 @@ var Style = {
   // defined to keep compatibility of older nehan.js document,
   // and must be defined as logical-break-before, logical-break-after props in the future.
   "page-break":{
-    "display":"block"
+    "display":"inline"
   },
   "pbr":{
-    "display":"block"
+    "display":"inline"
   },
   "end-page":{
-    "display":"block"
+    "display":"inline"
   },
   //-------------------------------------------------------
   // rounded corner
@@ -2694,6 +2694,9 @@ var Tag = (function (){
     },
     removeClass : function(klass){
       this.attrs.removeClass(klass);
+    },
+    getId : function(){
+      return this.attrs.id;
     },
     getClasses : function(){
       return this.attrs.classes;
@@ -6682,7 +6685,8 @@ var StyleContext = (function(){
 
       // backup other line data. mainly required to restore inline-context.
       if(this.isRootLine()){
-	line.br = opt.br || false;
+	line.lineBreak = opt.lineBreak || false;
+	line.breakAfter = opt.breakAfter || false;
 	line.inlineMeasure = opt.measure || this.contentMeasure;
 	line.texts = opt.texts || [];
 
@@ -6784,6 +6788,14 @@ var StyleContext = (function(){
       var white_space = this.getCssAttr("white-space", "normal");
       return white_space === "pre";
     },
+    isPageBreak : function(){
+      switch(this.getMarkupName()){
+      case "page-break": case "end-page": case "pbr":
+	return true;
+      default:
+	return false;
+      }
+    },
     isBreakBefore : function(){
       return this.breakBefore? !this.breakBefore.isAvoid() : false;
     },
@@ -6846,7 +6858,7 @@ var StyleContext = (function(){
       return this.markup.getAttr(name, def_value);
     },
     _evalCssAttr : function(name, value){
-      // "oncreate" not return style, it's a hook, called when this style is converted into dom element.
+      // "oncreate" not return style, it's a hook called after this style is converted into dom element.
       // so leave it as it is.
       if(name === "oncreate"){
 	return value; 
@@ -6881,7 +6893,7 @@ var StyleContext = (function(){
     },
     // if markup is <p id="foo">, markup.id is "nehan-foo".
     getMarkupId : function(){
-      return this.markup.id;
+      return this.markup.getId();
     },
     getMarkupContent : function(){
       return this.markup.getContent();
@@ -7423,10 +7435,7 @@ var LayoutContext = (function(){
       return this.block.hasSpaceFor(extent);
     },
     hasBreakAfter : function(){
-      return this.block.hasBreakAfter();
-    },
-    setBreakAfter : function(status){
-      this.block.setBreakAfter(status);
+      return this.block.hasBreakAfter() || this.inline.hasBreakAfter() || false;
     },
     addBlockElement : function(element, extent){
       this.block.addElement(element, extent);
@@ -7459,11 +7468,14 @@ var LayoutContext = (function(){
     hasInlineSpaceFor : function(measure){
       return this.inline.hasSpaceFor(measure);
     },
-    hasBr : function(){
-      return this.inline.hasBr();
+    hasLineBreak : function(){
+      return this.inline.hasLineBreak();
     },
     setLineBreak : function(status){
       this.inline.setLineBreak(status);
+    },
+    setBreakAfter : function(status){
+      this.inline.setBreakAfter(status);
     },
     addInlineElement : function(element, measure){
       this.inline.addElement(element, measure);
@@ -7524,20 +7536,23 @@ var BlockContext = (function(){
     hasBreakAfter : function(){
       return this.breakAfter;
     },
-    setBreakAfter : function(status){
-      this.breakAfter = status;
+    _onAddElement : function(element, extent){
+      this.curExtent += extent;
+      if(element.breakAfter){
+	this.breakAfter = true;
+      }
     },
     addElement : function(element, extent){
       this.elements.push(element);
-      this.curExtent += extent;
+      this._onAddElement(element, extent);
     },
     pushElement : function(element, extent){
       this.pushedElements.push(element);
-      this.curExtent += extent;
+      this._onAddElement(element, extent);
     },
     pullElement : function(element, extent){
       this.pulledElements.unshift(element);
-      this.curExtent += extent;
+      this._onAddElement(element, extent);
     },
     getCurExtent : function(){
       return this.curExtent;
@@ -7568,12 +7583,13 @@ var InlineContext = (function(){
     this.maxFontSize = 0;
     this.elements = [];
     this.texts = [];
-    this.br = false; // is line-break included in line?
+    this.lineBreak = false; // is line-break included in line?
+    this.breakAfter = false; // is break-after incuded in line?
   }
 
   InlineContext.prototype = {
     isEmpty : function(){
-      return !this.br && this.elements.length === 0;
+      return !this.lineBreak && !this.breakAfter && this.elements.length === 0;
     },
     isSpaceLeft : function(){
       return this.getRestMeasure() > 0;
@@ -7581,11 +7597,17 @@ var InlineContext = (function(){
     hasSpaceFor : function(measure){
       return this.getRestMeasure() >= measure;
     },
-    hasBr : function(){
-      return this.br;
+    hasLineBreak : function(){
+      return this.lineBreak;
     },
     setLineBreak : function(status){
-      this.br = status;
+      this.lineBreak = status;
+    },
+    hasBreakAfter : function(){
+      return this.breakAfter;
+    },
+    setBreakAfter : function(status){
+      this.breakAfter = status;
     },
     addElement : function(element, measure){
       this.elements.push(element);
@@ -7602,6 +7624,9 @@ var InlineContext = (function(){
 	}
 	if(element.maxFontSize){
 	  this.maxFontSize = Math.max(this.maxFontSize, element.maxFontSize);
+	}
+	if(element.breakAfter){
+	  this.breakAfter = true;
 	}
       }
       this.curMeasure += measure;
@@ -7847,14 +7872,6 @@ var LayoutGenerator = (function(){
       // create block with no elements, but with edge(border).
       return new LazyGenerator(style, style.createBlock());
 
-    case "page-break": case "end-page": case "pbr":
-      // to penetrate layout-break to parent layout,
-      // breaking-flag is set to block-context.
-      context.setBreakAfter(true);
-
-      // break-generator always yields null to break parent loop.
-      return new LazyGenerator(style, null);
-
     case "first-line":
       return new FirstLineGenerator(style, stream, outline_context);
 
@@ -7887,7 +7904,7 @@ var LayoutGenerator = (function(){
     }
   };
 
-  LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, outline_context){
+  LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, context, outline_context){
     if(style.isInlineBlock()){
       return new InlineBlockGenerator(style, stream, outline_context);
     }
@@ -7897,6 +7914,8 @@ var LayoutGenerator = (function(){
       return new LazyGenerator(style, style.createImage());
     case "a":
       return new LinkGenerator(style, stream, outline_context);
+    case "page-break": case "end-page": case "pbr":
+      return new BreakAfterGenerator(style);
     default:
       return new InlineGenerator(style, stream, outline_context);
     }
@@ -7995,7 +8014,7 @@ var BlockGenerator = (function(){
     // if child inline or child inline-block,
     // delegate current style and stream to child inline-generator with first child inline generator.
     if(child_style.isInlineBlock() || child_style.isInline()){
-      var first_inline_gen = this._createChildInlineGenerator(child_style, child_stream, this.outlineContext);
+      var first_inline_gen = this._createChildInlineGenerator(child_style, child_stream, context, this.outlineContext);
       this.setChildLayout(new InlineGenerator(this.style, this.stream, this.outlineContext, first_inline_gen));
       return this.yieldChildLayout(context);
     }
@@ -8008,9 +8027,6 @@ var BlockGenerator = (function(){
   BlockGenerator.prototype._addElement = function(context, element, extent){
     if(element === null){
       return;
-    }
-    if(element.breakAfter){
-      context.setBreakAfter(true);
     }
     if(this.style.isPushed() || element.pushed){
       context.pushBlockElement(element, extent);
@@ -8113,16 +8129,17 @@ var InlineGenerator = (function(){
   };
 
   InlineGenerator.prototype._createOutput = function(context){
-    // no br, no element
+    // no like-break, no page-break, no element
     if(context.isInlineEmpty()){
       return null;
     }
     // justify if this line is generated by overflow(not line-break).
-    if(!context.hasBr()){
+    if(!context.hasLineBreak()){
       this._justifyLine(context);
     }
     var line = this.style.createLine({
-      br:context.hasBr(), // is line broken by br?
+      lineBreak:context.hasLineBreak(), // is line break included in?
+      breakAfter:context.hasBreakAfter(), // is break after included in?
       measure:context.getInlineCurMeasure(), // actual measure
       elements:context.getInlineElements(), // all inline-child, not only text, but recursive child box.
       texts:context.getInlineTexts(), // elements but text element only.
@@ -8213,6 +8230,12 @@ var InlineGenerator = (function(){
       return (new InlineBlockGenerator(child_style, child_stream, this.outlineContext)).yield(context);
     }
 
+    // if <page-break>, <end-page>, <pbr>, set break flag and line-break.
+    if(child_style.isPageBreak()){
+      context.setBreakAfter(true);
+      return null;
+    }
+
     // inline child
     switch(child_style.getMarkupName()){
     case "img":
@@ -8223,7 +8246,7 @@ var InlineGenerator = (function(){
       return null;
 
     default:
-      var child_generator = this._createChildInlineGenerator(child_style, child_stream, this.outlineContext);
+      var child_generator = this._createChildInlineGenerator(child_style, child_stream, context, this.outlineContext);
       this.setChildLayout(child_generator);
       return this.yieldChildLayout(context);
     }
@@ -8394,29 +8417,48 @@ var FirstLineGenerator = (function(){
 })();
 
 
-// lazy generator holds pre-yielded block in construction,
-// and output it once when yielded later.
+// lazy generator holds pre-yielded output in construction, and yields it once.
 var LazyGenerator = (function(){
-  function LazyGenerator(style, block){
+  function LazyGenerator(style, output){
     LayoutGenerator.call(this, style, null);
-    this.block = block;
+    this.output = output; // only output this gen yields.
   }
   Class.extend(LazyGenerator, LayoutGenerator);
 
   LazyGenerator.prototype.hasNext = function(){
-    return this._terminate === false;
+    return !this._terminate;
   };
 
   LazyGenerator.prototype.yield = function(context){
-    if(this._terminate){
+    if(this._terminate){ // already yielded
       return null;
     }
     this._terminate = true; // yield only once.
-    return this.block;
+    return this.output;
   };
 
   return LazyGenerator;
 })();
+
+var BreakAfterGenerator = (function(){
+  function BreakAfterGenerator(style){
+    InlineGenerator.call(this, style, null, null);
+  }
+  Class.extend(BreakAfterGenerator, InlineGenerator);
+
+  BreakAfterGenerator.prototype.hasNext = function(){
+    return !this._terminate;
+  };
+
+  BreakAfterGenerator.prototype._yield = function(context){
+    context.setBreakAfter(true);
+    this._terminate = true;
+    return null;
+  }
+
+  return BreakAfterGenerator;
+})();
+
 
 var FlipGenerator = (function(){
   function FlipGenerator(style, stream, outline_context){
@@ -8632,10 +8674,14 @@ var FloatGenerator = (function(){
     var measure = block1.getLayoutMeasure(flow); // block2 has same measure
     var extent = block1.getLayoutExtent(flow) + (block2? block2.getLayoutExtent(flow) : 0);
     var elements = block2? [block1, block2] : [block1];
+    var break_after = List.exists(elements, function(element){
+      return (element && element.breakAfter)? true : false;
+    });
 
     // wrapping block always float to start direction
     return this.style.createChild("div", {"float":"start", measure:measure}).createBlock({
       elements:elements,
+      breakAfter:break_after,
       extent:extent
     });
   };
@@ -8643,8 +8689,13 @@ var FloatGenerator = (function(){
   FloatGenerator.prototype._wrapFloat = function(floated, rest, measure){
     var flow = this.style.flow;
     var extent = floated.getExtent(flow);
+    var elements = this._sortFloatRest(floated, rest);
+    var break_after = List.exists(elements, function(element){
+      return (element && element.breakAfter)? true : false;
+    });
     return this.style.createChild("div", {"float":"start", measure:measure}).createBlock({
-      elements:this._sortFloatRest(floated, rest),
+      elements:elements,
+      breakAfter:break_after,
       extent:extent
     });
   };
