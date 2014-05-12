@@ -1622,6 +1622,7 @@ var Closure = {
 
 var Args = {
   copy : function(dst, args){
+    dst = dst || {};
     for(var prop in args){
       dst[prop] = args[prop];
     }
@@ -2802,6 +2803,9 @@ var Char = (function(){
   var tail_ng = ["\uff08","\x5c","\x28","\u300c","\u3010","\uff3b","\u3014","\x5c","\x5b","\u300e","\uff1c","\u3008","\u300a","\u201c","\u301d"];
 
   Char.prototype = {
+    getData : function(){
+      return this.cnv || this.data;
+    },
     getCssPadding : function(line){
       var padding = new Padding();
       if(this.paddingStart){
@@ -3055,16 +3059,18 @@ var Char = (function(){
 	this._setImg("equal", 1); break;
       case 61:
 	this._setImg("equal", 1); break;
+      case 8212: // Em dash(Generao Punctuation)
+	this._setRotate(90); break;
       case 12540:
 	this._setImg("onbiki", 1); break;
-      case 45:
+      case 45: // Hyphen-minus(Basic Latin)
 	this._setCnv("&#65372;"); break;
-      case 8213:
-	this._setCnv("&#65372;"); break;
-      case 65293:
-	this._setCnv("&#65372;"); break;
-      case 9472:
-	this._setCnv("&#65372;"); break;
+      case 8213: // Horizontal bar(General Punctuation)
+      case 65293: // Halfwidth and Fullwidth Forms
+      case 9472: // Box drawings light horizontal(Box Drawing)
+	this._setCnv("&#8212;");
+	this._setRotate(90);
+	break;
       case 8593: // up
 	this._setCnv("&#8594;"); break;
       case 8594: // right
@@ -6108,6 +6114,8 @@ var PageGroupStream = (function(){
 })();
 
 
+// notice charactors that can be shurinked is already shurinked in it's body size calculation in nehan.js.
+// so this module only 'add' the space to start/end direction, that are not requiered to be shurinked.
 var Kerning = {
   set : function(cur_char, prev_text, next_text){
     if(cur_char.isKakkoStart()){
@@ -9155,7 +9163,7 @@ var LayoutEvaluator = (function(){
     _createElement : function(name, opt){
       var opt = opt || {};
       var styles = opt.styles || {};
-      var attrs = opt.attrs? opt.attrs.attrs : {};
+      var attrs = opt.attrs? ((opt.attrs instanceof TagAttrs)? opt.attrs.attrs : opt.attrs) : {};
       var dataset = opt.attrs? opt.attrs.dataset : {};
       var dom = document.createElement(name);
       if(opt.id){
@@ -9420,14 +9428,14 @@ var VertEvaluator = (function(){
 
   VertEvaluator.prototype.evalRotateCharTransform = function(line, chr){
     return this._createElement("div", {
-      content:chr.data,
+      content:chr.getData(),
       className:"nehan-rotate-90"
     });
   };
 
   VertEvaluator.prototype.evalRotateCharIE = function(line, chr){
     return this._createElement("div", {
-      content:chr.data,
+      content:chr.getData(),
       className:"nehan-vert-ie",
       styles:chr.getCssVertRotateCharIE(line)
     }); // NOTE(or TODO):clearfix in older version after this code
@@ -9448,8 +9456,6 @@ var VertEvaluator = (function(){
       return this.evalImgChar(line, chr);
     } else if(chr.isHalfSpaceChar(chr)){
       return this.evalHalfSpaceChar(line, chr);
-    } else if(chr.isCnvChar()){
-      return this.evalCnvChar(line, chr);
     } else if(chr.isRotateChar()){
       return this.evalRotateChar(line, chr);
     } else if(chr.isSmallKana()){
@@ -9466,19 +9472,19 @@ var VertEvaluator = (function(){
   // for example, if we use <div>, parent bg-color is not inherited.
   VertEvaluator.prototype.evalCharWithBr = function(line, chr){
     chr.withBr = true;
-    return document.createTextNode(Html.unescape(chr.data));
+    return document.createTextNode(Html.unescape(chr.getData()));
   };
 
   VertEvaluator.prototype.evalCharLetterSpacing = function(line, chr){
     return this._createElement("div", {
-      content:chr.data,
+      content:chr.getData(),
       styles:chr.getCssVertLetterSpacing(line)
     });
   };
 
   VertEvaluator.prototype.evalEmpha = function(line, chr){
     var char_body = this._createElement("span", {
-      content:chr.data,
+      content:chr.getData(),
       className:"nehan-empha-src",
       styles:chr.getCssVertEmphaTarget(line)
     });
@@ -9498,7 +9504,7 @@ var VertEvaluator = (function(){
 
   VertEvaluator.prototype.evalPaddingChar = function(line, chr){
     return this._createElement("div", {
-      content:chr.data,
+      content:chr.getData(),
       styles:chr.getCssPadding(line)
     });
   };
@@ -9509,7 +9515,7 @@ var VertEvaluator = (function(){
     var palette_color = Palette.getColor(font_rgb).toUpperCase();
     return this._createElement("img", {
       className:"nehan-img-char",
-      attr:{
+      attrs:{
 	src:chr.getImgSrc(palette_color)
       },
       styles:chr.getCssVertImgChar(line)
@@ -9518,22 +9524,16 @@ var VertEvaluator = (function(){
 
   VertEvaluator.prototype.evalVerticalGlyph = function(line, chr){
     return this._createElement("div", {
-      content:chr.data,
+      content:chr.getData(),
       className:"nehan-vert-glyph",
       styles:chr.getCssVertGlyph(line)
-    });
-  };
-
-  VertEvaluator.prototype.evalCnvChar = function(line, chr){
-    return this._createElement("div", {
-      content:chr.cnv
     });
   };
 
   VertEvaluator.prototype.evalSmallKana = function(line, chr){
     var tag_name = (line.style.textEmpha && line.style.textEmpha.isEnable())? "span" : "div";
     return this._createElement(tag_name, {
-      content:chr.data,
+      content:chr.getData(),
       styles:chr.getCssVertSmallKana()
     });
   };
