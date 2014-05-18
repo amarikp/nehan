@@ -1997,6 +1997,7 @@ var PseudoSelector = (function(){
 
    1. name selector
      div {font-size:xxx}
+     /h[1-6]/ {font-weight:xxx}
 
    2. class selector
      div.class{font-size:xxx}
@@ -2016,6 +2017,7 @@ var PseudoSelector = (function(){
 var TypeSelector = (function(){
   function TypeSelector(opt){
     this.name = opt.name || null;
+    this.nameRex = opt.nameRex || null;
     this.id = opt.id || null;
     this.className = opt.className || null;
     this.attrs = opt.attrs || [];
@@ -2029,6 +2031,10 @@ var TypeSelector = (function(){
       }
       // name selector
       if(this.name && this.name != "*" && style.getMarkupName() != this.name){
+	return false;
+      }
+      // name selector(by rex)
+      if(this.nameRex && !this.nameRex.test(style.getMarkupName())){
 	return false;
       }
       // class selector
@@ -2049,23 +2055,26 @@ var TypeSelector = (function(){
       }
       return true;
     },
+    getNameSpec : function(){
+      if(this.nameRex){
+	return 1;
+      }
+      return (this.name !== "*" && this.name !== "") ? 1 : 0;
+    },
     getIdSpec : function(){
       return this.id? 1 : 0;
     },
     getClassSpec : function(){
       return this.className? 1 : 0;
     },
-    getTypeSpec : function(){
-      return (this.name !== "*" && this.name !== "") ? 1 : 0;
+    getAttrSpec : function(){
+      return this.attrs.length;
     },
     getPseudoClassSpec : function(){
       if(this.pseudo){
 	return this.pseudo.hasPseudoElement()? 0 : 1;
       }
       return 0;
-    },
-    getAttrSpec : function(){
-      return this.attrs.length;
     },
     _testAttrs : function(style){
       return List.forall(this.attrs, function(attr){
@@ -2083,10 +2092,13 @@ var SelectorLexer = (function(){
     this.buff = this._normalize(src);
   }
 
-  var rex_type = /^[\w-_\.#\*!\?]+/;
+  var rex_name = /^[\w-_\*!\?]+/;
+  var rex_name_rex = /^\/[^\/]+\//;
+  var rex_id = /^#[\w-_]+/;
+  var rex_class = /^\.[\w-_]+/;
   var rex_attr = /^\[[^\]]+\]/;
   var rex_pseudo = /^:{1,2}[\w-_]+/;
-  
+
   SelectorLexer.prototype = {
     getTokens : function(){
       var tokens = [];
@@ -2100,6 +2112,7 @@ var SelectorLexer = (function(){
       return tokens;
     },
     _getNextToken : function(){
+      this.buff = Utils.trim(this.buff);
       if(this.buff === ""){
 	return null;
       }
@@ -2108,25 +2121,8 @@ var SelectorLexer = (function(){
       case "+": case "~": case ">": // combinator
 	this._stepBuff(1);
 	return c1;
-      case ":": // pseudo without type
-	var pseudo = this._getByRex(rex_pseudo);
-	return new TypeSelector({
-	  name:"body",
-	  pseudo:(new PseudoSelector(pseudo))
-	});
       default: // type-selecor
-	var type = this._getByRex(rex_type);
-	if(type){
-	  var attrs = this._getAttrs();
-	  var pseudo = this._getByRex(rex_pseudo);
-	  return new TypeSelector({
-	    name:this._getName(type),
-	    id:this._getId(type),
-	    className:this._getClassName(type),
-	    attrs:attrs,
-	    pseudo:(pseudo? (new PseudoSelector(pseudo)) : null)
-	  });
-	}
+	return this._getTypeSelector();
       }
       throw "invalid selector:[" + this.buff + "]";
     },
@@ -2145,16 +2141,45 @@ var SelectorLexer = (function(){
       }
       return ret;
     },
-    _getName : function(str){
-      return str.replace(/[\.#].+$/, "");
+    _getTypeSelector : function(){
+      var name = this._getName();
+      var name_rex = (name === null)? this._getNameRex() : null;
+      var id = this._getId();
+      var klass = this._getClass();
+      var attrs = this._getAttrs();
+      var pseudo = this._getPseudo();
+      return new TypeSelector({
+	name:name,
+	nameRex:name_rex,
+	id:id,
+	className:klass,
+	attrs:attrs,
+	pseudo:pseudo
+      });
     },
-    _getId : function(str){
-      var parts = str.split("#");
-      return (parts.length > 0)? parts[1] : "";
+    _getName : function(){
+      return this._getByRex(rex_type_name);
     },
-    _getClassName : function(str){
-      var parts = str.split(".");
-      return (parts.length >= 2)? parts[1] : "";
+    // type name defined by regexp
+    // "/h[1-6]/.nehan-some-class span"
+    // => /h[16]/
+    _getNameRex : function(){
+      var name_rex = this._getByRex(rex_name_rex);
+      if(name_rex === null){
+	return null;
+      }
+      return new RegExp(name_rex.replace(/[\/]/g, ""));
+    },
+    _getName : function(){
+      return this._getByRex(rex_name);
+    },
+    _getId : function(){
+      var id = this._getByRex(rex_id);
+      return id? id.substring(1) : null;
+    },
+    _getClass : function(){
+      var klass = this._getByRex(rex_class);
+      return klass? klass.substring(1) : null;
     },
     _getAttrs : function(){
       var attrs = [];
@@ -2167,6 +2192,10 @@ var SelectorLexer = (function(){
 	}
       }
       return attrs;
+    },
+    _getPseudo : function(){
+      var pseudo = this._getByRex(rex_pseudo);
+      return pseudo? new PseudoSelector(pseudo) : null;
     }
   };
 
@@ -2337,7 +2366,7 @@ var Selector = (function(){
 	if(token instanceof TypeSelector){
 	  a += token.getIdSpec();
 	  b += token.getClassSpec() + token.getPseudoClassSpec() + token.getAttrSpec();
-	  c += token.getTypeSpec();
+	  c += token.getNameSpec();
 	}
       });
       return parseInt([a,b,c].join(""), 10); // maybe ok in most case.
