@@ -169,7 +169,7 @@ var Env = (function(){
   var nav = navigator.appName;
   var ua = navigator.userAgent.toLowerCase();
   var is_pure_trident = ua.indexOf("trident") >= 0 && ua.indexOf("msie") < 0;
-  var browser, version, is_transform_enable, tmp_match;
+  var browser, version, tmp_match;
   if(is_pure_trident){
     browser = "msie";
     tmp_match = ua.match(/rv:([\.\d]+)/i);
@@ -1009,7 +1009,12 @@ var Style = {
   // rounded corner
   //-------------------------------------------------------
   ".nehan-rounded":{
-    "padding":["1.6em", "1.0em", "1.6em", "1.0em"],
+    "padding":{
+      before:"1.6em",
+      end:"1.0em",
+      after:"1.6em",
+      start:"1.0em"
+    },
     "border-radius":"10px"
   },
   //-------------------------------------------------------
@@ -1877,15 +1882,27 @@ var CssParser = (function(){
     return {}; // TODO
   };
 
-  var format = function(prop, value){
+  // all subdivided properties are evaluated as unified value.
+  // for example, 'margin-before:1em' => 'margin:1em 0 0 0'.
+  // so subdivided properties must be renamed to unified property('margin-before' => 'margin').
+  var format_prop = function(prop){
+    if(prop.indexOf("margin-") >= 0 || prop.indexOf("padding-") >= 0 || prop.indexOf("border-width-") >= 0){
+      return prop.split("-")[0];
+    }
+    return prop;
+  };
+
+  var format_value = function(prop, value){
     switch(typeof value){
     case "function": case "object": case "boolean":
       return value;
     }
     value = normalize(value); // number, string
     switch(prop){
+      /* TODO: border abbr
     case "border":
       return parse_border_abbr(value);
+      */
     case "border-width":
       return parse_4d(value);
     case "border-radius":
@@ -1894,25 +1911,42 @@ var CssParser = (function(){
       return parse_4d(value);
     case "border-style":
       return parse_4d(value);
+
+      /* TODO: font abbr
     case "font":
       return parse_font_abbr(value);
+      */
+
+      /* TODO: list-style abbr
     case "list-style":
       return parse_list_style_abbr(value);
+      */
     case "margin":
       return parse_4d(value);
     case "padding":
       return parse_4d(value);
-    default: return value; // unmanaged properties is treated as it is.
+
+    // subdivided properties
+    case "margin-before": case "padding-before": case "border-width-before":
+      return {before:value, end:0, after:0, start:0};
+    case "margin-end": case "padding-end": case "border-width-end":
+      return {before:0, end:value, after:0, start:0};
+    case "margin-after": case "padding-after": case "border-width-after":
+      return {before:0, end:0, after:value, start:0};
+    case "margin-start": case "padding-start": case "border-width-start":
+      return {before:0, end:0, after:0, start:value};      
+
+    // unmanaged properties is treated as it is.
+    default: return value;
     }
   };
 
   return {
-    format : function(prop, value){
-      try {
-	return format(prop, value);
-      } catch(e){
-	return {};
-      }
+    formatProp : function(prop){
+      return format_prop(prop);
+    },
+    formatValue : function(prop, value){
+      return format_value(prop, value);
     }
   };
 })();
@@ -2245,7 +2279,7 @@ var SelectorLexer = (function(){
       });
     },
     _getName : function(){
-      return this._getByRex(rex_type_name);
+      return this._getByRex(rex_name);
     },
     // type name defined by regexp
     // "/h[1-6]/.nehan-some-class span"
@@ -2256,9 +2290,6 @@ var SelectorLexer = (function(){
 	return null;
       }
       return new RegExp(name_rex.replace(/[\/]/g, ""));
-    },
-    _getName : function(){
-      return this._getByRex(rex_name);
     },
     _getId : function(){
       var id = this._getByRex(rex_id);
@@ -2337,7 +2368,7 @@ var SelectorStateMachine = (function(){
       }
     }
     return null;
-  }
+  };
 
   return {
     // return true if all the selector-tokens(TypeSelector or combinator) matches the style-context.
@@ -2394,7 +2425,7 @@ var SelectorStateMachine = (function(){
       }
       return true; // all accepted
     }
-  }
+  };
 })();
 
 
@@ -2403,43 +2434,29 @@ var Selector = (function(){
   function Selector(key, value){
     this.key = this._normalizeKey(key); // selector source like 'h1 > p'
     this.value = this._formatValue(value); // associated css value object like {font-size:16px}
-    this.parts = this._getSelectorParts(this.key); // [type-selector | combinator]
-    this.spec = this._countSpec(this.parts); // specificity
+    this.elements = this._getSelectorElements(this.key); // [type-selector | combinator]
+    this.spec = this._countSpec(this.elements); // count specificity
   }
 
-  var set_format_value = function(ret, prop, format_value){
-    if(format_value instanceof Array){
-      set_format_values(ret, format_value);
-    } else {
-      ret[prop] = format_value;
-    }
-  };
-
-  var set_format_values = function(ret, format_values){
-    List.iter(format_values, function(fmt_value){
-      for(var prop in fmt_value){
-	set_format_value(ret, prop, fmt_value[prop]);
-      }
-    });
-  };
-
   Selector.prototype = {
-    test : function(style, pseudo_element_name){
-      if(pseudo_element_name && !this.hasPseudoElementName(pseudo_element_name)){
-	return false;
-      }
-      return SelectorStateMachine.accept(style, this.parts);
+    test : function(style){
+      return SelectorStateMachine.accept(style, this.elements);
+    },
+    // element_name: "before", "after", "first-line", "first-letter"
+    testPseudoElement : function(style, element_name){
+      return this.hasPseudoElementName(element_name) && this.test(style);
     },
     updateValue : function(value){
       for(var prop in value){
-	var old_value = this.value[prop] || null;
-	var new_value = CssParser.format(prop, value[prop]);
+	var fmt_value = CssParser.formatValue(prop, value[prop]);
+	var fmt_prop = CssParser.formatProp(prop);
+	var old_value = this.value[fmt_prop] || null;
 	if(old_value === null){
-	  this.value[prop] = new_value;
-	} else if(typeof old_value === "object" && typeof new_value === "object"){
-	  Args.copy(old_value, new_value);
+	  this.value[fmt_prop] = fmt_value;
+	} else if(typeof old_value === "object" && typeof fmt_value === "object"){
+	  Args.copy(old_value, fmt_value);
 	} else {
-	  old_value = new_value;
+	  old_value = fmt_value; // direct value or function
 	}
       }
     },
@@ -2460,9 +2477,9 @@ var Selector = (function(){
     },
     // count selector 'specificity'
     // see http://www.w3.org/TR/css3-selectors/#specificity
-    _countSpec : function(parts){
+    _countSpec : function(elements){
       var a = 0, b = 0, c = 0;
-      List.iter(parts, function(token){
+      List.iter(elements, function(token){
 	if(token instanceof TypeSelector){
 	  a += token.getIdSpec();
 	  b += token.getClassSpec() + token.getPseudoClassSpec() + token.getAttrSpec();
@@ -2471,7 +2488,7 @@ var Selector = (function(){
       });
       return parseInt([a,b,c].join(""), 10); // maybe ok in most case.
     },
-    _getSelectorParts : function(key){
+    _getSelectorElements : function(key){
       var lexer = new SelectorLexer(key);
       return lexer.getTokens();
     },
@@ -2482,7 +2499,9 @@ var Selector = (function(){
     _formatValue : function(value){
       var ret = {};
       for(var prop in value){
-	set_format_value(ret, prop, CssParser.format(prop, value[prop]));
+	var fmt_prop = CssParser.formatProp(prop);
+	var fmt_value = CssParser.formatValue(prop, value[prop]);
+	ret[fmt_prop] = fmt_value;
       }
       return ret;
     }
@@ -2549,7 +2568,7 @@ var Selectors = (function(){
   // => style = 'p', pseudo_element_name = 'first-letter'
   var get_value_pe = function(style, pseudo_element_name){
     return List.fold(selectors_pe, {}, function(ret, selector){
-      return selector.test(style, pseudo_element_name)? Args.copy(ret, selector.getValue()) : ret;
+      return selector.testPseudoElement(style, pseudo_element_name)? Args.copy(ret, selector.getValue()) : ret;
     });
   };
 
@@ -2992,7 +3011,7 @@ var Char = (function(){
     },
     getCssVertRotateCharIE : function(line){
       var css = {}, font_size = line.style.getFontSize();
-      css["float"] = "left";
+      css["css-float"] = "left";
       css["writing-mode"] = "tb-rl";
       css["padding-left"] = Math.round(font_size / 2) + "px";
       css["line-height"] = font_size + "px";
@@ -3094,12 +3113,21 @@ var Char = (function(){
     _setRotate : function(angle){
       this.rotate = angle;
     },
+    _setRotateOrImg : function(angle, img, vscale){
+      if(Env.isTransformEnable){
+	this._setRotate(angle);
+	return;
+      }
+      this._setImg(img, vscale);
+    },
     _setupRef : function(c1){
       switch(c1){
       case "&lt;":
-	Env.isTransformEnable? this._setRotate(90) : this._setImg("kakko7", 0.5); break;
+	this._setRotateOrImg(90, "kakko7", 0.5);
+	break;
       case "&gt;":
-	Env.isTransformEnable? this._setRotate(90) : this._setImg("kakko8", 0.5); break;
+	this._setRotateOrImg(90, "kakko8", 0.5);
+	break;
       }
     },
     _setupNormal : function(code){
@@ -3346,14 +3374,14 @@ var Word = (function(){
       css["line-height"] = this.bodySize + "px";
       var trans = Math.floor((this.bodySize - line.style.getFontSize()) / 2);
       if(trans > 0){
-	css["transform"] = "rotate(90deg) translate(-" + trans + "px, 0)";
+	css.transform = "rotate(90deg) translate(-" + trans + "px, 0)";
       }
       return css;
     },
     getCssVertTransIE : function(line){
       var css = {}, font_size = line.style.getFontSize();
       css["font-family"] = "monospace";
-      css["float"] = "left";
+      css["css-float"] = "left";
       css["writing-mode"] = "tb-rl";
       css["letter-spacing"] = (line.style.letterSpacing || 0) + "px";
       css["padding-left"] = Math.round(font_size / 2) + "px";
@@ -3475,7 +3503,7 @@ var Ruby = (function(){
     },
     getCssVertRt : function(line){
       var css = {};
-      css["float"] = "left";
+      css["css-float"] = "left";
       return css;
     },
     getCssHoriRt : function(line){
@@ -3487,7 +3515,7 @@ var Ruby = (function(){
     },
     getCssVertRb : function(line){
       var css = {};
-      css["float"] = "left";
+      css["css-float"] = "left";
       if(this.padding){
 	Args.copy(css, this.padding.getCss());
       }
@@ -4061,9 +4089,9 @@ var BlockFlow = (function(){
   BlockFlow.prototype.getCss = function(){
     var css = {};
     if(this.isHorizontal()){
-      css["float"] = (this.dir === "lr")? "left" : "right";
+      css["css-float"] = (this.dir === "lr")? "left" : "right";
     } else if(this.isVertical()){
-      css["float"] = (this.dir === "lr")? "left" : "right";
+      css["css-float"] = (this.dir === "lr")? "left" : "right";
     }
     return css;
   };
@@ -4773,10 +4801,11 @@ var Uri = (function(){
 
 
 var BoxEdge = (function (){
-  function BoxEdge(){
-    this.padding = new Padding();
-    this.border = new Border();
-    this.margin = new Margin();
+  function BoxEdge(opt){
+    opt = opt || {};
+    this.padding = opt.padding || new Padding();
+    this.border = opt.border || new Border();
+    this.margin = opt.margin || new Margin();
   }
 
   BoxEdge.prototype = {
@@ -5008,7 +5037,7 @@ var Box = (function(){
     getCssInlineBlock : function(){
       var css = this.getCssBlock();
       if(!this.style.isFloated()){
-	delete css["float"];
+	delete css["css-float"];
       }
       css.display = "inline-block";
       return css;
@@ -6189,9 +6218,9 @@ var FloatDirection = (function(){
       var css = {};
       if(flow.isTextHorizontal()){
 	if(this.isStart()){
-	  css["float"] = "left";
+	  css["css-float"] = "left";
 	} else if(this.isEnd()){
-	  css["float"] = "right";
+	  css["css-float"] = "right";
 	}
       }
       return css;
@@ -6472,7 +6501,8 @@ var StyleContext = (function(){
       this.markupName = markup.getName();
       this.parent = parent || null;
       this.childs = [];
-      this.next = null;
+      this.next = null; // next sibling
+      this.prev = null; // prev sibling
 
       // initialize tree
       if(parent){
@@ -6622,7 +6652,9 @@ var StyleContext = (function(){
     // append child style context
     appendChild : function(child_style){
       if(this.childs.length > 0){
-	List.last(this.childs).next = child_style;
+	var last_child = List.last(this.childs);
+	last_child.next = child_style;
+	child_style.prev = last_child;
       }
       this.childs.push(child_style);
     },
@@ -6910,15 +6942,18 @@ var StyleContext = (function(){
       // "oncreate" not return style, it's a hook called after this style is converted into dom element.
       // so leave it as it is.
       if(name === "oncreate"){
-	return value; 
+	return value;
       }
       // if value is function, call with selector context, and format the returned value.
       if(typeof value === "function"){
-	return CssParser.format(name, value(this.selectorContext));
+	return CssParser.formatValue(name, value(this.selectorContext));
       }
       return value; // already formatted
     },
     // priority: inline css > selector css
+    // notice that subdivided properties like 'margin-before' as [name] are always not found,
+    // even if you defined them in setStyle(s).
+    // because all subdivided properties are already converted into unified name in loading process.
     getCssAttr : function(name, def_value){
       var ret;
       ret = this.getInlineCssAttr(name);
@@ -7138,14 +7173,16 @@ var StyleContext = (function(){
       switch(this.boxSizing){
       case "margin-box": return outer_measure - this.getEdgeMeasure();
       case "border-box": return outer_measure - this.getInnerEdgeMeasure();
-      case "content-box": default: return outer_measure;
+      case "content-box": return outer_measure;
+      default: return outer_measure;
       }
     },
     _computeContentExtent : function(outer_extent){
       switch(this.boxSizing){
       case "margin-box": return outer_extent - this.getEdgeExtent();
       case "border-box": return outer_extent - this.getInnerEdgeExtent();
-      case "content-box": default: return outer_extent;
+      case "content-box": return outer_extent;
+      default: return outer_extent;
       }
     },
     _computeFontSize : function(val, unit_size){
@@ -7258,7 +7295,9 @@ var StyleContext = (function(){
 	if(nv.length >= 2){
 	  var prop = Utils.trim(nv[0]).toLowerCase();
 	  var value = Utils.trim(nv[1]);
-	  ret[prop] = CssParser.format(prop, value);
+	  var fmt_prop = CssParser.formatProp(prop);
+	  var fmt_value = CssParser.formatValue(prop, value);
+	  ret[fmt_prop] = fmt_value;
 	}
 	return ret;
       });
@@ -7357,35 +7396,87 @@ var StyleContext = (function(){
       return this.getCssAttr("box-sizing", "margin-box");
     },
     _loadEdge : function(flow, font_size){
-      var padding = this.getCssAttr("padding");
-      var margin = this.getCssAttr("margin");
-      var border_width = this.getCssAttr("border-width");
-      if(padding === null && margin === null && border_width === null){
+      var padding = this._loadPadding(flow, font_size);
+      var margin = this._loadMargin(flow, font_size);
+      var border = this._loadBorder(flow, font_size);
+      if(padding === null && margin === null && border === null){
 	return null;
       }
-      var edge = new BoxEdge();
-      if(padding){
-	edge.padding.setSize(flow, this._computeEdgeSize(padding, font_size));
+      return new BoxEdge({
+	padding:padding,
+	margin:margin,
+	border:border
+      });
+    },
+    _loadEdgeSize : function(font_size, prop){
+      var edge_size = this.getCssAttr(prop);
+      if(edge_size === null){
+	return null;
       }
-      if(margin){
-	edge.margin.setSize(flow, this._computeEdgeSize(margin, font_size));
+      return this._computeEdgeSize(edge_size, font_size);
+    },
+    _loadPadding : function(flow, font_size){
+      var edge_size = this._loadEdgeSize(font_size, "padding");
+      if(edge_size === null){
+	return null;
       }
-      if(border_width){
-	edge.border.setSize(flow, this._computeEdgeSize(border_width, font_size));
+      var padding = new Padding();
+      padding.setSize(flow, edge_size);
+      return padding;
+    },
+    _loadMargin : function(flow, font_size){
+      var edge_size = this._loadEdgeSize(font_size, "margin");
+      if(edge_size === null){
+	return null;
       }
+      var margin = new Margin();
+      margin.setSize(flow, edge_size);
+
+      // cancel margin between previous sibling and cur element if
+      // 1. prev sibling element with edge exists.
+      // 2. both prev and cur have display "block".
+      // 3. both prev and cur have same box flow.
+      // 4. both prev and cur is not floated element.
+      // 5. prev has margin-after and cur has margin-before.
+      if(this.prev && this.prev.display === "block" && !this.prev.isFloated() && this.prev.edge &&
+	 this.flow === this.prev.flow &&
+	 this.display === "block" && !this.isFloated() &&
+	 (this.prev.edge.margin.getAfter(this.flow) > 0) &&
+	 (margin.getBefore(this.flow) > 0)){
+	this._cancelMargin(this.flow, margin, this.prev.edge.margin);
+      }
+      return margin;
+    },
+    _cancelMargin : function(flow, cur_margin, prev_margin){
+      var after = prev_margin.getAfter(flow);
+      var before = cur_margin.getBefore(flow);
+      if(after >= before){
+	cur_margin.setBefore(flow, 0);
+      } else {
+	cur_margin.setBefore(flow, before - after);
+      }
+    },
+    _loadBorder : function(flow, font_size){
+      var edge_size = this._loadEdgeSize(font_size, "border-width");
+      if(edge_size === null){
+	return null;
+      }
+      var border = new Border();
+      border.setSize(flow, edge_size);
+
       var border_radius = this.getCssAttr("border-radius");
       if(border_radius){
-	edge.setBorderRadius(flow, this._computeCornerSize(border_radius, font_size));
+	border.setRadius(flow, this._computeCornerSize(border_radius, font_size));
       }
       var border_color = this.getCssAttr("border-color");
       if(border_color){
-	edge.setBorderColor(flow, border_color);
+	border.setColor(flow, border_color);
       }
       var border_style = this.getCssAttr("border-style");
       if(border_style){
-	edge.setBorderStyle(flow, border_style);
+	border.setStyle(flow, border_style);
       }
-      return edge;
+      return border;
     },
     _loadLineRate : function(){
       var value = this.getCssAttr("line-rate", "inherit");
@@ -7721,10 +7812,9 @@ var InlineContext = (function(){
       return List.last(this.texts);
     },
     justify : function(head){
-      var last = this.texts.length - 1;
-      var ptr = last;
+      var last = this.texts.length - 1, ptr = last, tail;
       while(ptr >= 0){
-	var tail = this.texts[ptr];
+	tail = this.texts[ptr];
 	if(head && head.isHeadNg && head.isHeadNg() || tail.isTailNg && tail.isTailNg()){
 	  head = tail;
 	  ptr--;
@@ -8519,7 +8609,7 @@ var BreakAfterGenerator = (function(){
     context.setBreakAfter(true);
     this._terminate = true;
     return this.style.createBreakLine();
-  }
+  };
 
   return BreakAfterGenerator;
 })();
@@ -8605,9 +8695,9 @@ var FloatGroupStack = (function(){
 
   // [float block] -> [FloatGroup]
   var make_float_groups = function(flow, float_direction, blocks){
-    var ret = [];
+    var ret = [], group;
     do{
-      var group = pop_float_group(flow, float_direction, blocks);
+      group = pop_float_group(flow, float_direction, blocks);
       if(group){
 	ret.push(group);
       }
@@ -9201,7 +9291,7 @@ var LayoutEvaluator = (function(){
 
   LayoutEvaluator.prototype = {
     _createElement : function(name, opt){
-      var opt = opt || {};
+      opt = opt || {};
       var styles = opt.styles || {};
       var attrs = opt.attrs? ((opt.attrs instanceof TagAttrs)? opt.attrs.attrs : opt.attrs) : {};
       var dataset = opt.attrs? opt.attrs.dataset : {};
@@ -9216,14 +9306,9 @@ var LayoutEvaluator = (function(){
 	dom.innerHTML = opt.content;
       }
 
-      // font-family -> fontFamily(use camel case by default)
-      // float -> cssFloat(special case)
+      // store css value to dom.style[<camelized-css-property>]
       Obj.iter(styles, function(style_name, value){
-	if(style_name === "float"){
-	  dom.style.cssFloat = value;
-	} else {
-	  dom.style[Utils.camelize(style_name)] = value;
-	}
+	dom.style[Utils.camelize(style_name)] = value;
       });
 
       // notice that class(className in style object) is given by variable "Box::classes".
