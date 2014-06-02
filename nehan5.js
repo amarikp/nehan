@@ -6628,18 +6628,12 @@ var StyleContext = (function(){
       this.contentMeasure = this._computeContentMeasure(this.outerMeasure);
       this.contentExtent = this._computeContentExtent(this.outerExtent);
     },
-    // if update static size, update context size too.
-    updateStaticSize : function(measure, extent){
-      this.staticMeasure = measure;
-      this.staticExtent = extent;
-      this.updateContextSize(measure, extent);
-    },
-    // if update context size, update all context size of children too.
+    // force update context size.
     updateContextSize : function(measure, extent){
+      if(this.staticMeasure && this.staticExtent){
+	return;
+      }
       this.initContextSize(measure, extent);
-      List.iter(this.childs, function(child){
-	child.updateContextSize(null, null);
-      });
     },
     // clone style-context with temporary css
     clone : function(css){
@@ -6706,6 +6700,11 @@ var StyleContext = (function(){
       });
       box.breakAfter = this.isBreakAfter() || opt.breakAfter || false;
       box.content = opt.content || null;
+      if(this.isPushed()){
+	box.pushed = true;
+      } else if(this.isPulled()){
+	box.pulled = true;
+      }
       return box;
     },
     createImage : function(opt){
@@ -7590,12 +7589,6 @@ var LayoutContext = (function(){
     addBlockElement : function(element, extent){
       this.block.addElement(element, extent);
     },
-    pushBlockElement : function(element, extent){
-      this.block.pushElement(element, extent);
-    },
-    pullBlockElement : function(element, extent){
-      this.block.pullElement(element, extent);
-    },
     getBlockElements : function(){
       return this.block.getElements();
     },
@@ -7686,23 +7679,18 @@ var BlockContext = (function(){
     hasBreakAfter : function(){
       return this.breakAfter;
     },
-    _onAddElement : function(element, extent){
+    addElement : function(element, extent){
       this.curExtent += extent;
       if(element.breakAfter){
 	this.breakAfter = true;
       }
-    },
-    addElement : function(element, extent){
-      this.elements.push(element);
-      this._onAddElement(element, extent);
-    },
-    pushElement : function(element, extent){
-      this.pushedElements.push(element);
-      this._onAddElement(element, extent);
-    },
-    pullElement : function(element, extent){
-      this.pulledElements.unshift(element);
-      this._onAddElement(element, extent);
+      if(element.pushed){
+	this.pushedElements.push(element);
+      } else if(element.pulled){
+	this.pulledElements.unshift(element);
+      } else {
+	this.elements.push(element);
+      }
     },
     getCurExtent : function(){
       return this.curExtent;
@@ -8174,15 +8162,7 @@ var BlockGenerator = (function(){
     if(element === null){
       return;
     }
-    if(this.style.isPushed() || element.pushed){
-      context.pushBlockElement(element, extent);
-    } else if(this.style.isPulled() || element.pulled){
-      context.pullBlockElement(element, extent);
-    } else {
-      context.addBlockElement(element, extent);
-    }
-
-    // call _onAddElement callback for each 'element' of output.
+    context.addBlockElement(element, extent);
     this._onAddElement(element);
   };
 
