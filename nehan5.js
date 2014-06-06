@@ -1762,6 +1762,7 @@ var HashSet = (function(){
       this._values[name] = old_value? this.merge(old_value, value) : value;
     },
     addValues : function(values){
+      values = values || {};
       for(var prop in values){
 	this.add(prop, values[prop]);
       }
@@ -2002,13 +2003,13 @@ var CssParser = (function(){
 
     // subdivided properties
     case "margin-before": case "padding-before": case "border-width-before":
-      return {before:value, end:0, after:0, start:0};
+      return {before:value};
     case "margin-end": case "padding-end": case "border-width-end":
-      return {before:0, end:value, after:0, start:0};
+      return {end:value};
     case "margin-after": case "padding-after": case "border-width-after":
-      return {before:0, end:0, after:value, start:0};
+      return {after:value};
     case "margin-start": case "padding-start": case "border-width-start":
-      return {before:0, end:0, after:0, start:value};      
+      return {start:value};      
 
     // unmanaged properties is treated as it is.
     default: return value;
@@ -6500,13 +6501,11 @@ var SelectorContext = (function(){
   Class.extend(SelectorContext, SelectorPropContext);
 
   SelectorContext.prototype.getCssAttr = function(name, def_value){
-    // TODO: define public interface to StyleContext
     return this._style.getCssAttr(name, def_value);
   };
 
   SelectorContext.prototype.setCssAttr = function(name, value){
-    // TODO: define public interface to StyleContext
-    this._style.managedCss.add(name, value);
+    this._style.setCssAttr(name, value);
   };
 
   return SelectorContext;
@@ -6570,6 +6569,10 @@ var StyleContext = (function(){
     "text-combine",
     "width"
   ];
+
+  var __is_managed_css_prop = function(prop){
+    return List.exists(__managed_css_props, Closure.eq(prop));
+  };
 
   var __filter_decorated_inline_elements = function(elements){
     var ret = [];
@@ -7050,7 +7053,13 @@ var StyleContext = (function(){
       }
       return value; // already formatted
     },
-    // priority: inline css > selector css
+    setCssAttr : function(name, value){
+      if(__is_managed_css_prop(name)){
+	this.managedCss.add(name, value);
+      } else {
+	this.unmanagedCss.add(name, value);
+      }
+    },
     // notice that subdivided properties like 'margin-before' as [name] are always not found,
     // even if you defined them in setStyle(s).
     // because all subdivided properties are already converted into unified name in loading process.
@@ -7428,7 +7437,7 @@ var StyleContext = (function(){
     },
     _loadUnmanagedCss : function(managed_css){
       return managed_css.filter(function(prop, value){
-	return !List.exists(__managed_css_props, Closure.eq(prop));
+	return !__is_managed_css_prop(prop);
       });
     },
     _disableUnmanagedCssProps : function(unmanaged_css){
