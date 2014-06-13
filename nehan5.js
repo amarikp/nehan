@@ -35,9 +35,9 @@ if(!Nehan){
 // glocal style
 Nehan.style = {};
 
-// global single tag names
-Nehan.__single_tags__ = [];
-Nehan.__single_tags_rex__ = [];
+// global single tags
+Nehan.__single_tag_names__ = [];
+Nehan.__single_tag_rexes__ = [];
 
 Nehan.setStyle = function(selector_key, value){
   var entry = Nehan.style[selector_key] || {};
@@ -53,12 +53,12 @@ Nehan.setStyles = function(values){
   }
 };
 
-Nehan.addSingleTag = function(tag_name){
-  Nehan.__single_tags__.push(tag_name);
+Nehan.addSingleTagByName = function(tag_name){
+  Nehan.__single_tag_names__.push(tag_name);
 };
 
-Nehan.addSingleTagRex = function(rex){
-  Nehan.__single_tags_rex__.push(rex);
+Nehan.addSingleTagByRex = function(rex){
+  Nehan.__single_tag_rexes__.push(rex);
 };
 
 // this function ends at the tail of this source.
@@ -224,9 +224,8 @@ var Env = (function(){
 })();
 
 
-// TODO: create hashset by js.
 var LexingRule = (function(){
-  var __single_tags__ = [
+  var __single_tag_names__ = [
     "br",
     "hr",
     "img",
@@ -241,20 +240,20 @@ var LexingRule = (function(){
     "pbr"
   ];
 
-  var __single_tags_rex__ = [];
+  var __single_tag_rexes__ = [];
 
   var __is_single_tag = function(tag_name){
-    return List.exists(__single_tags__, Closure.eq(tag_name));
+    return List.exists(__single_tag_names__, Closure.eq(tag_name));
   };
 
   var __is_single_tag_rex = function(tag_name){
-    return List.exists(__single_tags_rex__, function(rex){
+    return List.exists(__single_tag_rexes__, function(rex){
       return rex.test(tag_name);
     });
   };
 
   var __find_single_tag_rex_by_rex = function(rex){
-    return List.exists(__single_tags_rex__, function(rex_){
+    return List.exists(__single_tag_rexes__, function(rex_){
       return rex.source === rex_.source;
     });
   };
@@ -263,21 +262,15 @@ var LexingRule = (function(){
     isSingleTag : function(tag_name){
       return __is_single_tag(tag_name) || __is_single_tag_rex(tag_name) || false;
     },
-    addSingleTag : function(tag_name){
+    addSingleTagByName : function(tag_name){
       if(!__is_single_tag(tag_name)){
-	__single_tags__.push(tag_name);
+	__single_tag_names__.push(tag_name);
       }
     },
-    addSingleTagAll : function(tag_names){
-      return List.iter(tag_names, this.addSingleTag);
-    },
-    addSingleTagRex : function(rex){
+    addSingleTagByRex : function(rex){
       if(!__find_single_tag_rex_by_rex(rex)){
-	__single_tags_rex__.push(rex);
+	__single_tag_rexes__.push(rex);
       }
-    },
-    addSingleTagRexAll : function(rexes){
-      return List.iter(rexes, this.addSingleTagRex);
     }
   };
 })();
@@ -5525,9 +5518,9 @@ var TocContext = (function(){
 })();
 
 var OutlineContext = (function(){
-  function OutlineContext(style){
+  function OutlineContext(markup_name){
     this.logs = [];
-    this.style = style;
+    this.markupName = markup_name;
   }
 
   var __header_id__ = 0; // glocal unique header id
@@ -5543,7 +5536,7 @@ var OutlineContext = (function(){
       return this.logs[index] || null;
     },
     getMarkupName : function(){
-      return this.style.getMarkupName();
+      return this.markupName;
     },
     startSection : function(type){
       this.logs.push({
@@ -6624,7 +6617,7 @@ var StyleContext = (function(){
       }
 
       // create context for each functional css property.
-      this.selectorContext = new SelectorPropContext(this, args.layoutContext || null);
+      this.selectorPropContext = new SelectorPropContext(this, args.layoutContext || null);
 
       // create selector callback context,
       // this context is passed to "onload" callback.
@@ -6632,7 +6625,7 @@ var StyleContext = (function(){
       // because 'onload' callback is called after loading selector css.
       // notice that at this phase, css values are not converted into internal style object.
       // so by updating css value, you can update calculation of internal style object.
-      this.callbackContext = new SelectorContext(this, args.layoutContext || null);
+      this.selectorContext = new SelectorContext(this, args.layoutContext || null);
 
       this.managedCss = new CssHashSet();
       this.unmanagedCss = new CssHashSet();
@@ -6718,6 +6711,29 @@ var StyleContext = (function(){
 
       // disable some unmanaged css properties depending on loaded style values.
       this._disableUnmanagedCssProps(this.unmanagedCss);
+    },
+    getOutlineContext : function(){
+      return this.outlineContext || this.parent.getOutlineContext();
+    },
+    startOutlineContext : function(){
+      this.outlineContext = new OutlineContext(this.getMarkupName());
+    },
+    endOutlineContext : function(){
+      DocumentContext.addOutlineContext(this.getOutlineContext());
+    },
+    startSectionContext : function(){
+      this.getOutlineContext().startSection(this.getMarkupName());
+    },
+    endSectionContext : function(){
+      this.getOutlineContext().endSection(this.getMarkupName());
+    },
+    // return header id
+    startHeaderContext : function(opt){
+      return this.getOutlineContext().addHeader({
+	type:opt.type,
+	rank:opt.rank,
+	title:opt.title
+      });
     },
     // [context_size] = (outer_size, content_size)
     //
@@ -7062,7 +7078,7 @@ var StyleContext = (function(){
       }
       // if value is function, call with selector context, and format the returned value.
       if(typeof value === "function"){
-	return CssParser.formatValue(name, value(this.selectorContext));
+	return CssParser.formatValue(name, value(this.selectorPropContext));
       }
       return value; // already formatted
     },
@@ -7430,7 +7446,7 @@ var StyleContext = (function(){
       if(callback === null || typeof callback !== "function"){
 	return {};
       }
-      var ret = callback(this.callbackContext) || {};
+      var ret = callback(this.selectorContext) || {};
       for(var prop in ret){
 	ret[prop] = this._evalCssAttr(prop, ret[prop]);
       }
@@ -8078,7 +8094,7 @@ var LayoutGenerator = (function(){
     } 
   };
 
-  LayoutGenerator.prototype._createFloatGenerator = function(context, outline_context, first_float_gen){
+  LayoutGenerator.prototype._createFloatGenerator = function(context, first_float_gen){
     var self = this, parent_style = this.style;
     var rest_float_gens = this.stream.mapWhile(function(token){
       if(!Token.isTag(token)){
@@ -8090,15 +8106,15 @@ var LayoutGenerator = (function(){
 	return null;
       }
       var child_stream = self._createStream(child_style);
-      return self._createChildBlockGenerator(child_style, child_stream, context, outline_context);
+      return self._createChildBlockGenerator(child_style, child_stream, context);
     });
     var floated_generators = [first_float_gen].concat(rest_float_gens);
-    return new FloatGenerator(this.style, this.stream, outline_context, floated_generators);
+    return new FloatGenerator(this.style, this.stream, floated_generators);
   };
 
-  LayoutGenerator.prototype._createChildBlockGenerator = function(style, stream, context, outline_context){
+  LayoutGenerator.prototype._createChildBlockGenerator = function(style, stream, context){
     if(style.hasFlipFlow()){
-      return new FlipGenerator(style, stream, outline_context, context);
+      return new FlipGenerator(style, stream, context);
     }
 
     // if child style with 'pasted' attribute, yield block with direct content by LazyGenerator.
@@ -8111,18 +8127,18 @@ var LayoutGenerator = (function(){
     // switch generator by display
     switch(style.display){
     case "list-item":
-      return new ListItemGenerator(style, stream, outline_context);
+      return new ListItemGenerator(style, stream);
 
     case "table":
-      return new TableGenerator(style, stream, outline_context);
+      return new TableGenerator(style, stream);
 
     case "table-header-group":
     case "table-row-group":
     case "table-footer-group":
-      return new TableRowGroupGenerator(style, stream, outline_context);
+      return new TableRowGroupGenerator(style, stream);
 
     case "table-row":
-      return new TableRowGenerator(style, stream, outline_context);
+      return new TableRowGenerator(style, stream);
 
     case "table-cell":
       return new TableCellGenerator(style, stream);
@@ -8138,7 +8154,7 @@ var LayoutGenerator = (function(){
       return new LazyGenerator(style, style.createBlock());
 
     case "first-line":
-      return new FirstLineGenerator(style, stream, outline_context);
+      return new FirstLineGenerator(style, stream);
 
     case "details":
     case "blockquote":
@@ -8150,7 +8166,7 @@ var LayoutGenerator = (function(){
     case "article":
     case "nav":
     case "aside":
-      return new SectionContentGenerator(style, stream, outline_context);
+      return new SectionContentGenerator(style, stream);
 
     case "h1":
     case "h2":
@@ -8158,20 +8174,20 @@ var LayoutGenerator = (function(){
     case "h4":
     case "h5":
     case "h6":
-      return new HeaderGenerator(style, stream, outline_context);
+      return new HeaderGenerator(style, stream);
 
     case "ul":
     case "ol":
-      return new ListGenerator(style, stream, outline_context);
+      return new ListGenerator(style, stream);
 
     default:
-      return new BlockGenerator(style, stream, outline_context);
+      return new BlockGenerator(style, stream);
     }
   };
 
-  LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, context, outline_context){
+  LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, context){
     if(style.isInlineBlock()){
-      return new InlineBlockGenerator(style, stream, outline_context);
+      return new InlineBlockGenerator(style, stream);
     }
     if(style.isPasted()){
       return new LazyGenerator(style, style.createLine({content:style.getContent()}));
@@ -8181,11 +8197,11 @@ var LayoutGenerator = (function(){
       // if inline img, no content text is included in img tag, so we yield it by lazy generator.
       return new LazyGenerator(style, style.createImage());
     case "a":
-      return new LinkGenerator(style, stream, outline_context);
+      return new LinkGenerator(style, stream);
     case "page-break": case "end-page": case "pbr":
       return new BreakAfterGenerator(style);
     default:
-      return new InlineGenerator(style, stream, outline_context);
+      return new InlineGenerator(style, stream);
     }
   };
 
@@ -8194,9 +8210,8 @@ var LayoutGenerator = (function(){
 
 
 var BlockGenerator = (function(){
-  function BlockGenerator(style, stream, outline_context){
+  function BlockGenerator(style, stream){
     LayoutGenerator.call(this, style, stream);
-    this.outlineContext = outline_context;
   }
   Class.extend(BlockGenerator, LayoutGenerator);
 
@@ -8258,7 +8273,7 @@ var BlockGenerator = (function(){
 	return this._getNext(context);
       }
       this.stream.prev();
-      this.setChildLayout(new InlineGenerator(this.style, this.stream, this.outlineContext));
+      this.setChildLayout(new InlineGenerator(this.style, this.stream));
       return this.yieldChildLayout(context);
     }
 
@@ -8274,21 +8289,21 @@ var BlockGenerator = (function(){
     var child_stream = this._createStream(child_style);
 
     if(child_style.isFloated()){
-      var first_float_gen = this._createChildBlockGenerator(child_style, child_stream, context, this.outlineContext);
-      this.setChildLayout(this._createFloatGenerator(context, this.outlineContext, first_float_gen));
+      var first_float_gen = this._createChildBlockGenerator(child_style, child_stream, context);
+      this.setChildLayout(this._createFloatGenerator(context, first_float_gen));
       return this.yieldChildLayout(context);
     }
 
     // if child inline or child inline-block,
     // delegate current style and stream to child inline-generator with first child inline generator.
     if(child_style.isInlineBlock() || child_style.isInline()){
-      var first_inline_gen = this._createChildInlineGenerator(child_style, child_stream, context, this.outlineContext);
-      this.setChildLayout(new InlineGenerator(this.style, this.stream, this.outlineContext, first_inline_gen));
+      var first_inline_gen = this._createChildInlineGenerator(child_style, child_stream, context);
+      this.setChildLayout(new InlineGenerator(this.style, this.stream, first_inline_gen));
       return this.yieldChildLayout(context);
     }
 
     // other case, start child block generator
-    this.setChildLayout(this._createChildBlockGenerator(child_style, child_stream, context, this.outlineContext));
+    this.setChildLayout(this._createChildBlockGenerator(child_style, child_stream, context));
     return this.yieldChildLayout(context);
   };
 
@@ -8327,9 +8342,8 @@ var BlockGenerator = (function(){
 
 
 var InlineGenerator = (function(){
-  function InlineGenerator(style, stream, outline_context, child_generator){
+  function InlineGenerator(style, stream, child_generator){
     LayoutGenerator.call(this, style, stream);
-    this.outlineContext = outline_context || null;
     if(child_generator){
       this.setChildLayout(child_generator);
     }
@@ -8471,9 +8485,9 @@ var InlineGenerator = (function(){
 
     // if inline -> block(or floated layout), force terminate inline
     if(child_style.isBlock() || child_style.isFloated()){
-      var child_gen = this._createChildBlockGenerator(child_style, child_stream, context, this.outlineContext);
+      var child_gen = this._createChildBlockGenerator(child_style, child_stream, context);
       if(child_style.isFloated()){
-	child_gen = this._createFloatGenerator(context, this.outlineContext, child_gen);
+	child_gen = this._createFloatGenerator(context, child_gen);
       }
       this._breakInline(child_gen);
 
@@ -8486,7 +8500,7 @@ var InlineGenerator = (function(){
 
     // if inline-block, yield immediately, and return as child inline element.
     if(child_style.isInlineBlock()){
-      return (new InlineBlockGenerator(child_style, child_stream, this.outlineContext)).yield(context);
+      return (new InlineBlockGenerator(child_style, child_stream)).yield(context);
     }
 
     // inline child
@@ -8499,7 +8513,7 @@ var InlineGenerator = (function(){
       return null;
 
     default:
-      var child_generator = this._createChildInlineGenerator(child_style, child_stream, context, this.outlineContext);
+      var child_generator = this._createChildInlineGenerator(child_style, child_stream, context);
       this.setChildLayout(child_generator);
       return this.yieldChildLayout(context);
     }
@@ -8617,8 +8631,8 @@ var InlineGenerator = (function(){
 
 
 var InlineBlockGenerator = (function (){
-  function InlineBlockGenerator(style, stream, outline_context){
-    BlockGenerator.call(this, style, stream, outline_context);
+  function InlineBlockGenerator(style, stream){
+    BlockGenerator.call(this, style, stream);
   }
   Class.extend(InlineBlockGenerator, BlockGenerator);
 
@@ -8650,8 +8664,8 @@ var LinkGenerator = (function(){
     }
   };
 
-  function LinkGenerator(style, stream, outline_context){
-    InlineGenerator.call(this, style, stream, outline_context);
+  function LinkGenerator(style, stream){
+    InlineGenerator.call(this, style, stream);
     __add_anchor(style); // set anchor at this point
   }
   Class.extend(LinkGenerator, InlineGenerator);
@@ -8667,8 +8681,8 @@ var LinkGenerator = (function(){
 // style of first line generator is enabled until first line is yielded.
 // after yielding first line, parent style is inherited.
 var FirstLineGenerator = (function(){
-  function FirstLineGenerator(style, stream, outline_context){
-    BlockGenerator.call(this, style, stream, outline_context);
+  function FirstLineGenerator(style, stream){
+    BlockGenerator.call(this, style, stream);
   }
   Class.extend(FirstLineGenerator, BlockGenerator);
 
@@ -8730,8 +8744,8 @@ var BreakAfterGenerator = (function(){
 
 
 var FlipGenerator = (function(){
-  function FlipGenerator(style, stream, outline_context){
-    BlockGenerator.call(this, style, stream, outline_context);
+  function FlipGenerator(style, stream){
+    BlockGenerator.call(this, style, stream);
   }
   Class.extend(FlipGenerator, BlockGenerator);
 
@@ -8844,15 +8858,15 @@ var FloatGenerator = (function(){
   // caution: constructor argument 'style' is the style of parent.
   // so if <body><float1>..</float1><float2>...</float2></body>,
   // style of this contructor is 'body.style'
-  function FloatGenerator(style, stream, outline_context, floated_generators){
-    BlockGenerator.call(this, style, stream, outline_context);
+  function FloatGenerator(style, stream, floated_generators){
+    BlockGenerator.call(this, style, stream);
     this.generators = floated_generators;
 
     // create child generator to yield rest-space of float-elements with logical-float "start".
     // notice that this generator uses 'clone' of original style, because content size changes by position,
     // but on the other hand, original style is referenced by float-elements as their parent style.
     // so we must keep original style immutable.
-    this.setChildLayout(new BlockGenerator(style.clone({"float":"start"}), stream, outline_context));
+    this.setChildLayout(new BlockGenerator(style.clone({"float":"start"}), stream));
   }
   Class.extend(FloatGenerator, LayoutGenerator);
 
@@ -9074,26 +9088,26 @@ var ParallelGenerator = (function(){
 var SectionRootGenerator = (function(){
   function SectionRootGenerator(style, stream){
     BlockGenerator.call(this, style, stream);
-    this.outlineContext = new OutlineContext(style); // create new section root
+    this.style.startOutlineContext(); // create new section root
   }
   Class.extend(SectionRootGenerator, BlockGenerator);
 
   SectionRootGenerator.prototype._onComplete = function(context, block){
-    DocumentContext.addOutlineContext(this.outlineContext);
+    this.style.endOutlineContext();
   };
 
   return SectionRootGenerator;
 })();
 
 var SectionContentGenerator = (function(){
-  function SectionContentGenerator(style, stream, outline_context){
-    BlockGenerator.call(this, style, stream, outline_context);
-    this.outlineContext.startSection(this.style.getMarkupName());
+  function SectionContentGenerator(style, stream){
+    BlockGenerator.call(this, style, stream);
+    this.style.startSectionContext();
   }
   Class.extend(SectionContentGenerator, BlockGenerator);
 
   SectionContentGenerator.prototype._onComplete = function(context, block){
-    this.outlineContext.endSection(this.style.getMarkupName());
+    this.style.endSectionContext();
   };
 
   return SectionContentGenerator;
@@ -9101,8 +9115,8 @@ var SectionContentGenerator = (function(){
 
 
 var ListGenerator = (function(){
-  function ListGenerator(style, stream, outline_context){
-    BlockGenerator.call(this, style, stream, outline_context);
+  function ListGenerator(style, stream){
+    BlockGenerator.call(this, style, stream);
     this.style.markerSize = this._getMarkerSize(this.stream.getTokenCount());
   }
   Class.extend(ListGenerator, BlockGenerator);
@@ -9124,15 +9138,15 @@ var ListGenerator = (function(){
 
 
 var ListItemGenerator = (function(){
-  function ListItemGenerator(style, stream, outline_context){
+  function ListItemGenerator(style, stream){
     ParallelGenerator.call(this, style, [
-      this._createListMarkGenerator(style, outline_context),
-      this._createListBodyGenerator(style, stream, outline_context)
+      this._createListMarkGenerator(style),
+      this._createListBodyGenerator(style, stream)
     ]);
   }
   Class.extend(ListItemGenerator, ParallelGenerator);
 
-  ListItemGenerator.prototype._createListMarkGenerator = function(style, outline_context){
+  ListItemGenerator.prototype._createListMarkGenerator = function(style){
     var marker_size = style.parent.markerSize || style.flow.getBoxSize(Layout.fontSize * 2, Layout.fontSize);
     var item_order = style.getChildIndex();
     var marker_text = style.parent.getMarkerHtml(item_order + 1);
@@ -9143,10 +9157,10 @@ var ListItemGenerator = (function(){
     }, {
       "class":"nehan-li-marker"
     });
-    return new BlockGenerator(marker_style, new TokenStream(marker_text), outline_context);
+    return new BlockGenerator(marker_style, new TokenStream(marker_text));
   };
 
-  ListItemGenerator.prototype._createListBodyGenerator = function(style, stream, outline_context){
+  ListItemGenerator.prototype._createListBodyGenerator = function(style, stream){
     var marker_size = style.parent.markerSize || style.flow.getBoxSize(Layout.fontSize * 2, Layout.fontSize);
     var measure = style.contentMeasure - marker_size.getMeasure(style.flow);
     var body_style = style.createChild("li-body", {
@@ -9155,7 +9169,7 @@ var ListItemGenerator = (function(){
     }, {
       "class":"nehan-li-body"
     });
-    return new BlockGenerator(body_style, stream, outline_context);
+    return new BlockGenerator(body_style, stream);
   };
 
   return ListItemGenerator;
@@ -9179,8 +9193,8 @@ var TableGenerator = (function(){
 // stream : [tr]
 // yield : [tr]
 var TableRowGroupGenerator = (function(){
-  function TableRowGroupGenerator(style, stream, outline_context){
-    BlockGenerator.call(this, style, stream, outline_context);
+  function TableRowGroupGenerator(style, stream){
+    BlockGenerator.call(this, style, stream);
   }
   Class.extend(TableRowGroupGenerator, BlockGenerator);
 
@@ -9193,17 +9207,17 @@ var TableRowGroupGenerator = (function(){
 // stream : [td | th]
 // yield : parallel([td | th])
 var TableRowGenerator = (function(){
-  function TableRowGenerator(style, stream, outline_context){
-    var generators = this._getGenerators(style, stream, outline_context);
+  function TableRowGenerator(style, stream){
+    var generators = this._getGenerators(style, stream);
     ParallelGenerator.call(this, style, generators);
   }
   Class.extend(TableRowGenerator, ParallelGenerator);
 
-  TableRowGenerator.prototype._getGenerators = function(style, stream, outline_context){
+  TableRowGenerator.prototype._getGenerators = function(style, stream){
     var child_tags = this._getChildTags(stream);
     var child_styles = this._getChildStyles(style, child_tags);
     return List.map(child_styles, function(child_style){
-      return new TableCellGenerator(child_style, new TokenStream(child_style.getMarkupContent()), outline_context);
+      return new TableCellGenerator(child_style, new TokenStream(child_style.getMarkupContent()));
     });
   };
 
@@ -9235,7 +9249,6 @@ var TableRowGenerator = (function(){
 var TableCellGenerator = (function(){
   function TableCellGenerator(style, stream){
     SectionRootGenerator.call(this, style, stream);
-    this.outlineContext = new OutlineContext(style);
   }
   // notice that table-cell is sectioning root, so extends SectionRootGenerator.
   Class.extend(TableCellGenerator, SectionRootGenerator);
@@ -9245,8 +9258,8 @@ var TableCellGenerator = (function(){
 
 
 var HeaderGenerator = (function(){
-  function HeaderGenerator(style, stream, outline_context){
-    BlockGenerator.call(this, style, stream, outline_context);
+  function HeaderGenerator(style, stream){
+    BlockGenerator.call(this, style, stream);
   }
   Class.extend(HeaderGenerator, BlockGenerator);
 
@@ -9258,7 +9271,7 @@ var HeaderGenerator = (function(){
   };
 
   HeaderGenerator.prototype._onComplete = function(context, block){
-    var header_id = this.outlineContext.addHeader({
+    var header_id = this.style.startHeaderContext({
       type:this.style.getMarkupName(),
       rank:this._getHeaderRank(),
       title:this.style.getMarkupContent()
@@ -9949,22 +9962,30 @@ Args.copy2(Layout, __engine_args.layout || {});
 Selectors.setValues(Nehan.style || {}); // copy global style
 Selectors.setValues(__engine_args.style || {}); // copy engine local style
 
-// copy global single tags by regexp
-LexingRule.addSingleTagAll(Nehan.__single_tags__);
-LexingRule.addSingleTagRexAll(Nehan.__single_tags_rex__);
+// register global single tags
+List.iter(Nehan.__single_tag_names__, LexingRule.addSingleTagByName);
+List.iter(Nehan.__single_tag_rexes__, LexingRule.addSingleTagByRex);
 
 // export engine local interfaces
 return {
-  documentContext: DocumentContext,
   createPageStream : function(text){
     return new PageStream(text);
   },
-  // register engine local single tag name
-  addSingleTag : function(name){
-    LexingRule.addSingleTag(name);
+  // create outline element of "<body>",
+  // if multiple body exists, only first one is returned.
+  // about callback argument, see 'src/section-tree-converter.js'.
+  createOutlineElement : function(callbacks){
+    return DocumentContext.createBodyOutlineElement(callbacks);
   },
-  // register engine local single tag name by rex
-  addSingleTagRex : function(rex){
+  getAnchorPageNo : function(anchor_name){
+    return DocumentContext.getAnchorPageNo(anchor_name);
+  },
+  // register engine local single tag by name
+  addSingleTagByName : function(name){
+    LexingRule.addSingleTagByName(name);
+  },
+  // register engine local single tag by rex
+  addSingleTagByRex : function(rex){
     LexingRule.addSingleTagRex(name);
   },
   // set engine local style
