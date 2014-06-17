@@ -70,7 +70,7 @@ var Config = {
   debug:false,
   kerning:true,
   justify:true,
-  maxRollbackCount:40,
+  maxRollbackCount:20,
   maxPageCount:10000,
   useVerticalGlyphIfEnable:true,
   useStrictWordMetrics:true,
@@ -102,7 +102,9 @@ var Layout = {
   width: screen.width, // root width, used when style.body.width not defined.
   height: screen.height, // root height, used when style.body.height not defined.
   fontSize:16, // root fontSize, used when style.body["font-size"] not defined.
+  minFontSize:12,
   maxFontSize:64,
+  minTableCellSize:48, // if table-layout is set to 'auto', all sizes of cell are larger than this value.
   rubyRate:0.5, // used when Style.rt["font-size"] is not defined.
   boldRate:0.5, // used to calculate sketchy bold metrics in the environment with no canvas element.
   lineRate: 2.0, // in nehan.js, extent size of line is specified by [lineRate] * [max-font-size of current-line].
@@ -845,7 +847,8 @@ var Style = {
   "table":{
     "display":"table",
     "embeddable":true,
-    "table-layout":"fixed", // 'auto' not supported yet.
+    "table-layout":"fixed",
+    //"table-layout":"auto",
     "background-color":"white",
     "border-collapse":"collapse", // 'separate' is not supported yet.
     "border-color":"#a8a8a8",
@@ -1725,11 +1728,8 @@ var Args = {
 };
 
 var HashSet = (function(){
-  function HashSet(values){
+  function HashSet(){
     this._values = {};
-    if(values){
-      this.addValues(values);
-    }
   }
 
   HashSet.prototype = {
@@ -1744,16 +1744,22 @@ var HashSet = (function(){
     merge : function(old_value, new_value){
       return new_value;
     },
+    union : function(set){
+      var self = this;
+      set.iter(function(key, value){
+	self.add(key, value);
+      });
+      return this;
+    },
     get : function(name){
       return this._values[name] || null;
-    },
-    getValues : function(){
-      return this._values;
     },
     add : function(name, value){
       var old_value = this._values[name] || null;
       this._values[name] = old_value? this.merge(old_value, value) : value;
     },
+    // this function is used when performance matters,
+    // instead of using this.union(new HashSet(values))
     addValues : function(values){
       values = values || {};
       for(var prop in values){
@@ -1772,8 +1778,8 @@ var HashSet = (function(){
 
 
 var CssHashSet = (function(){
-  function CssHashSet(values){
-    HashSet.call(this, values || null);
+  function CssHashSet(){
+    HashSet.call(this);
   }
   Class.extend(CssHashSet, HashSet);
 
@@ -1786,6 +1792,10 @@ var CssHashSet = (function(){
       return old_value;
     }
     return new_value;
+  };
+
+  CssHashSet.prototype.copyValuesTo = function(dst){
+    return Args.copy(dst, this._values);
   };
 
   return CssHashSet;
@@ -2519,12 +2529,10 @@ var Selector = (function(){
 	var fmt_value = CssParser.formatValue(prop, value[prop]);
 	var fmt_prop = CssParser.formatProp(prop);
 	var old_value = this.value[fmt_prop] || null;
-	if(old_value === null){
-	  this.value[fmt_prop] = fmt_value;
-	} else if(typeof old_value === "object" && typeof fmt_value === "object"){
+	if(typeof old_value === "object" && typeof fmt_value === "object"){
 	  Args.copy(old_value, fmt_value);
 	} else {
-	  old_value = fmt_value; // direct value or function
+	  this.value[fmt_prop] = fmt_value; // direct value or function
 	}
       }
     },
@@ -6446,6 +6454,194 @@ var TextAligns = {
   }
 };
 
+var PartitionUnit = (function(){
+  function PartitionUnit(opt){
+    this.weight = opt.weight || 0;
+    this.isStatic = opt.isStatic || false;
+  }
+
+  PartitionUnit.prototype = {
+    getSize : function(measure, total_weight){
+      return Math.floor(measure * this.weight / total_weight);
+    },
+    mergeTo : function(punit){
+      if(this.isStatic && !punit.isStatic){
+	return this;
+      }
+      if(!this.isStatic && punit.isStatic){
+	return punit;
+      }
+      return (this.weight > punit.weight)? this : punit;
+    }
+  };
+
+  return PartitionUnit;
+})();
+
+
+var Partition = (function(){
+  function Partition(punits){
+    this._punits = punits || []; // partition units
+  }
+
+  var __levelize = function(sizes, min_size){
+    // filter parts that is smaller than min_size.
+    var smaller_parts = List.filter(sizes, function(size){ return size < min_size; });
+
+    // if all elements has enough space for min_size, nothing to do.
+    if(smaller_parts.length === 0){
+      return sizes;
+    }
+
+    // total size that must be added to small parts.
+    var delta_plus_total = List.fold(smaller_parts, 0, function(ret, size){ return ret + (min_size - size); });
+
+    // filter parts that has enough space.
+    var larger_parts = List.filter(sizes, function(size){
+      return size - min_size >= min_size; // check if size is more than min_size and over even if min_size is subtracted.
+    });
+
+    // if there are no enough rest space, nothing to do.
+    if(larger_parts.length === 0){
+      return sizes;
+    }
+
+    var delta_minus_avg = Math.floor(delta_plus_total / larger_parts.length);
+    return List.map(sizes, function(size){
+      return (size < min_size)? min_size : ((size - min_size >= min_size)? size - delta_minus_avg : size);
+    });
+  };
+
+  Partition.prototype = {
+    get : function(index){
+      return this._punits[index] || null;
+    },
+    getLength : function(){
+      return this._punits.length;
+    },
+    getTotalWeight : function(){
+      return List.fold(this._punits, 0, function(ret, punit){
+	return ret + punit.weight;
+      });
+    },
+    // merge(this._punits[0], partition._punits[0]),
+    // merge(this._punits[1], partition._punits[1]),
+    // ...
+    // merge(this._punits[n-1], partition._punits[n-1])
+    mergeTo : function(partition){
+      if(this.getLength() !== partition.getLength()){
+	throw "Partition::mergeTo, invalid merge target(length not same)";
+      }
+      var merged_punits =  List.mapi(this._punits, function(i, punit){
+	return punit.mergeTo(partition.get(i));
+      });
+      return new Partition(merged_punits);
+    },
+    mapMeasure : function(measure){
+      var total_weight = this.getTotalWeight();
+      var sizes =  List.map(this._punits, function(punit){
+	return punit.getSize(measure, total_weight);
+      });
+      return __levelize(sizes, Layout.minTableCellSize);
+    }
+  };
+
+  return Partition;
+})();
+
+
+// key : partition count
+// value : Partition
+var PartitionHashSet = (function(){
+  function PartitionHashSet(){
+    HashSet.call(this);
+  }
+  Class.extend(PartitionHashSet, HashSet);
+
+  PartitionHashSet.prototype.merge = function(old_part, new_part){
+    return old_part.mergeTo(new_part);
+  };
+
+  // [arugments]
+  // opt.partitionCount : int
+  // opt.measure : int
+  PartitionHashSet.prototype.getSizes = function(opt){
+    var partition = this.get(opt.partitionCount);
+    return partition.mapMeasure(opt.measure);
+  };
+
+  return PartitionHashSet;
+})();
+
+
+var TablePartitionParser = {
+  parse : function(style, stream){
+    var pset = new PartitionHashSet();
+    while(stream.hasNext()){
+      var token = stream.get();
+      if(token === null){
+	break;
+      }
+      if(!Token.isTag(token)){
+	continue;
+      }
+      switch(token.getName()){
+      case "tbody": case "thead": case "tfoot":
+	var pset2 = this.parse(style, this._getRowStream(token));
+	pset = pset.union(pset2);
+	break;
+
+      case "tr":
+	var cell_tags = this._getCellStream(token).getAll();
+	var cell_count = cell_tags.length;
+	var partition = this._getPartition(style, cell_tags);
+	pset.add(cell_count, partition);
+	break;
+      }
+    }
+    return pset;
+  },
+  _getPartition : function(style, cell_tags){
+    var self = this;
+    var partition_count = cell_tags.length;
+    var partition_units = List.map(cell_tags, function(cell_tag){
+      return self._getPartitionUnit(style, cell_tag, partition_count);
+    });
+    return new Partition(partition_units);
+  },
+  _getPartitionUnit : function(style, cell_tag, partition_count){
+    var measure = cell_tag.getAttr("measure") || cell_tag.getAttr("width") || null;
+    if(measure){
+      return new PartitionUnit({weight:measure, isStatic:true});
+    }
+    var content = cell_tag.getContent();
+    var lines = cell_tag.getContent().split("\n");
+    // this sizing algorithem is not strict, but still effective,
+    // especially for text only table.
+    var max_line = List.maxobj(lines, function(line){ return line.length; });
+    var max_weight = Math.floor(style.contentMeasure / 2);
+    var min_weight = Math.floor(style.contentMeasure / (partition_count * 2));
+    var weight = max_line.length * style.getFontSize();
+    // less than 50% of parent size, but more than 50% of average partition size.
+    weight = Math.max(min_weight, Math.min(weight, max_weight));
+
+    // but confirm that weight is more than single font size of parent style.
+    weight = Math.max(style.getFontSize(), weight);
+    return new PartitionUnit({weight:weight, isStatic:false});
+  },
+  _getCellStream : function(tag){
+    return new FilteredTokenStream(tag.getContent(), function(token){
+      return Token.isTag(token) && (token.getName() === "td" || token.getName() === "th");
+    });
+  },
+  _getRowStream : function(tag){
+    return new FilteredTokenStream(tag.getContent(), function(token){
+      return Token.isTag(token) && token.getName() === "tr";
+    });
+  }
+};
+
+
 var SelectorPropContext = (function(){
   function SelectorPropContext(style, layout_context){
     this._style = style;
@@ -6462,6 +6658,9 @@ var SelectorPropContext = (function(){
     },
     getMarkup : function(){
       return this._style.markup;
+    },
+    getDocumentHeader : function(){
+      return DocumentContext.documentHeader;
     },
     getRestMeasure : function(){
       return this._layoutContext? this._layoutContext.getInlineRestMeasure() : null;
@@ -6698,7 +6897,6 @@ var StyleContext = (function(){
       if(break_after){
 	this.breakAfter = break_after;
       }
-
       // static size is defined in selector or tag attr, hightest priority
       this.staticMeasure = this._loadStaticMeasure();
       this.staticExtent = this._loadStaticExtent();
@@ -6708,6 +6906,11 @@ var StyleContext = (function(){
       // 2. parent size
       // 3. current edge size.
       this.initContextSize(this.staticMeasure, this.staticExtent);
+
+      // load partition set after context size is calculated.
+      if(this.display === "table" && this.getCssAttr("table-layout") === "auto"){
+	this.tablePartition = TablePartitionParser.parse(this, new TokenStream(this.getContent()));
+      }
 
       // disable some unmanaged css properties depending on loaded style values.
       this._disableUnmanagedCssProps(this.unmanagedCss);
@@ -7169,6 +7372,9 @@ var StyleContext = (function(){
     getColor : function(){
       return this.color || (this.parent? this.parent.getColor() : new Color(Layout.fontColor));
     },
+    getTablePartition : function(){
+      return this.tablePartition || (this.parent? this.parent.getTablePartition() : null);
+    },
     getChildCount : function(){
       return this.childs.length;
     },
@@ -7273,7 +7479,7 @@ var StyleContext = (function(){
       if(this.zIndex){
 	css["z-index"] = this.zIndex;
       }
-      Args.copy(css, this.unmanagedCss.getValues());
+      this.unmanagedCss.copyValuesTo(css);
       css.overflow = "hidden"; // to avoid margin collapsing
       return css;
     },
@@ -7309,7 +7515,7 @@ var StyleContext = (function(){
 	  css["line-height"] = this._computeUnitSize(line_height, this.font.size) + "px";
 	}
       }
-      Args.copy(css, this.unmanagedCss.getValues());
+      this.unmanagedCss.copyValuesTo(css);
       return css;
     },
     _computeContentMeasure : function(outer_measure){
@@ -9176,6 +9382,15 @@ var ListItemGenerator = (function(){
 })();
   
 
+/*
+  type partion_set = (col_count, partition) HashSet.t
+  and col_count = int
+  and partition = [partition_unit]
+  and partition_unit = PartitionUnit(size, is_important)
+  and size = int
+  and is_important = bool
+*/
+
 // tag : table
 // stream : [thead | tbody | tfoot]
 // yield : [thead | tbody | tfoot]
@@ -9184,6 +9399,7 @@ var TableGenerator = (function(){
     BlockGenerator.call(this, style, stream);
   }
   Class.extend(TableGenerator, BlockGenerator);
+
   return TableGenerator;
 })();
 
@@ -9202,7 +9418,7 @@ var TableRowGroupGenerator = (function(){
 })();
 
 
-// parent : thead | tbody | tfoot
+// parent : table | thead | tbody | tfoot
 // tag : tr | th
 // stream : [td | th]
 // yield : parallel([td | th])
@@ -9213,22 +9429,29 @@ var TableRowGenerator = (function(){
   }
   Class.extend(TableRowGenerator, ParallelGenerator);
 
-  TableRowGenerator.prototype._getGenerators = function(style, stream){
+  TableRowGenerator.prototype._getGenerators = function(style_tr, stream){
     var child_tags = this._getChildTags(stream);
-    var child_styles = this._getChildStyles(style, child_tags);
+    var child_styles = this._getChildStyles(style_tr, child_tags);
     return List.map(child_styles, function(child_style){
       return new TableCellGenerator(child_style, new TokenStream(child_style.getMarkupContent()));
     });
   };
 
-  TableRowGenerator.prototype._getChildStyles = function(style, child_tags){
+  TableRowGenerator.prototype._getChildStyles = function(style_tr, child_tags){
     var self = this;
-    var child_count = child_tags.length;
-    var rest_measure = style.contentMeasure;
+    var rest_measure = style_tr.contentMeasure;
+    var partition = style_tr.getTablePartition();
+    var part_sizes = partition? partition.getSizes({
+      partitionCount:child_tags.length,
+      measure:style_tr.contentMeasure
+    }) : [];
     return List.mapi(child_tags, function(i, tag){
-      var default_style = new StyleContext(tag, style);
+      var default_style = new StyleContext(tag, style_tr);
       var static_measure = default_style.staticMeasure;
-      var measure = (static_measure && rest_measure >= static_measure)? static_measure : Math.floor(rest_measure / (child_count - i));
+      var measure = (static_measure && rest_measure >= static_measure)? static_measure : Math.floor(rest_measure / (child_tags.length - i));
+      if(part_sizes.length > 0){
+	measure = part_sizes[i];
+      }
       rest_measure -= measure;
       return default_style.clone({
 	"float":"start",
