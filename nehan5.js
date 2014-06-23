@@ -1227,6 +1227,18 @@ var Style = {
     "break-after":"always"
   },
   //-------------------------------------------------------
+  // word-break
+  //-------------------------------------------------------
+  ".nehan-wb-all":{
+    "word-break":"break-all"
+  },
+  ".nehan-wb-normal":{
+    "word-break":"normal"
+  },
+  ".nehan-wb-keep":{
+    "word-break":"keep-all"
+  },
+  //-------------------------------------------------------
   // other utility classes
   //-------------------------------------------------------
   ".nehan-drop-caps::first-letter":{
@@ -6802,7 +6814,8 @@ var StyleContext = (function(){
     "text-emphasis-position",
     "text-emphasis-color",
     "text-combine",
-    "width"
+    "width",
+    "word-break"
   ];
 
   var __is_managed_css_prop = function(prop){
@@ -6930,6 +6943,10 @@ var StyleContext = (function(){
       var break_after = this._loadBreakAfter();
       if(break_after){
 	this.breakAfter = break_after;
+      }
+      var word_break = this._loadWordBreak();
+      if(word_break){
+	this.wordBreak = word_break;
       }
       // static size is defined in selector or tag attr, hightest priority
       this.staticMeasure = this._loadStaticMeasure();
@@ -7283,6 +7300,9 @@ var StyleContext = (function(){
     },
     isMarkupEmpty : function(){
       return this.markup.isEmpty();
+    },
+    isWordBreakAll : function(){
+      return this.wordBreak && this.wordBreak === "break-all";
     },
     hasFlipFlow : function(){
       return this.parent? (this.flow !== this.parent.flow) : false;
@@ -7919,6 +7939,9 @@ var StyleContext = (function(){
     _loadBreakAfter : function(){
       var value = this.getCssAttr("break-after");
       return value? Breaks.getAfter(value) : null;
+    },
+    _loadWordBreak : function(){
+      return this.getCssAttr("word-break");
     },
     _loadListStyle : function(){
       var list_style_type = this.getCssAttr("list-style-type", "none");
@@ -8832,13 +8855,20 @@ var InlineGenerator = (function(){
     var rest_measure = context.getInlineRestMeasure();
     var advance = token.getAdvance(this.style.flow, this.style.letterSpacing || 0);
     
-    // if advance of this word is less than max-measure, just return.
+    // if there is enought space for this word, just return.
     if(advance <= rest_measure){
       token.setDevided(false);
       return token;
     }
-    // if advance is lager than max_measure,
-    // we must cut this word into some parts.
+    // if word size is less than max_measure, and 'word-berak' is not 'break-all', just break.
+    if(advance <= context.getInlineMaxMeasure() && !this.style.isWordBreakAll()){
+      this.stream.prev();
+      return null;
+    }
+    // at this point, situations are
+    // 1. advance is lager than rest_measure and 'word-break' is 'break-all'.
+    // 2. word itself is larger than max_measure.
+    // in these case, we must cut this word into some parts.
     var part = token.cutMeasure(this.style.getFontSize(), rest_measure); // get sliced word
     part.setMetrics(this.style.flow, this.style.font); // metrics for first half
     token.setMetrics(this.style.flow, this.style.font); // metrics for second half
