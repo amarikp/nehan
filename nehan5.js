@@ -1,7 +1,7 @@
 /*
  nehan.js
  Copyright (C) 2010-2014 Watanabe Masaki<lambda.watanabe[at]gmail.com>
- http://tb.antiscroll.com/docs/nehan/
+ repository: https://github.com/tategakibunko/nehan.js
 
  licensed under MIT license.
 
@@ -61,7 +61,10 @@ Nehan.addSingleTagByRex = function(rex){
   Nehan.__single_tag_rexes__.push(rex);
 };
 
-// this function ends at the tail of this source.
+// this function return the engine module(ends at nehan-setup-end.js),
+// enclosing local variable(style, layout, config, document-context etc).
+// so each module returned by this function has independent environment.
+// this is usefull to show multiple layout(vertical and horizontal) in a single page.
 Nehan.setup = function(engine_args){
 var __engine_args = engine_args || {};
 
@@ -4226,8 +4229,6 @@ var BlockFlow = (function(){
   BlockFlow.prototype.getCss = function(){
     var css = {};
     if(this.isHorizontal()){
-      css["css-float"] = (this.dir === "lr")? "left" : "right";
-    } else if(this.isVertical()){
       css["css-float"] = (this.dir === "lr")? "left" : "right";
     }
     return css;
@@ -10300,3 +10301,88 @@ return {
 };
 
 }; // Nehan.setup
+
+var NehanPagedElement = (function(){
+  function NehanPagedElement(engine_args){
+    this.pageNo = 0;
+    this.element = document.createElement("div");
+    this.engine = Nehan.setup(engine_args);
+    this._pageStream = null;
+  }
+
+  NehanPagedElement.prototype = {
+    getEngine : function(){
+      return this.engine;
+    },
+    getElement : function(){
+      return this.element;
+    },
+    getContent : function(){
+      return this._pageStream? this._pageStream.text : "";
+    },
+    getPageCount : function(){
+      return this._pageStream? this._pageStream.getPageCount() : 0;
+    },
+    getPage : function(page_no){
+      return this._pageStream? this._pageStream.getPage(page_no) : null;
+    },
+    getPagedElement : function(page_no){
+      var page = this.getPage(page_no);
+      return page? page.element : null;
+    },
+    getPageNo : function(){
+      return this.pageNo;
+    },
+    setNextPage : function(){
+      if(this.pageNo + 1 < this.getPageCount()){
+	this.setPage(this.pageNo + 1);
+      }
+    },
+    setPrevPage : function(){
+      if(this.pageNo > 0){
+	this.setPage(this.pageNo - 1);
+      }
+    },
+    setStyle : function(name, value){
+      this.engine.setStyle(name, value);
+    },
+    setStyles : function(values){
+      this.engine.setStyles(values);
+    },
+    setContent : function(content, opt){
+      var self = this;
+      opt = opt || {};
+      this._pageStream = this.engine.createPageStream(content);
+      this._pageStream.asyncGet({
+	onProgress : function(stream, tree){
+	  if(tree.pageNo === 0){
+	    self.setPage(tree.pageNo);
+	  }
+	  if(opt.onProgress){
+	    opt.onProgress(tree);
+	  }
+	},
+	onComplete : function(stream, time){
+	  if(opt.onComplete){
+	    opt.onComplete(time);
+	  }
+	}
+      });
+    },
+    setPage : function(page_no){
+      var page = this.getPage(page_no);
+      if(page === null || page.element === null){
+	throw "page_no(" + page_no + ") is not found";
+      }
+      this.pageNo = page_no;
+      this.element.innerHTML = "";
+      this.element.appendChild(page.element);
+    }
+  };
+  
+  return NehanPagedElement;
+})();
+
+Nehan.createPagedElement = function(engine_args){
+  return new NehanPagedElement(engine_args || {});
+};
