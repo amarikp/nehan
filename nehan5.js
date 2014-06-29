@@ -2052,22 +2052,22 @@ var AttrSelector = (function(){
     this._parseExpr(this.expr);
   }
 
-  var rex_symbol = /[^=^~|$*\s]+/;
-  var op_symbols = ["|=", "~=", "^=", "$=", "*=", "="];
+  var __rex_symbol = /[^=^~|$*\s]+/;
+  var __op_symbols = ["|=", "~=", "^=", "$=", "*=", "="];
 
   AttrSelector.prototype = {
     _normalize : function(expr){
       return expr.replace(/\[/g, "").replace(/\]/g, "");
     },
     _parseSymbol : function(expr){
-      var match = expr.match(rex_symbol);
+      var match = expr.match(__rex_symbol);
       if(match){
 	return match[0];
       }
       return "";
     },
     _parseOp : function(expr){
-      return List.find(op_symbols, function(symbol){
+      return List.find(__op_symbols, function(symbol){
 	return expr.indexOf(symbol) >= 0;
       });
     },
@@ -8538,13 +8538,14 @@ var BlockGenerator = (function(){
       return null;
     }
 
+    // skip while-space in block-level.
+    if(Token.isWhiteSpace(token)){
+      this.stream.skipUntil(Token.isWhiteSpace);
+      return this._getNext(context);
+    }
+
     // if text, push back stream and restart current style and stream as child inline generator.
     if(Token.isText(token)){
-      // skip while-space token in block level.
-      if(Token.isWhiteSpace(token)){
-	this.stream.skipUntil(Token.isWhiteSpace);
-	return this._getNext(context);
-      }
       this.stream.prev();
       this.setChildLayout(new InlineGenerator(this.style, this.stream));
       return this.yieldChildLayout(context);
