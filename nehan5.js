@@ -2431,7 +2431,7 @@ var SelectorLexer = (function(){
 
 
 var SelectorStateMachine = (function(){
-  var find_parent = function(style, parent_type){
+  var __find_parent = function(style, parent_type){
     var ptr = style.parent;
     while(ptr !== null){
       if(parent_type.test(ptr)){
@@ -2442,7 +2442,7 @@ var SelectorStateMachine = (function(){
     return null;
   };
 
-  var find_direct_parent = function(style, parent_type){
+  var __find_direct_parent = function(style, parent_type){
     var ptr = style.parent;
     if(ptr === null){
       return null;
@@ -2451,14 +2451,14 @@ var SelectorStateMachine = (function(){
   };
 
   // search adjacent sibling forom 'style' that matches f1 selector.
-  var find_adj_sibling = function(style, f1){
+  var __find_adj_sibling = function(style, f1){
     var sibling_index = style.getChildIndex();
     var prev_sibling = style.getParentNthChild(sibling_index - 1) || null;
     return (prev_sibling && f1.test(prev_sibling))? prev_sibling : null;
   };
 
   // search style context that matches f1 selector from all preceding siblings of 'style'.
-  var find_prev_sibling = function(style, f1){
+  var __find_prev_sibling = function(style, f1){
     var sibling_index = style.getChildIndex();
     for(var i = 0; i < sibling_index; i++){
       var prev_sibling = style.getParentNthChild(i);
@@ -2509,10 +2509,10 @@ var SelectorStateMachine = (function(){
 	// notice that f2 is already accepted at this point, so next we check [f1 combinator] parts.
 	// if style-context that matches [f1 combinator] is found, update 'style' to it, and next loop.
 	switch(combinator){
-	case " ": style = find_parent(style, f1); break; // search parent context that matches f1.
-	case ">": style = find_direct_parent(style, f1); break; // search direct parent context that matches f1.
-	case "+": style = find_adj_sibling(style, f1); break; // find adjacent sibling context that matches f1.
-	case "~": style = find_prev_sibling(style, f1); break; // find previous sibling context that matches f1.
+	case " ": style = __find_parent(style, f1); break; // search parent context that matches f1.
+	case ">": style = __find_direct_parent(style, f1); break; // search direct parent context that matches f1.
+	case "+": style = __find_adj_sibling(style, f1); break; // find adjacent sibling context that matches f1.
+	case "~": style = __find_prev_sibling(style, f1); break; // find previous sibling context that matches f1.
 	default: throw "selector syntax error:invalid combinator(" + combinator + ")";
 	}
 	// can't find style-context that matches [f1 combinator f2]
@@ -2609,43 +2609,43 @@ var Selector = (function(){
 
 
 var Selectors = (function(){
-  var selectors = []; // selector list ordered by specificity desc.
-  var selectors_pe = []; // selector (with pseudo-element) list, ordered by specificity desc.
+  var __selectors = []; // selector list ordered by specificity desc.
+  var __selectors_pe = []; // selector (with pseudo-element) list, ordered by specificity desc.
 
-  // sort selectors by specificity asc.
+  // sort __selectors by specificity asc.
   // so higher specificity overwrites lower one.
-  var sort_selectors = function(){
-    selectors.sort(function(s1,s2){ return s1.spec - s2.spec; });
+  var __sort_selectors = function(){
+    __selectors.sort(function(s1,s2){ return s1.spec - s2.spec; });
   };
 
-  var sort_selectors_pe = function(){
-    selectors_pe.sort(function(s1,s2){ return s1.spec - s2.spec; });
+  var __sort_selectors_pe = function(){
+    __selectors_pe.sort(function(s1,s2){ return s1.spec - s2.spec; });
   };
 
-  var is_pe_key = function(selector_key){
+  var __is_pe_key = function(selector_key){
     return selector_key.indexOf("::") >= 0;
   };
 
-  var find_selector = function(selector_key){
-    var dst_selectors = is_pe_key(selector_key)? selectors_pe : selectors;
+  var __find_selector = function(selector_key){
+    var dst_selectors = __is_pe_key(selector_key)? __selectors_pe : __selectors;
     return List.find(dst_selectors, function(selector){
       return selector.getKey() === selector_key;
     });
   };
 
-  var update_value = function(selector_key, value){
+  var __update_value = function(selector_key, value){
     var style_value = Style[selector_key]; // old style value, must be found
     Args.copy(style_value, value); // overwrite new value to old
-    var selector = find_selector(selector_key); // selector object for selector_key, must be found
+    var selector = __find_selector(selector_key); // selector object for selector_key, must be found
     selector.updateValue(style_value);
   };
 
-  var insert_value = function(selector_key, value){
+  var __insert_value = function(selector_key, value){
     var selector = new Selector(selector_key, value);
     if(selector.hasPseudoElement()){
-      selectors_pe.push(selector);
+      __selectors_pe.push(selector);
     } else {
-      selectors.push(selector);
+      __selectors.push(selector);
     }
     // to speed up 'init_selectors' function, we did not sort immediatelly after inserting value.
     // we sort entries after all selector_key and value are registered.
@@ -2655,49 +2655,49 @@ var Selectors = (function(){
   // apply Selector::test to style.
   // if matches, copy selector value to result object.
   // offcource, higher specificity overwrite lower one.
-  var get_value = function(style){
-    return List.fold(selectors, {}, function(ret, selector){
+  var __get_value = function(style){
+    return List.fold(__selectors, {}, function(ret, selector){
       return selector.test(style)? Args.copy(ret, selector.getValue()) : ret;
     });
   };
 
   // 'p::first-letter'
   // => style = 'p', pseudo_element_name = 'first-letter'
-  var get_value_pe = function(style, pseudo_element_name){
-    return List.fold(selectors_pe, {}, function(ret, selector){
+  var __get_value_pe = function(style, pseudo_element_name){
+    return List.fold(__selectors_pe, {}, function(ret, selector){
       return selector.testPseudoElement(style, pseudo_element_name)? Args.copy(ret, selector.getValue()) : ret;
     });
   };
 
-  var set_value = function(selector_key, value){
+  var __set_value = function(selector_key, value){
     // if selector_key already defined, just overwrite it.
     if(Style[selector_key]){
-      update_value(selector_key, value);
+      __update_value(selector_key, value);
       return;
     }
-    insert_value(selector_key, value);
+    __insert_value(selector_key, value);
 
-    var selector = insert_value(selector_key, value);
+    var selector = __insert_value(selector_key, value);
 
-    // notice that 'sort_selectors'(or 'sort_selectors_pe') is not called in 'insert_value'.
+    // notice that '__sort_selectors'(or '__sort_selectors_pe') is not called in '__insert_value'.
     Style[selector_key] = selector.getValue();
     if(selector.hasPseudoElement()){
-      sort_selectors_pe();
+      __sort_selectors_pe();
     } else {
-      sort_selectors();
+      __sort_selectors();
     }
   };
 
-  var init_selectors = function(){
+  var __init_selectors = function(){
     // initialize selector list
     Obj.iter(Style, function(key, value){
-      insert_value(key, value);
+      __insert_value(key, value);
     });
-    sort_selectors();
-    sort_selectors_pe();
+    __sort_selectors();
+    __sort_selectors_pe();
   };
 
-  init_selectors();
+  __init_selectors();
 
   return {
     // selector_key: selector string
@@ -2706,18 +2706,18 @@ var Selectors = (function(){
     // value: associated selector value object.
     // [example] => {'color':'black', 'font-size':'16px'}
     setValue : function(selector_key, value){
-      set_value(selector_key, value);
+      __set_value(selector_key, value);
     },
     setValues : function(values){
       for(var selector_key in values){
-	set_value(selector_key, values[selector_key]);
+	__set_value(selector_key, values[selector_key]);
       }
     },
     // get selector css that matches to the style context.
     //
     // style: style context
     getValue : function(style){
-      return get_value(style);
+      return __get_value(style);
     },
     // get selector css that matches to the pseudo element of some style context.
     // notice that if selector_key is "p::first-letter",
@@ -2726,7 +2726,7 @@ var Selectors = (function(){
     // style: 'parent' style of pseudo-element
     // pseudo_element_name: "first-letter", "first-line", "before", "after" are available
     getValuePe : function(style, pseudo_element_name){
-      return get_value_pe(style, pseudo_element_name);
+      return __get_value_pe(style, pseudo_element_name);
     }
   };
 })();
@@ -3745,7 +3745,7 @@ var Color = (function(){
 })();
 
 var Colors = (function(){
-  var color_names = {
+  var __color_names = {
     "aliceblue":"f0f8ff",
     "antiquewhite":"faebd7",
     "aqua":"00ffff",
@@ -3894,7 +3894,7 @@ var Colors = (function(){
     get : function(value){
       value = value.replace(/#/g, "").toLowerCase();
       if(!rex_hex_color.test(value)){
-	return color_names[value] || value;
+	return __color_names[value] || value;
       }
       if(value.length === 3){
 	return value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
@@ -3907,10 +3907,10 @@ var Colors = (function(){
 
 var Palette = (function(){
   // 256(8 * 8 * 4) color palette scales.
-  var RG_PALETTE = [0, 36, 73, 109, 146, 182, 219, 255];
-  var B_PALETTE = [0, 85, 170, 255];
+  var __rg_palette = [0, 36, 73, 109, 146, 182, 219, 255];
+  var __b_palette = [0, 85, 170, 255];
 
-  var make_hex_str = function(ival){
+  var __make_hex_str = function(ival){
     var str = ival.toString(16);
     if(str.length <= 1){
       return "0" + str;
@@ -3918,7 +3918,7 @@ var Palette = (function(){
     return str;
   };
 
-  var find_palette = function(ival, palette){
+  var __find_palette = function(ival, palette){
     if(List.exists(palette, Closure.eq(ival))){
       return ival;
     }
@@ -3931,14 +3931,14 @@ var Palette = (function(){
     // search and return color value defined in nehan palette.
     // we use this value for img characters.
     getColor : function(rgb){
-      var palette_red = find_palette(rgb.getRed(), RG_PALETTE);
-      var palette_green = find_palette(rgb.getGreen(), RG_PALETTE);
-      var palette_blue = find_palette(rgb.getBlue(), B_PALETTE);
+      var palette_red = __find_palette(rgb.getRed(), __rg_palette);
+      var palette_green = __find_palette(rgb.getGreen(), __rg_palette);
+      var palette_blue = __find_palette(rgb.getBlue(), __b_palette);
 
       return [
-	make_hex_str(palette_red),
-	make_hex_str(palette_green),
-	make_hex_str(palette_blue)
+	__make_hex_str(palette_red),
+	__make_hex_str(palette_green),
+	__make_hex_str(palette_blue)
       ].join("");
     }
   };
@@ -4013,23 +4013,23 @@ var Cardinal = (function(){
 
 // more strict metrics using canvas
 var TextMetrics = (function(){
-  var canvas = document.createElement("canvas");
-  canvas.style.width = Math.max(Layout.width, Layout.height) + "px";
-  canvas.style.height = Layout.maxFontSize + "px";
+  var __canvas = document.createElement("canvas");
+  __canvas.style.width = Math.max(Layout.width, Layout.height) + "px";
+  __canvas.style.height = Layout.maxFontSize + "px";
 
-  var context;
-  if(canvas.getContext){
-    context = canvas.getContext("2d");
-    context.textAlign = "left";
+  var __canvas_context;
+  if(__canvas.getContext){
+    __canvas_context = __canvas.getContext("2d");
+    __canvas_context.textAlign = "left";
   }
 
   return {
     isEnable : function(){
-      return context && (typeof context.measureText !== "undefined");
+      return __canvas_context && (typeof __canvas_context.measureText !== "undefined");
     },
     getMetrics : function(font, text){
-      context.font = font.toString(); // to get accurate metrics, font info is required.
-      return context.measureText(text);
+      __canvas_context.font = font.toString(); // to get accurate metrics, font info is required.
+      return __canvas_context.measureText(text);
     },
     getMeasure : function(font, text){
       var metrics = this.getMetrics(font, text);
@@ -4045,7 +4045,7 @@ var ListStyleType = (function(){
     this.type = type;
   }
 
-  var marker_text = {
+  var __marker_text = {
     "disc": "&#x2022;",
     "circle":"&#x25CB;",
     "square":"&#x25A0;"
@@ -4100,7 +4100,7 @@ var ListStyleType = (function(){
 	return Const.space;
       }
       if(this.isMarkList()){
-	return marker_text[this.type] || "";
+	return __marker_text[this.type] || "";
       }
       var digit = this._getMarkerDigitString(count);
       return digit + "."; // add period as postfix.
@@ -4789,8 +4789,8 @@ var Border = (function(){
 })();
 
 var TextEmphaStyle = (function(){
-  var default_empha_style = "filled dot";
-  var empha_marks = {
+  var __default_empha_style = "filled dot";
+  var __empha_marks = {
     // dot
     "filled dot":"&#x2022;",
     "open dot":"&#x25e6;",
@@ -4824,7 +4824,7 @@ var TextEmphaStyle = (function(){
       this.value = value;
     },
     getText : function(){
-      return empha_marks[this.value] || this.value || empha_marks[default_empha_style];
+      return __empha_marks[this.value] || this.value || __empha_marks[__default_empha_style];
     },
     getCss : function(){
       var css = {};
@@ -7991,10 +7991,6 @@ var LayoutContext = (function(){
     this.inline = inline;
   }
 
-  // extra document information
-  var __header_id__ = 0;
-  var __anchors__ = {};
-
   LayoutContext.prototype = {
     // block-level
     isBlockSpaceLeft : function(){
@@ -10025,8 +10021,8 @@ var VertEvaluator = (function(){
     return this.evalCharWithBr(line, chr);
   };
 
-  // to inherit style of parent wrap, we text with <br> to keep elements in 'inline-level'.
-  // for example, if we use <div>, parent bg-color is not inherited.
+  // to inherit style of parent, we use <br> to keep elements in 'inline-level'.
+  // for example, if we use <div> instead, parent bg-color is not inherited.
   VertEvaluator.prototype.evalCharWithBr = function(line, chr){
     chr.withBr = true;
     return document.createTextNode(Html.unescape(chr.getData()));
