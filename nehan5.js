@@ -221,37 +221,40 @@ var Client = (function(){
     _parseUserAgent : function(user_agent){
       // in latest agent style of MSIE, 'Trident' is specified but 'MSIE' is not.
       if(user_agent.indexOf("trident") >= 0 && user_agent.indexOf("msie") < 0){
-	this._parsePureTrident(user_agent);
+	this.name = "msie";
+	this.version = this._parseVersionPureTrident(user_agent);
 	return;
       }
       // normal desktop agent styles
       if(user_agent.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(?:\.\d+)*)/)){
-	this._parseNormalClient(user_agent, RegExp.$1.toLowerCase(), parseInt(RegExp.$2, 10));
+	this.name = RegExp.$1.toLowerCase();
+	this.version = this._parseVersionNormalClient(user_agent, parseInt(RegExp.$2, 10));
 	return;
       }
       // if iphone/ipad/ipod, and user agent is not normal desktop style
       if(this.isAppleMobileFamily()){
-	this._parseAppleMobileFamily(user_agent);
+	this.name = "safari";
+	this.version = this._parseVersionAppleMobileFamily(user_agent);
 	return;
       }
     },
-    _parsePureTrident : function(user_agent){
-      var rv_matched = user_agent.match(/rv:([\.\d]+)/i);
-      this.name = "msie";
-      this.version = rv_matched? parseInt(rv_matched[1], 10) : "";
-    },
-    _parseNormalClient : function(user_agent, tmp_name, tmp_version){
-      this.name = tmp_name;
-      this.version = tmp_version;
-      if(user_agent.match(/version\/([\.\d]+)/i)){
-	this.version = parseInt(RegExp.$1, 10);
+    _parseVersionPureTrident : function(user_agent){
+      if(user_agent.match(/rv:([\.\d]+)/)){
+	return parseInt(RegExp.$1, 10);
       }
+      return this.version;
     },
-    _parseAppleMobileFamily : function(user_agent){
+    _parseVersionNormalClient : function(user_agent, tmp_version){
+      if(user_agent.match(/version\/([\.\d]+)/)){
+	return parseInt(RegExp.$1, 10);
+      }
+      return tmp_version;
+    },
+    _parseVersionAppleMobileFamily : function(user_agent){
       if(user_agent.match(/os ([\d_]+) like/)){
-	this.name = "safari"; // safari(maybe!)
-	this.version = parseInt(RegExp.$1, 10); // [iOS major version] = [safari major version]
+	return parseInt(RegExp.$1, 10); // [iOS major version] = [safari major version]
       }
+      return this.version;
     }
   };
 
@@ -266,18 +269,7 @@ var Env = (function(){
   var __is_vertical_glyph_enable = __is_chrome_vert_glyph_enable || __is_safari_vert_glyph_enable;
 
   return {
-    clientName : __client.name,
-    clientVersion : __client.version,
-    isIE : __client.isIE(),
-    isTrident : __client.isTrident(),
-    isChrome : __client.isChrome(),
-    isWebkit : __client.isWebkit(),
-    isIphone : __client.isIphone(),
-    isIpod : __client.isIpod(),
-    isIpad : __client.isIpad(),
-    isAppleMobileFamily : __client.isAppleMobileFamily(),
-    isAndroid : __client.isAndroid(),
-    isSmartPhone : __client.isSmartPhone(),
+    client:__client,
     isTransformEnable : __is_transform_enable,
     isVerticalGlyphEnable : __is_vertical_glyph_enable
   };
@@ -7614,7 +7606,7 @@ var StyleContext = (function(){
       }
       if(this.isTextVertical()){
 	css["line-height"] = "1em";
-	if(Env.isAppleMobileFamily){
+	if(Env.client.isAppleMobileFamily()){
 	  css["letter-spacing"] = "-0.001em";
 	}
 	if(this.markup.getName() !== "ruby"){
@@ -9976,11 +9968,11 @@ var VertEvaluator = (function(){
 
   VertEvaluator.prototype._evalWord = function(line, word){
     if(Env.isTransformEnable){
-      if(Env.isTrident){
+      if(Env.client.isTrident()){
 	return this._evalWordTransformTrident(line, word);
       }
       return this._evalWordTransform(line, word);
-    } else if(Env.isIE){
+    } else if(Env.client.isIE()){
       return this._evalWordIE(line, word);
     } else {
       return "";
@@ -10029,7 +10021,7 @@ var VertEvaluator = (function(){
   VertEvaluator.prototype._evalRotateChar = function(line, chr){
     if(Env.isTransformEnable){
       return this._evalRotateCharTransform(line, chr);
-    } else if(Env.isIE){
+    } else if(Env.client.isIE()){
       return this._evalRotateCharIE(line, chr);
     } else {
       return this._evalCharWithBr(line, chr);
