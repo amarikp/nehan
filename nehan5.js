@@ -66,6 +66,7 @@ Nehan.addSingleTagByRex = function(rex){
 // so each module returned by this function has independent environment.
 // this is usefull to show multiple layout(vertical and horizontal) in a single page.
 Nehan.setup = function(engine_args){
+"use strict";
 var __engine_args = engine_args || {};
 
 var Config = {
@@ -2596,7 +2597,7 @@ var Selector = (function(){
 	var fmt_value = CssParser.formatValue(prop, value[prop]);
 	var fmt_prop = CssParser.formatProp(prop);
 	var old_value = this.value[fmt_prop] || null;
-	if(typeof old_value === "object" && typeof fmt_value === "object"){
+	if(old_value !== null && typeof old_value === "object" && typeof fmt_value === "object"){
 	  Args.copy(old_value, fmt_value);
 	} else {
 	  this.value[fmt_prop] = fmt_value; // direct value or function
@@ -3141,8 +3142,8 @@ var Char = (function(){
   }
   var __kuten = ["\u3002","."];
   var __touten = ["\u3001", ","];
-  var __kakko_start = ["\uff62","\u300c","\u300e","\u3010","\uff3b","\uff08","\u300a","\u3008","\u226a","\uff1c","\uff5b","\x7b","\x5b","\x28"];
-  var __kakko_end = ["\u300d","\uff63","\u300f","\u3011","\uff3d","\uff09","\u300b","\u3009","\u226b","\uff1e","\uff5d","\x7d","\x5d","\x29"];
+  var __kakko_start = ["\uff62","\u300c","\u300e","\u3010","\uff3b","\uff08","\u300a","\u3008","\u226a","\uff1c","\uff5b","\x7b","\x5b","\x28", "\u2772", "\u3014"];
+  var __kakko_end = ["\u300d","\uff63","\u300f","\u3011","\uff3d","\uff09","\u300b","\u3009","\u226b","\uff1e","\uff5d","\x7d","\x5d","\x29", "\u2773", "\u3015"];
   var __small_kana = ["\u3041","\u3043","\u3045","\u3047","\u3049","\u3063","\u3083","\u3085","\u3087","\u308e","\u30a1","\u30a3","\u30a5","\u30a7","\u30a9","\u30f5","\u30f6","\u30c3","\u30e3","\u30e5","\u30e7","\u30ee"];
   var __head_ng = ["\uff09","\x5c","\x29","\u300d","\u3011","\u3015","\uff3d","\x5c","\x5d","\u3002","\u300f","\uff1e","\u3009","\u300b","\u3001","\uff0e","\x5c","\x2e","\x2c","\u201d","\u301f"];
   var __tail_ng = ["\uff08","\x5c","\x28","\u300c","\u3010","\uff3b","\u3014","\x5c","\x5b","\u300e","\uff1c","\u3008","\u300a","\u201c","\u301d"];
@@ -3167,7 +3168,9 @@ var Char = (function(){
       css["margin-left"] = "auto";
       css["margin-right"] = "auto";
       if(this.isKakkoStart()){
-	if(!padding_enable){
+	if(this.data === "\x28"){ // left parenthis
+	  css["height"] = "0.5em"; // it's temporary fix, so maybe need to be refactored.
+	} else if(!padding_enable){
 	  css["margin-top"] = "-0.5em";
 	}
       } else {
@@ -3436,8 +3439,8 @@ var Char = (function(){
       case 8592: // left
 	this._setCnv("&#8593;"); break;
       case 8220: // left double quotation mark
-	this._setRotate(90); break;
       case 8221: // right double quotateion mark
+      case 8786: // approximately equal to
 	this._setRotate(90); break;
       }
     },
@@ -5706,11 +5709,11 @@ var OutlineContextParser = (function(){
       if(parent){
 	parent.addChild(section);
       }
-      arguments.callee(context, section, ptr);
+      _parse(context, section, ptr);
       break;
 
     case "end-section":
-      arguments.callee(context, parent.getParent(), ptr);
+      _parse(context, parent.getParent(), ptr);
       break;
 
     case "set-header":
@@ -5718,26 +5721,26 @@ var OutlineContextParser = (function(){
       if(parent === null){
 	var auto_section = new Section("section", null, log.pageNo);
 	auto_section.setHeader(header);
-	arguments.callee(context, auto_section, ptr);
+	_parse(context, auto_section, ptr);
       } else if(!parent.hasHeader()){
 	parent.setHeader(header);
-	arguments.callee(context, parent, ptr);
+	_parse(context, parent, ptr);
       } else {
 	var rank = log.rank;
 	var parent_rank = parent.getRank();
 	if(rank < parent_rank){ // higher rank
 	  ptr = Math.max(0, ptr - 1);
-	  arguments.callee(context, parent.getParent(), ptr);
+	  _parse(context, parent.getParent(), ptr);
 	} else if(log.rank == parent_rank){ // same rank
 	  var next_section = new Section("section", parent, log.pageNo);
 	  next_section.setHeader(header);
 	  parent.addNext(next_section);
-	  arguments.callee(context, next_section, ptr);
+	  _parse(context, next_section, ptr);
 	} else { // lower rank
 	  var child_section = new Section("section", parent, log.pageNo);
 	  child_section.setHeader(header);
 	  parent.addChild(child_section);
-	  arguments.callee(context, child_section, ptr);
+	  _parse(context, child_section, ptr);
 	}
       }
       break;
@@ -5870,13 +5873,13 @@ var SectionTreeConverter = (function(){
       toc_ctx = toc_ctx.startRoot();
       var child_toc = callbacks.createToc(toc_ctx, child);
       var ol = callbacks.createRoot(child_toc);
-      arguments.callee(toc_ctx, ol, child, callbacks);
+      parse(toc_ctx, ol, child, callbacks);
       li.appendChild(ol);
       toc_ctx = toc_ctx.endRoot();
     }
     var next = tree.getNext();
     if(next){
-      arguments.callee(toc_ctx.stepNext(), parent, next, callbacks);
+      parse(toc_ctx.stepNext(), parent, next, callbacks);
     }
     return parent;
   };
@@ -6458,6 +6461,16 @@ var Kerning = {
       cur_char.spaceRateEnd = space_rate;
     }
   },
+  // if previous text is not exists or previous text is not left brace(or paren etc),
+  // add space to start direction.
+  //
+  // [example:add space]
+  //   (  => [SPACE](
+  //   a( => a[SPACE](
+  //
+  // [example:do nothing]
+  //   (( => ((
+  //   {( => {(
   _getTextSpaceStart : function(cur_char, prev_text){
     if(prev_text === null){
       return 0.5;
@@ -6467,6 +6480,16 @@ var Kerning = {
     }
     return 0.5;
   },
+  // if next text is not exists or next text is not right brace(or paren etc),
+  // add space to end direction.
+  //
+  // [example:add space]
+  //   )  => )[SPACE]
+  //   )a => )[SPACE]a
+  //
+  // [example:do nothing]
+  //   )) => ))
+  //   )} => )}
   _getTextSpaceEnd : function(cur_char, next_text){
     if(next_text === null){
       return 0.5;
@@ -10483,9 +10506,11 @@ var NehanPagedElement = (function(){
     },
     setStyle : function(name, value){
       this.engine.setStyle(name, value);
+      return this;
     },
     setStyles : function(values){
       this.engine.setStyles(values);
+      return this;
     },
     setContent : function(content, opt){
       var self = this;
@@ -10506,6 +10531,7 @@ var NehanPagedElement = (function(){
 	  }
 	}
       });
+      return this;
     },
     setPage : function(page_no){
       var page = this.getPage(page_no);
