@@ -28,7 +28,7 @@
 */
 
 var Nehan = Nehan || {};
-Nehan.version = "5.0.4";
+Nehan.version = "5.0.5";
 
 Nehan.Client = (function(){
   function Client(){
@@ -1335,10 +1335,10 @@ var Style = {
 
 var Class = {};
 Class.extend = function(childCtor, parentCtor) {
-  function tempCtor() {};
-  tempCtor.prototype = parentCtor.prototype;
+  function TempCtor() {}
+  TempCtor.prototype = parentCtor.prototype;
   childCtor.superClass_ = parentCtor.prototype;
-  childCtor.prototype = new tempCtor();
+  childCtor.prototype = new TempCtor();
   childCtor.prototype.constructor = childCtor;
 };
 
@@ -5419,6 +5419,9 @@ var HtmlLexer = (function (){
     getSeekPercent : function(seek_pos){
       return Math.round(100 * seek_pos / this.src.length);
     },
+    addText : function(text){
+      this.buff = this.buff + this._normalize(text);
+    },
     _stepBuff : function(count){
       this.pos += count;
       this.buff = this.buff.slice(count);
@@ -5975,6 +5978,8 @@ var DocumentContext = (function(){
   var __anchors = {};
   var __outline_contexts = [];
   var __header_id = 0; // unique header-id
+  var __block_id = 0; // unique block-id
+  var __root_block_id = 0; // unique block-id for direct children of <body>.
 
   var __get_outline_contexts_by_name = function(section_root_name){
     return List.filter(__outline_contexts, function(context){
@@ -6032,6 +6037,12 @@ var DocumentContext = (function(){
     genHeaderId : function(){
       return [Nehan.engineId, __header_id++].join("-");
     },
+    genRootBlockId : function(){
+      return __root_block_id++;
+    },
+    genBlockId : function(){
+      return __block_id++;
+    },
     // this is shortcut function for __create_outline_elements_by_name("body", callbacks).
     // if many outline elements exists(that is, multiple '<body>' exists), use first one only.
     createBodyOutlineElement : function(callbacks){
@@ -6068,6 +6079,13 @@ var TokenStream = (function(){
     },
     isHead : function(){
       return this.pos === 0;
+    },
+    addText : function(text){
+      // check if already done, and text is not empty.
+      if(this.eof && text !== ""){
+	this.lexer.addText(text);
+	this.eof = false;
+      }
     },
     prev : function(){
       this.pos = Math.max(0, this.pos - 1);
@@ -6329,6 +6347,9 @@ var PageStream = (function(){
     },
     hasNext : function(){
       return this.generator.hasNext();
+    },
+    addText : function(text){
+      this.generator.addText(text);
     },
     setTerminate : function(status){
       this.generator.setTerminate(status);
@@ -7165,6 +7186,7 @@ var StyleContext = (function(){
       }
       var clone_style = new StyleContext(this.markup, this.parent, {forceCss:(css || {})});
       clone_style.parent.removeChild(clone_style);
+      clone_style.setClone(true);
       return clone_style;
     },
     // append child style context
@@ -7203,6 +7225,12 @@ var StyleContext = (function(){
       var marker_extent = line? line.size.getExtent(this.flow) : this.getFontSize();
       this.listMarkerSize = this.flow.getBoxSize(marker_measure, marker_extent);
     },
+    isClone : function(){
+      return this._isClone || false;
+    },
+    setClone : function(state){
+      this._isClone = state;
+    },
     createBlock : function(opt){
       opt = opt || {};
       var elements = opt.elements || [];
@@ -7213,6 +7241,12 @@ var StyleContext = (function(){
       var box = new Box(box_size, this);
       if(this.markup.isHeaderTag()){
 	classes.push("nehan-header");
+      }
+      if(this.isClone()){
+	classes.push("nehan-clone");
+      }
+      if(typeof opt.rootBlockId !== "undefined"){
+	box.rootBlockId = opt.rootBlockId;
       }
       box.blockId = opt.blockId;
       box.display = (this.display === "inline-block")? this.display : "block";
@@ -7235,7 +7269,7 @@ var StyleContext = (function(){
       if(edge === null){
 	return null;
       }
-      if(cancel_edge == null || (cancel_edge.before === 0 && cancel_edge.after === 0)){
+      if(cancel_edge === null || (cancel_edge.before === 0 && cancel_edge.after === 0)){
 	return edge; // nothing to do
       }
       var context_edge = edge.clone();
@@ -7523,6 +7557,9 @@ var StyleContext = (function(){
       }
       return (typeof def_value !== "undefined")? def_value : null;
     },
+    getParentMarkupName : function(){
+      return this.parent? this.parent.getMarkupName() : null;
+    },
     getMarkupName : function(){
       return this.markup.getName();
     },
@@ -7662,8 +7699,8 @@ var StyleContext = (function(){
       return edge? edge.getExtent(flow || this.flow) : 0;
     },
     getBlockContextEdge : function(flow){
+      flow = flow || this.flow;
       var edge = this.edge || null;
-      var flow = flow || this.flow;
       return {
 	before:(edge? edge.getBefore(flow) : 0),
 	after:(edge? edge.getAfter(flow) : 0)
@@ -8501,6 +8538,12 @@ var LayoutGenerator = (function(){
     this._cachedElements = [];
   };
 
+  LayoutGenerator.prototype.addText = function(text){
+    if(this.stream){
+      this.stream.addText(text);
+    }
+  };
+
   // called when each time generator yields element of output, and added it.
   LayoutGenerator.prototype._onAddElement = function(block){
   };
@@ -8664,10 +8707,12 @@ var LayoutGenerator = (function(){
 
 
 var BlockGenerator = (function(){
-  var __global_block_id = 0;
   function BlockGenerator(style, stream){
     LayoutGenerator.call(this, style, stream);
-    this.blockId = __global_block_id++;
+    if(this.style.getParentMarkupName() === "body"){
+      this.rootBlockId = DocumentContext.genRootBlockId();
+    }
+    this.blockId = DocumentContext.genBlockId();
   }
   Class.extend(BlockGenerator, LayoutGenerator);
 
@@ -8789,13 +8834,17 @@ var BlockGenerator = (function(){
     if(extent === 0 || elements.length === 0){
       return null;
     }
-    var block = this.style.createBlock({
+    var block_args = {
       blockId:this.blockId,
       extent:extent,
       elements:elements,
       breakAfter:context.hasBreakAfter(),
       cancelEdge:context.getBlockCancelEdge(is_last_block)
-    });
+    };
+    if(typeof this.rootBlockId !== "undefined"){
+      block_args.rootBlockId = this.rootBlockId;
+    }
+    var block = this.style.createBlock(block_args);
 
     // call _onCreate callback for 'each' output
     this._onCreate(context, block);
@@ -9856,6 +9905,9 @@ var HtmlGenerator = (function(){
     setTerminate : function(status){
       this.generator.setTerminate(status);
     },
+    addText : function(text){
+      this.generator.addText(text);
+    },
     _createGenerator : function(){
       while(this.stream.hasNext()){
 	var tag = this.stream.get();
@@ -9918,6 +9970,9 @@ var DocumentGenerator = (function(){
     setTerminate : function(status){
       this.generator.setTerminate(status);
     },
+    addText : function(text){
+      this.generator.addText(text);
+    },
     _createGenerator : function(){
       while(this.stream.hasNext()){
 	var tag = this.stream.get();
@@ -9974,6 +10029,9 @@ var LayoutEvaluator = (function(){
       }
       if(opt.content){
 	dom.innerHTML = opt.content;
+      }
+      if(typeof opt.rootBlockId !== "undefined"){
+	dataset["rootBlockId"] = opt.rootBlockId;
       }
       if(typeof opt.blockId !== "undefined"){
 	dataset["blockId"] = opt.blockId;
@@ -10037,6 +10095,7 @@ var LayoutEvaluator = (function(){
 	attrs:tree.getAttrs(),
 	oncreate:tree.getOnCreate(),
 	content:(opt.content || tree.getContent()),
+	rootBlockId:tree.rootBlockId,
 	blockId:tree.blockId,
 	css:(opt.css || tree.getCssRoot()),
 	styleContext:tree.style
@@ -10542,6 +10601,9 @@ var NehanPagedElement = (function(){
   }
 
   NehanPagedElement.prototype = {
+    isLastPage : function(){
+      return this.getPageNo() + 1 >= this.getPageCount();
+    },
     getEngine : function(){
       return this.engine;
     },
@@ -10566,13 +10628,15 @@ var NehanPagedElement = (function(){
     },
     setNextPage : function(){
       if(this.pageNo + 1 < this.getPageCount()){
-	this.setPage(this.pageNo + 1);
+	return this.setPage(this.pageNo + 1);
       }
+      return null;
     },
     setPrevPage : function(){
       if(this.pageNo > 0){
-	this.setPage(this.pageNo - 1);
+	return this.setPage(this.pageNo - 1);
       }
+      return null;
     },
     setStyle : function(name, value){
       this.engine.setStyle(name, value);
@@ -10583,25 +10647,13 @@ var NehanPagedElement = (function(){
       return this;
     },
     setContent : function(content, opt){
-      var self = this;
-      opt = opt || {};
       this._pageStream = this.engine.createPageStream(content);
-      this._pageStream.asyncGet({
-	onProgress : function(stream, tree){
-	  if(tree.pageNo === 0){
-	    self.setPage(tree.pageNo);
-	  }
-	  if(opt.onProgress){
-	    opt.onProgress(tree);
-	  }
-	},
-	onComplete : function(stream, time){
-	  if(opt.onComplete){
-	    opt.onComplete(time);
-	  }
-	}
-      });
+      this._asyncGet(opt || {});
       return this;
+    },
+    addContent : function(content, opt){
+      this._pageStream.addText(content);
+      this._asyncGet(opt || {});
     },
     setPage : function(page_no){
       var page = this.getPage(page_no);
@@ -10611,6 +10663,24 @@ var NehanPagedElement = (function(){
       this.pageNo = page_no;
       this.element.innerHTML = "";
       this.element.appendChild(page.element);
+      return page;
+    },
+    _asyncGet : function(opt){
+      this._pageStream.asyncGet({
+	onProgress : function(stream, tree){
+	  if(tree.pageNo === 0){
+	    this.setPage(tree.pageNo);
+	  }
+	  if(opt.onProgress){
+	    opt.onProgress(tree);
+	  }
+	}.bind(this),
+	onComplete : function(stream, time){
+	  if(opt.onComplete){
+	    opt.onComplete(time);
+	  }
+	}.bind(this)
+      });
     }
   };
   
