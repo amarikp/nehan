@@ -1,6 +1,6 @@
 // nehan.book.js
 // (c) 2014 - all rights reserved by Watanabe Masaki.
-// url: http://github.com/tategakibunko/nehan.book.js
+// url: http://github.com/tategakibunko/nehan-book
 // license: MIT
 ;
 if(typeof Nehan === "undefined"){
@@ -71,7 +71,7 @@ Nehan.Book.Model.PageStream = Backbone.Model.extend({
   initialize : function(){
     this.engine = Nehan.setup({
       config:Nehan.Book.NehanConfig,
-      layout:{
+      display:{
 	direction:this.get("direction"),
 	width:this.get("layoutWidth")
       }
