@@ -2427,6 +2427,25 @@ var Css = {
   */
   addNehanTocLinkPrefix : function(name){
     return "nehan-toc-link-" + name;
+  },
+  /**
+     set vender-prefixed css value like(-webkit-opacity, -moz-opacity etc).
+
+     @memberof Nehan.Css
+     @param 
+     @param dst {Object}
+     @param name {String}
+     @param value {String}
+     @return {Object}
+     @example
+     * Css.setCssValueWithVender({}, "writing-mode", "vertical-rl");
+  */
+  setCssValueWithVender: function(dst, name, value){
+    dst[name] = value; // no prefixed version
+    List.iter(Const.cssVenderPrefixes, function(prefix){
+      dst[prefix + "-" + name] = value;
+    });
+    return dst;
   }
 };
 
