@@ -25,9 +25,10 @@
   -webkit-text-overflow:clip;
   -o-text-overflow:clip;
 }
+/*
 .nehan-inline.nehan-inline-lr-tb .nehan-inline{
   float:none;
-}
+}*/
 .nehan-inline-tb-rl a,
 .nehan-inline-tb-lr a {
   overflow:visible;
@@ -60,6 +61,12 @@
   float:left;
 }
 .nehan-block,
+.nehan-inline,
+.nehan-text-block,
 .nehan-img-char{
-  box-sizing:content-box;
+  -o-box-sizing:content-box !important;
+  -ms-box-sizing:content-box !important;
+  -moz-box-sizing:content-box !important;
+  -webkit-box-sizing:content-box !important;
+  box-sizing:content-box !important;
 }

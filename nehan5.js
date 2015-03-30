@@ -31,7 +31,7 @@
    @namespace Nehan
 */
 var Nehan = Nehan || {};
-Nehan.version = "5.0.6";
+Nehan.version = "5.1.0";
 
 Nehan.Client = (function(){
   /**
@@ -512,14 +512,13 @@ var Display = {
   */
   boldRate:0.5,
   /**
-    * standard line rate. note that extent size of line is specified by<br>
-    * [lineRate] * [max-font-size of current-line] in nehan.js.
+     standard line-height.
 
      @memberof Nehan.Display
      @type {Float}
      @default 2.0
   */
-  lineRate: 2.0,
+  lineHeight: 2.0,
   /**
      extra space rate for vertical word in vertical mode.
 
@@ -684,25 +683,18 @@ var LexingRule = (function(){
     "pbr"
   ];
 
-  var __single_tag_rexes__ = [];
-
   var __is_single_tag = function(tag_name){
     return List.exists(__single_tag_names__, Closure.eq(tag_name));
   };
 
-  var __is_single_tag_rex = function(tag_name){
-    return List.exists(__single_tag_rexes__, function(rex){
-      return rex.test(tag_name);
-    });
-  };
-
-  var __find_single_tag_rex_by_rex = function(rex){
-    return List.exists(__single_tag_rexes__, function(rex_){
-      return rex.source === rex_.source;
-    });
-  };
-
   return {
+    /**
+       @memberof Nehan.LexingRule
+       @return {Array.<String>}
+    */
+    getSingleTagNames : function(){
+      return __single_tag_names__;
+    },
     /**
        @memberof Nehan.LexingRule
        @param tag_name {String}
@@ -713,7 +705,7 @@ var LexingRule = (function(){
        * LexingRule.isSingleTag("div"); // false
     */
     isSingleTag : function(tag_name){
-      return __is_single_tag(tag_name) || __is_single_tag_rex(tag_name) || false;
+      return __is_single_tag(tag_name) || false;
     },
     /**
        @memberof Nehan.LexingRule
@@ -723,20 +715,9 @@ var LexingRule = (function(){
        * LexingRule.isSingleTag("my-custom-single-tag"); // true
     */
     addSingleTagByName : function(tag_name){
+      tag_name = tag_name.toLowerCase();
       if(!__is_single_tag(tag_name)){
 	__single_tag_names__.push(tag_name);
-      }
-    },
-    /**
-       @memberof Nehan.LexingRule
-       @param rex {RegExp}
-       @example
-       * LexingRule.addSingleTagByName(new RegExp("my-single-\d"));
-       * LexingRule.isSingleTag("my-single-1"); // true
-    */
-    addSingleTagByRex : function(rex){
-      if(!__find_single_tag_rex_by_rex(rex)){
-	__single_tag_rexes__.push(rex);
       }
     }
   };
@@ -808,18 +789,7 @@ var LexingRule = (function(){
  5. special properties in nehan.js
   ----------------------------------
 
-  (5.1) line-rate:(float)
-
-  In normal html, size of 'line-height:1.0em' is determined by
-  font size of 'parent' block.
-
-  In contrast, property line-rate is determined by max font size of
-  'current line'.
-
-  Assume that font-size of parent block is 16px, and max font size of
-  current line is 32px, line-height:1.0em is 16px, but line-rate:1.0em is 32px.
-
-  (5.2) box-sizing:[content-box | border-box | margin-box(default)]
+  (5.1) box-sizing:[content-box | border-box | margin-box(default)]
 
   In box-sizing, 'margin-box' is special value in nehan.js, and is box-sizing default value.
   In margin-box, even if margin is included in box-size.
@@ -829,7 +799,7 @@ var LexingRule = (function(){
   So if you represent margin/border/padding(called in edge in nehan.js),
   the only way is 'eliminating content space'.
 
-  (5.3) flow:[lr-tb | rl-tb | tb-rl | tb-lr | flip]
+  (5.2) flow:[lr-tb | rl-tb | tb-rl | tb-lr | flip]
 
   This property represent document-mode in nehan.js.
 
@@ -975,7 +945,7 @@ var Style = {
     "display":"block",
     "font-weight":"bold",
     "margin":{
-      "after":"0.2em"
+      "after":"1em"
     }
   },
   //-------------------------------------------------------
@@ -1139,19 +1109,13 @@ var Style = {
   "legend":{
     "display":"block",
     "font-weight":"bold",
-    "line-rate":1.5
+    "line-height":"1.5em"
   },
   "li":{
     "display":"list-item",
     "margin":{
       "after":"0.6em"
     }
-  },
-  "li-marker":{
-    "display":"block"
-  },
-  "li-body":{
-    "display":"block"
   },
   "link":{
     "meta":true
@@ -1202,16 +1166,6 @@ var Style = {
       "before":"1em"
     }
   },
-  "ol ol":{
-    "margin":{
-      "before":"0em"
-    }
-  },
-  "ol ul":{
-    "margin":{
-      "before":"0em"
-    }
-  },
   "optgroup":{
   },
   "option":{
@@ -1224,7 +1178,7 @@ var Style = {
   "p":{
     "display":"block",
     "margin":{
-      "after":"1.5em"
+      "after":"1em"
     }
   },
   "param":{
@@ -1256,7 +1210,7 @@ var Style = {
   },
   "rt":{
     "font-size":"0.5em",
-    "line-rate":1.0,
+    "line-height":"1.0em",
     "display":"inline"
   },
   //-------------------------------------------------------
@@ -1361,7 +1315,7 @@ var Style = {
   },
   "th":{
     "display":"table-cell",
-    "line-rate":1.4,
+    "line-height":"1.4em",
     "border-width":{
       "end":"1px"
     },
@@ -1415,16 +1369,6 @@ var Style = {
       "before":"1em"
     }
   },
-  "ul ul":{
-    "margin":{
-      "before":"0em"
-    }
-  },
-  "ul ol":{
-    "margin":{
-      "before":"0em"
-    }
-  },
   //-------------------------------------------------------
   // tag / v
   //-------------------------------------------------------
@@ -1447,10 +1391,6 @@ var Style = {
   "?xml":{
   },
   "!doctype":{
-  },
-  "first-line":{
-    //"display":"block !important" // TODO
-    "display":"block"
   },
   // <page-break>, <pbr>, <end-page> are all same and nehan.js original tag,
   // defined to keep compatibility of older nehan.js document,
@@ -1713,12 +1653,8 @@ var Style = {
     "measure":"1em",
     "extent":"1em",
     "float":"start",
-    "line-rate":1.0,
-    "font-size":"4em",
-    // set 'line-height:1em' to inline css if horizotal mode.
-    "onload":function(context){
-      return context.isTextHorizontal()? {"line-height":"1em"} : {};
-    }
+    "line-height":"1.0em",
+    "font-size":"4em"
   },
   ".nehan-gap-start":{
     "margin":{
@@ -1953,11 +1889,13 @@ var List = {
   /**
      @memberof Nehan.List
      @param lst {Array}
+     @param start {Number}
+     @param fn {Function}
      @return {Number}
   */
-  sum : function(lst){
-    return this.fold(lst, 0, function(ret, obj){
-      return ret + obj;
+  sum : function(lst, start, fn){
+    return this.fold(lst, start, function(ret, obj){
+      return ret + fn(obj);
     });
   },
   /**
@@ -3956,7 +3894,9 @@ var TagAttrLexer = (function(){
       this.buff = this.buff.substring(length);
     },
     _getSymbol : function(){
-      var symbol = HtmlLexer.prototype._getByRex.call(this, __rex_symbol);
+      //var symbol = HtmlLexer.prototype._getByRex.call(this, __rex_symbol);
+      var match = this.buff.match(__rex_symbol);
+      var symbol = match? match[0] : null;
       if(symbol){
 	this._step(symbol.length);
       }
@@ -4470,6 +4410,9 @@ var Token = {
      @return {boolean}
   */
   isText : function(token){
+    if(token instanceof Text){
+      return true;
+    }
     return token._type === "char" || token._type === "word" || token._type === "tcy" || token._type === "ruby";
   },
   /**
@@ -4523,6 +4466,28 @@ var Token = {
 };
 
 
+var Text = (function(){
+  /**
+     @memberof Nehan
+     @class Text
+     @param content {String}
+  */
+  function Text(content){
+    this.content = content;
+  }
+
+  Text.prototype = {
+    isWhiteSpaceOnly: function(){
+      return this.content.replace(/[\s\n]/g, "") === "";
+    },
+    getContent: function(){
+      return this.content;
+    }
+  };
+
+  return Text;
+})();
+
 var Char = (function(){
   /**
      @memberof Nehan
@@ -4548,19 +4513,20 @@ var Char = (function(){
   var __small_kana = ["\u3041","\u3043","\u3045","\u3047","\u3049","\u3063","\u3083","\u3085","\u3087","\u308e","\u30a1","\u30a3","\u30a5","\u30a7","\u30a9","\u30f5","\u30f6","\u30c3","\u30e3","\u30e5","\u30e7","\u30ee"];
   var __head_ng = ["\uff09","\x5c","\x29","\u300d","\u3011","\u3015","\uff3d","\x5c","\x5d","\u3002","\u300f","\uff1e","\u3009","\u300b","\u3001","\uff0e","\x5c","\x2e","\x2c","\u201d","\u301f"];
   var __tail_ng = ["\uff08","\x5c","\x28","\u300c","\u3010","\uff3b","\u3014","\x5c","\x5b","\u300e","\uff1c","\u3008","\u300a","\u201c","\u301d"];
+  var __rex_half_char = /[\w!\.\?\/:#;"',]/;
 
   Char.prototype = {
     /**
        @memberof Nehan.Char
        @return {string}
-     */
+    */
     getData : function(){
       return this.cnv || this.data;
     },
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
     getCssPadding : function(line){
       var padding = new Padding();
       if(this.paddingStart){
@@ -4574,12 +4540,10 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
     getCssVertGlyph : function(line){
       var css = {};
       var padding_enable = this.isPaddingEnable();
-      css["margin-left"] = "auto";
-      css["margin-right"] = "auto";
       if(this.isKakkoStart()){
 	if(this.data === "\x28"){ // left parenthis
 	  css["height"] = "0.5em"; // it's temporary fix, so maybe need to be refactored.
@@ -4599,14 +4563,12 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
     getCssVertImgChar : function(line){
       var css = {}, font_size = line.style.getFontSize();
       css.display = "block";
       css.width = font_size + "px";
       css.height = this.getVertHeight(font_size) + "px";
-      css["margin-left"] = "auto";
-      css["margin-right"] = "auto";
       if(this.isPaddingEnable()){
 	Args.copy(css, this.getCssPadding(line));
       }
@@ -4615,7 +4577,16 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
+    getCssVertSingleHalfChar : function(line){
+      var css = {};
+      css["padding-left"] = "0.25em";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
     getCssVertRotateCharIE : function(line){
       var css = {}, font_size = line.style.getFontSize();
       css["css-float"] = "left";
@@ -4627,15 +4598,7 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
-    getCssVertEmphaTarget : function(line){
-      var css = {};
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-     */
+    */
     getCssVertEmphaText : function(line){
       var css = {}, font_size = line.style.getFontSize();
       css.display = "inline-block";
@@ -4646,15 +4609,16 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
-    getCssHoriEmphaTarget : function(line){
+    */
+    getCssHoriEmphaSrc : function(line){
       var css = {};
+      css["line-height"] = "1em";
       return css;
     },
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
     getCssHoriEmphaText : function(line){
       var css = {};
       css["line-height"] = "1em";
@@ -4663,7 +4627,7 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
     getCssVertLetterSpacing : function(line){
       var css = {};
       css["margin-bottom"] = line.letterSpacing + "px";
@@ -4672,7 +4636,7 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
     getCssVertHalfSpaceChar : function(line){
       var css = {}, font_size = line.style.getFontSize();
       var half = Math.round(font_size / 2);
@@ -4683,7 +4647,7 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Object}
-     */
+    */
     getCssVertSmallKana : function(){
       var css = {};
       css.position = "relative";
@@ -4697,21 +4661,21 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {Float | Int}
-     */
+    */
     getHoriScale : function(){
       return this.hscale? this.hscale : 1;
     },
     /**
        @memberof Nehan.Char
        @return {Float | Int}
-     */
+    */
     getVertScale : function(){
       return this.vscale? this.vscale : 1;
     },
     /**
        @memberof Nehan.Char
        @return {Float | Int}
-     */
+    */
     getVertHeight : function(font_size){
       var vscale = this.getVertScale();
       return (vscale === 1)? font_size : Math.round(font_size * vscale);
@@ -4719,28 +4683,28 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {boolean}
-     */
+    */
     hasMetrics : function(){
       return (typeof this.bodySize != "undefined");
     },
     /**
        @memberof Nehan.Char
        @return {Int}
-     */
+    */
     getAdvance : function(flow, letter_spacing){
       return this.bodySize + this.getPaddingSize() + (letter_spacing || 0);
     },
     /**
        @memberof Nehan.Char
        @return {Int}
-     */
+    */
     getPaddingSize : function(){
       return (this.paddingStart || 0) + (this.paddingEnd || 0);
     },
     /**
        @memberof Nehan.Char
        @return {Int}
-     */
+    */
     getCharCount : function(){
       if(this.data === " " || this.data === "\t" || this.data === "\u3000"){
 	return 0;
@@ -4751,7 +4715,7 @@ var Char = (function(){
        @memberof Nehan.Char
        @param flow {Nehan.BoxFlow}
        @param font {Nehan.Font}
-     */
+    */
     setMetrics : function(flow, font){
       var is_vert = flow.isTextVertical();
       var step_scale = is_vert? this.getVertScale() : this.getHoriScale();
@@ -5043,6 +5007,13 @@ var Char = (function(){
        @memberof Nehan.Char
        @return {boolean}
      */
+    isSingleHalfChar : function(){
+      return this.data.length === 1 && __rex_half_char.test(this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
     isKakkoStart : function(){
       return List.mem(__kakko_start, this.data);
     },
@@ -5135,8 +5106,6 @@ var Word = (function(){
       }
       css.width = line.style.getFontSize() + "px";
       css.height = this.bodySize + "px";
-      css["margin-left"] = "auto";
-      css["margin-right"] = "auto";
       css["font-family"] = "monospace";
       return css;
     },
@@ -5202,7 +5171,7 @@ var Word = (function(){
        @return {int}
     */
     getAdvance : function(flow, letter_spacing){
-      return this.bodySize + (letter_spacing || 0) * this.getLetterCount();
+      return Math.floor(this.bodySize + (letter_spacing || 0) * this.getLetterCount());
     },
     /**
        @memberof Nehan.Word
@@ -5231,7 +5200,7 @@ var Word = (function(){
     */
     setMetrics : function(flow, font){
       if(Config.useStrictWordMetrics && TextMetrics.isEnable()){
-	this.bodySize = TextMetrics.getMeasure(font, this.data);
+	this.bodySize = Math.round(TextMetrics.getMeasure(font, this.data));
 	return;
       }
       this.bodySize = Math.round(this.data.length * font.size * 0.5);
@@ -5323,6 +5292,24 @@ var Tcy = (function(){
       return this.bodySize + letter_spacing;
     },
     /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVert : function(line){
+      var css = {};
+      css["text-align"] = "center";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssHoriSingleHalfChar : function(line){
+      var css = {};
+      css["text-align"] = "center";
+      return css;
+    },
+    /**
        @memberof Nehan.Tcy
        @return {boolean}
     */
@@ -5391,6 +5378,15 @@ var Ruby = (function(){
        @memberof Nehan.Ruby
        @return {String}
     */
+    getRbString : function(){
+      return List.map(this.rbs, function(rb){
+	return rb.data || "";
+      }).join("");
+    },
+    /**
+       @memberof Nehan.Ruby
+       @return {String}
+    */
     getRtString : function(){
       return this.rt? this.rt.getContent() : "";
     },
@@ -5400,16 +5396,6 @@ var Ruby = (function(){
     */
     getRtFontSize : function(){
       return this.rtFontSize;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssHoriRuby : function(line){
-      var css = {};
-      css.display = "inline-block";
-      return css;
     },
     /**
        @memberof Nehan.Ruby
@@ -6301,22 +6287,6 @@ var BlockFlow = (function(){
   };
 
   /**
-     get css object
-
-     @memberof Nehan.BlockFlow
-     @method getCss
-     @return {Object}
-  */
-  BlockFlow.prototype.getCss = function(){
-    var css = {};
-    if(this.isHorizontal()){
-      // notice that "float" property is converted into "cssFloat" in evaluation time.
-      css["css-float"] = (this.dir === "lr")? "left" : "right";
-    }
-    return css;
-  };
-
-  /**
      get physical directional property of logical before.
 
      @memberof Nehan.BlockFlow
@@ -6460,11 +6430,45 @@ var BoxFlow = (function(){
     },
     /**
        @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isTextLeftToRight : function(){
+      return this.inflow.isLeftToRight();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isTextRightToLeft : function(){
+      return this.inflow.isRightToLeft();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isBlockLeftToRight : function(){
+      return this.blockflow.isLeftToRight();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isBlockRightToLeft : function(){
+      return this.blockflow.isRightToLeft();
+    },
+    /**
+       @memberof Nehan.BoxFlow
        @return {Object}
     */
     getCss : function(){
       var css = {};
-      Args.copy(css, this.blockflow.getCss());
+
+      // notice that "float" property is converted into "cssFloat" in evaluation time.
+      if(this.isTextVertical()){
+	css["css-float"] = this.isBlockLeftToRight()? "left" : "right";
+      } else {
+	css["css-float"] = this.isTextLeftToRight()? "left" : "right";
+      }
       return css;
     },
     /**
@@ -8061,9 +8065,10 @@ var Box = (function(){
      @param {Nehan.BoxSize} box size
      @param {Nehan.StyleContext}
   */
-  function Box(size, style){
+  function Box(size, style, type){
     this.size = size;
     this.style = style;
+    this.type = type || "block";
     this.css = {};
   }
 
@@ -8072,7 +8077,7 @@ var Box = (function(){
       if(element instanceof Box){
 	return ret.concat(__filter_text(element.elements || []));
       }
-      return ret.concat(element);
+      return element? ret.concat(element) : ret;
     });
   };
 
@@ -8081,8 +8086,22 @@ var Box = (function(){
        @memberof Nehan.Box
        @return {boolean}
     */
-    isAnonymousLine : function(){
-      return this.display === "inline" && this.style.isRootLine();
+    isLine : function(){
+      return this.type === "line-block";
+    },
+    /**
+       @memberof Nehan.Box
+       @return {boolean}
+    */
+    isTextBlock : function(){
+      return this.type === "text-block";
+    },
+    /**
+       @memberof Nehan.Box
+       @return {boolean}
+    */
+    isRootLine : function(){
+      return this.isRootLine || false;
     },
     /**
        filter text object and concat it as string, mainly used for debugging.
@@ -8090,10 +8109,11 @@ var Box = (function(){
        @memberof Nehan.Box
        @return {string}
     */
-    toLineString : function(){
+    toString : function(){
       var texts = __filter_text(this.elements || []);
       return List.fold(texts, "", function(ret, text){
-	return ret + (text? (text.data || "") : "");
+	var str = (text instanceof Ruby)? text.getRbString() : (text.data || "");
+	return ret + str;
       });
     },
     /**
@@ -8122,8 +8142,8 @@ var Box = (function(){
        @return {Function}
     */
     getOnCreate : function(){
-      // on create of anonymous line is already captured by parent element.
-      if(this.isAnonymousLine()){
+      // on create of text-block is already captured by parent line
+      if(this.isTextBlock()){
 	return null;
       }
       return this.style.getCssAttr("oncreate");
@@ -8133,8 +8153,8 @@ var Box = (function(){
        @return {Object}
     */
     getAttrs : function(){
-      // attributes of anonymous line is already captured by parent element.
-      if(this.isAnonymousLine()){
+      // attributes of text-block is already captured by parent line
+      if(this.isTextBlock()){
 	return null;
       }
       return this.style.markup.attrs;
@@ -8143,7 +8163,7 @@ var Box = (function(){
        @memberof Nehan.Box
        @return {Object}
     */
-    getCssRoot : function(){
+    getBoxCss : function(){
       switch(this.display){
       case "block": return this.getCssBlock();
       case "inline": return this.getCssInline();
@@ -8155,28 +8175,17 @@ var Box = (function(){
        @return {Object}
     */
     getCssBlock : function(){
-      var css = {};
-      Args.copy(css, this.style.getCssBlock()); // base style
-      Args.copy(css, this.size.getCss(this.style.flow)); // content size
-      if(this.edge){
-	Args.copy(css, this.edge.getCss());
-      }
-      Args.copy(css, this.css); // some dynamic values
-      return css;
+      return this.style.getCssBlock(this);
     },
     /**
        @memberof Nehan.Box
        @return {Object}
     */
     getCssInline : function(){
-      var css = {};
-      Args.copy(css, this.style.getCssInline()); // base style
-      Args.copy(css, this.size.getCss(this.style.flow)); // layout size
-      if(this.edge){
-	Args.copy(css, this.edge.getCss());
+      if(this.isTextBlock()){
+	return this.style.getCssTextBlock(this);
       }
-      Args.copy(css, this.css); // some dynamic values
-      return css;
+      return this.style.getCssLineBlock(this);
     },
     /**
        @memberof Nehan.Box
@@ -8189,6 +8198,14 @@ var Box = (function(){
       }
       css.display = "inline-block";
       return css;
+    },
+    /**
+       @memberof Nehan.Box
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssHoriInlineImage : function(line){
+      return this.style.getCssHoriInlineImage(line, this);
     },
     /**
        @memberof Nehan.Box
@@ -8295,10 +8312,7 @@ var Box = (function(){
 })();
 
 var HtmlLexer = (function (){
-  var __rex_tcy = /\d\d|!\?|!!|\?!|\?\?/;
-  var __rex_word = /^[\w!\.\?\/\_:#;"',]+/;
-  var __rex_tag = /^<[^>]+>/;
-  var __rex_char_ref = /^&[^;\s]+;/;
+  var __rex_tag = /<[a-zA-Z][^>]*>/;
 
   /*
   var __close_abbr_tags = [
@@ -8339,7 +8353,7 @@ var HtmlLexer = (function (){
   /**
      @memberof Nehan
      @class HtmlLexer
-     @classdesc lexer of html text.
+     @classdesc lexer of html tag elements.
      @constructor
      @param src {String}
   */
@@ -8348,15 +8362,24 @@ var HtmlLexer = (function (){
     this.buff = this._normalize(src);
     this.src = this.buff;
   }
+
+  // discard close tags defined as single tag in LexingRule.
+  var __replace_single_close_tags = function(str){
+    return List.fold(LexingRule.getSingleTagNames(), str, function(ret, name){
+      return ret.replace(new RegExp("</" + name + ">", "g"), "");
+    });
+  };
+
   HtmlLexer.prototype = {
     _normalize : function(src){
-      return src
-	.replace(/(<\/[^>]+>)/g, function(p1){
+      var src = src.replace(/(<\/.+?>)(?:[\s]*)/gm, function(str, p1){
 	  return p1.toLowerCase();
-	}) // convert close tag to lower case(for innerHTML of IE)
-	//.replace(/“([^”]+)”/g, "〝$1〟") // convert double quote to double quotation mark
-	.replace(/^[ \n]+/, "") // shorten head space
-	.replace(/\s+$/, "") // discard tail space
+      }); // convert close tag to lower case(for innerHTML of IE)
+      src = __replace_single_close_tags(src);
+      //src = src.replace(/“([^”]+)”/g, "〝$1〟") // convert double quote to double quotation mark
+      return src
+	.replace(/^[\s]+/, "") // shorten head space
+	.replace(/[\s]+$/, "") // discard tail space
 	.replace(/\r/g, ""); // discard CR
     },
     /**
@@ -8405,49 +8428,29 @@ var HtmlLexer = (function (){
       this.buff = this.buff + this._normalize(text);
     },
     _stepBuff : function(count){
+      var part = this.buff.substring(0, count);
       this.pos += count;
       this.buff = this.buff.slice(count);
+      return part;
     },
     _getToken : function(){
       if(this.buff === ""){
 	return null;
       }
-      var rex_str;
-      rex_str = this._getByRex(__rex_tag);
-      if(rex_str){
-	return this._parseTag(rex_str);
+      var match;
+      match = this.buff.match(__rex_tag);
+      if(match === null){
+	return new Text(this._stepBuff(this.buff.length));
       }
-      rex_str = this._getByRex(__rex_word);
-      if(rex_str){
-	if(rex_str.length === 1){
-	  return this._parseChar(rex_str);
-	} else if(rex_str.length === 2 && rex_str.match(__rex_tcy)){
-	  return this._parseTcy(rex_str);
-	}
-	return this._parseWord(rex_str);
+      if(match.index === 0){
+	return this._parseTag(match[0]);
       }
-      rex_str = this._getByRex(__rex_char_ref);
-      if(rex_str){
-	return this._parseCharRef(rex_str);
-      }
-      return this._parseChar(this._getChar());
-    },
-    _getByRex : function(rex){
-      var rex_result = this.buff.match(rex);
-      return rex_result? rex_result[0] : null;
-    },
-    _getRb : function(){
-      var rb = this.buffRb.substring(0, 1);
-      this.buffRb = this.buffRb.slice(1);
-      return rb;
-    },
-    _getChar : function(){
-      return this.buff.substring(0,1);
+      return new Text(this._stepBuff(match.index));
     },
     _getTagContent : function(tag_name){
       // why we added [\\s|>] for open_tag_rex?
-      // because if we choose pattern only "<" + tag_name,
-      // "<p" matches both "<p" and "<pre".
+      // if tag_name is "p", 
+      // both "<p>" and "<p class='foo'" also must be matched.
       var open_tag_rex = new RegExp("<" + tag_name + "[\\s|>]");
       var close_tag = "</" + tag_name + ">"; // tag name is already lower-cased by preprocessor.
       var close_pos = __find_close_pos(this.buff, tag_name, open_tag_rex, close_tag);
@@ -8480,11 +8483,6 @@ var HtmlLexer = (function (){
       }
       return this._parseChildContentTag(tag);
     },
-    _parseTcyTag : function(tag){
-      var content = this._getTagContent(tag.name);
-      this._stepBuff(content.length + tag.name.length + 3); // 3 = "</>".length
-      return new Tcy(content);
-    },
     _parseChildContentTag : function(tag){
       var result = this._getTagContent(tag.name);
       tag.setContent(Utils.trimCRLF(result.content));
@@ -8494,25 +8492,58 @@ var HtmlLexer = (function (){
 	this._stepBuff(result.content.length);
       }
       return tag;
-    },
-    _parseWord : function(str){
-      this._stepBuff(str.length);
-      return new Word(str);
-    },
-    _parseTcy : function(str){
-      this._stepBuff(str.length);
-      return new Tcy(str);
-    },
-    _parseChar : function(str){
-      this._stepBuff(str.length);
-      return new Char(str, false);
-    },
-    _parseCharRef : function(str){
-      this._stepBuff(str.length);
-      return new Char(str, true);
     }
   };
   return HtmlLexer;
+})();
+
+
+
+var TextLexer = (function (){
+  var __rex_tcy = /\d\d|!\?|!!|\?!|\?\?/;
+  var __rex_word = /^[\w!\.\?\/\:#;"',]+/;
+  var __rex_char_ref = /^&[^;\s]+;/;
+
+  /**
+     @memberof Nehan
+     @class TextLexer
+     @classdesc lexer of html text elements.
+     @constructor
+     @param src {String}
+  */
+  function TextLexer(src){
+    HtmlLexer.call(this, src);
+  }
+
+  Class.extend(TextLexer, HtmlLexer);
+
+  TextLexer.prototype._getToken = function(){
+    if(this.buff === ""){
+      return null;
+    }
+    var str = this._getByRex(__rex_word);
+    if(str){
+      if(str.length === 1){
+	return new Char(this._stepBuff(1), false);
+      } else if(str.length === 2 && str.match(__rex_tcy)){
+	return new Tcy(this._stepBuff(str.length));
+      }
+      return new Word(this._stepBuff(str.length));
+    }
+    str = this._getByRex(__rex_char_ref);
+    if(str){
+      return new Char(this._stepBuff(str.length), true);
+    }
+    str = this.buff.substring(0, 1);
+    return new Char(this._stepBuff(1), false);
+  };
+
+  TextLexer.prototype._getByRex = function(rex){
+    var rex_result = this.buff.match(rex);
+    return rex_result? rex_result[0] : null;
+  };
+
+  return TextLexer;
 })();
 
 
@@ -9365,8 +9396,8 @@ var TokenStream = (function(){
      @constructor
      @param src {String}
   */
-  function TokenStream(src){
-    this.lexer = this._createLexer(src);
+  function TokenStream(src, lexer){
+    this.lexer = lexer || this._createLexer(src);
     this.tokens = [];
     this.pos = 0;
     this.eof = false;
@@ -9728,11 +9759,19 @@ var RubyTokenStream = (function(){
 	rt = token;
 	break;
       }
-      if(Token.isText(token)){
-	rbs.push(token);
+      if(Token.isTag(token) && token.getName() === "rb"){
+	rbs = this._parseRb(token.getContent())
+      }
+      if(token instanceof Text){
+	rbs = this._parseRb(token.getContent());
       }
     }
     return new Ruby(rbs, rt);
+  };
+
+  RubyTokenStream.prototype._parseRb = function(content){
+    var lexer = new TextLexer(content);
+    return (new TokenStream(content, lexer)).getAll();
   };
 
   return RubyTokenStream;
@@ -10782,7 +10821,7 @@ var StyleContext = (function(){
     "height",
     "interactive", // flag
     "letter-spacing",
-    "line-rate",
+    //"line-height",
     "list-style-type",
     "list-style-position",
     "list-style-image",
@@ -10806,21 +10845,6 @@ var StyleContext = (function(){
 
   var __is_managed_css_prop = function(prop){
     return List.exists(__managed_css_props, Closure.eq(prop));
-  };
-
-  var __filter_decorated_inline_elements = function(elements){
-    var ret = [];
-    List.iter(elements, function(element){
-      if(element instanceof Box === false){
-	return;
-      }
-      if(element.style.isTextEmphaEnable() || element.style.getMarkupName() === "ruby"){
-	ret.push(element);
-      } else if(element.elements){
-	ret = ret.concat(__filter_decorated_inline_elements(element.elements));
-      }
-    });
-    return ret;
   };
 
   /**
@@ -10912,9 +10936,9 @@ var StyleContext = (function(){
       if(edge){
 	this.edge = edge;
       }
-      var line_rate = this._loadLineRate();
-      if(line_rate){
-	this.lineRate = line_rate;
+      var line_height = this._loadLineHeight();
+      if(line_height){
+	this.lineHeight = line_height;
       }
       var text_align = this._loadTextAlign();
       if(text_align){
@@ -11084,11 +11108,10 @@ var StyleContext = (function(){
     */
     clone : function(css){
       // no one can clone root style.
-      if(this.parent === null){
-	return this.createChild("div", css);
+      var clone_style = this.parent? new StyleContext(this.markup, this.parent, {forceCss:(css || {})}) : this.createChild("div", css);
+      if(clone_style.parent){
+	clone_style.parent.removeChild(clone_style);
       }
-      var clone_style = new StyleContext(this.markup, this.parent, {forceCss:(css || {})});
-      clone_style.parent.removeChild(clone_style);
       clone_style.setClone(true);
       return clone_style;
     },
@@ -11183,7 +11206,12 @@ var StyleContext = (function(){
       opt = opt || {};
       var elements = opt.elements || [];
       var measure = this.contentMeasure;
-      var extent = (this.parent && opt.extent && this.staticExtent === null)? opt.extent : this.contentExtent;
+      var extent = this.contentExtent;
+
+      // if elements under <body>, staticExtent or context extent(opt.extent) is available.
+      if(this.parent && opt.extent){
+	extent = this.staticExtent || opt.extent;
+      }
       var classes = ["nehan-block", "nehan-" + this.getMarkupName()].concat(this.markup.getClasses());
       var box_size = this.flow.getBoxSize(measure, extent);
       var box = new Box(box_size, this);
@@ -11202,7 +11230,7 @@ var StyleContext = (function(){
       box.elements = elements;
       box.classes = classes;
       box.charCount = List.fold(elements, 0, function(total, element){
-	return total + (element? (element.charCount || 0) : 0);
+	return total + (element.charCount || 0);
       });
       box.breakAfter = this.isBreakAfter() || opt.breakAfter || false;
       box.content = opt.content || null;
@@ -11261,8 +11289,7 @@ var StyleContext = (function(){
        @param opt.measure {int}
        @param opt.content {String}
        @param opt.charCount {int}
-       @param opt.elements {Array.<Nehan.Char | Nehan.Word | Nehan.Tcy>}
-       @param opt.texts {Array.<Nehan.Char | Nehan.Word | Nehan.Tcy>}
+       @param opt.elements {Array.<Nehan.Box>}
        @param opt.maxFontSize {int}
        @param opt.maxExtent {int}
        @param opt.lineBreak {boolean}
@@ -11271,60 +11298,98 @@ var StyleContext = (function(){
     */
     createLine : function(opt){
       opt = opt || {};
+      var is_root_line = this.isRootLine();
       var elements = opt.elements || [];
       var max_font_size = opt.maxFontSize || this.getFontSize();
-      var max_extent = opt.maxExtent || 0;
+      var max_extent = opt.maxExtent || this.staticExtent || 0;
       var char_count = opt.charCount || 0;
       var content = opt.content || null;
-      if(this.isTextEmphaEnable()){
-	max_extent = Math.max(max_extent, this.getEmphaLineExtent());
-      } else if(this.markup.name === "ruby"){
-	max_extent = Math.max(max_extent, this.getRubyLineExtent());
-      } else {
-	max_extent = Math.max(max_extent, this.getAutoLineExtent());
-      }
-      var measure = (this.parent && opt.measure && this.staticMeasure === null && !this.isRootLine())? opt.measure : this.contentMeasure;
-      if(this.display === "inline-block"){
+      var measure = this.contentMeasure;
+      if((this.parent && opt.measure && !is_root_line) || (this.display === "inline-block")){
 	measure = this.staticMeasure || opt.measure;
       }
       var line_size = this.flow.getBoxSize(measure, max_extent);
       var classes = ["nehan-inline", "nehan-inline-" + this.flow.getName()].concat(this.markup.getClasses());
-      var line = new Box(line_size, this);
+      var line = new Box(line_size, this, "line-block");
       line.display = "inline"; // caution: display of anonymous line shares it's parent markup.
       line.elements = elements;
-      line.classes = this.isRootLine()? classes : classes.concat("nehan-" + this.getMarkupName());
+      line.classes = is_root_line? classes : classes.concat("nehan-" + this.getMarkupName());
       line.charCount = char_count;
       line.maxFontSize = max_font_size;
       line.maxExtent = max_extent;
       line.content = content;
+      line.isRootLine = is_root_line;
 
       // edge of top level line is disabled.
       // for example, consider '<p>aaa<span>bbb</span>ccc</p>'.
       // anonymous line block('aaa' and 'ccc') is already edged by <p> in block level.
       // so if line is anonymous, edge must be ignored.
-      line.edge = (this.edge && !this.isRootLine())? this.edge : null;
+      line.edge = (this.edge && !is_root_line)? this.edge : null;
 
       // backup other line data. mainly required to restore inline-context.
-      if(this.isRootLine()){
+      if(is_root_line){
+	line.lineNo = opt.lineNo;
 	line.lineBreak = opt.lineBreak || false;
 	line.breakAfter = opt.breakAfter || false;
 	line.inlineMeasure = opt.measure || this.contentMeasure;
-	line.texts = opt.texts || [];
-
-	// pickup decorated elements that has different baseline(ruby or empha)
-	var decorated_elements = __filter_decorated_inline_elements(elements);
 
 	// if vertical line, needs some position fix for decorated element(ruby, empha) to align baseline.
 	if(this.isTextVertical()){
-	  this._setVertBaseline(elements, decorated_elements, max_font_size, max_extent);
-	} else if(decorated_elements.length === 0){
-	  // if horizontal line and no decorated elements exists, set line-height = exent.
-	  this.setCssAttr("line-height", max_extent + "px");
+	  this._setVertBaseline(line);
+	} else {
+	  this._setHoriBaseline(line);
 	}
 	if(this.textAlign && !this.textAlign.isStart()){
 	  this._setTextAlign(line, this.textAlign);
 	}
+	var edge_size = Math.floor(line.maxFontSize * this.getLineHeight()) - line.maxExtent;
+	if(line.elements.length > 0 && edge_size > 0){
+	  line.edge = new BoxEdge();
+	  line.edge.padding.setBefore(this.flow, (line.lineNo > 0)? edge_size : Math.floor(edge_size / 2));
+	}
       }
+      //console.log("line: %s:(%d,%d)", line.classes.join(", "), line.size.width, line.size.height);
+      return line;
+    },
+    /**
+       @memberof Nehan.StyleContext
+       @param opt
+       @param opt.measure {int}
+       @param opt.content {String}
+       @param opt.charCount {int}
+       @param opt.elements {Array.<Nehan.Char | Nehan.Word | Nehan.Tcy>}
+       @param opt.maxFontSize {int}
+       @param opt.maxExtent {int}
+       @param opt.lineBreak {boolean}
+       @param opt.breakAfter {boolean}
+       @return {Nehan.Box}
+    */
+    createTextBlock : function(opt){
+      opt = opt || {};
+      var elements = opt.elements || [];
+      var font_size = this.getFontSize();
+      var extent = opt.maxExtent || font_size;
+      var measure = opt.measure;
+      var char_count = opt.charCount || 0;
+      var content = opt.content || null;
+
+      if(opt.isEmpty){
+	extent = 0;
+      } else if(this.isTextEmphaEnable()){
+	extent = this.getEmphaTextBlockExtent();
+      } else if(this.markup.name === "ruby"){
+	extent = this.getRubyTextBlockExtent();
+      }
+      var line_size = this.flow.getBoxSize(measure, extent);
+      var classes = ["nehan-text-block"].concat(this.markup.getClasses());
+      var line = new Box(line_size, this, "text-block");
+      line.display = "inline"; // caution: display of anonymous line shares it's parent markup.
+      line.elements = elements;
+      line.classes = classes;
+      line.charCount = char_count;
+      line.maxFontSize = font_size;
+      line.maxExtent = extent;
+      line.content = content;
       return line;
     },
     /**
@@ -11732,6 +11797,9 @@ var StyleContext = (function(){
     */
     getContent : function(){
       var content = this.markup.getContent();
+      if(this.isPre()){
+	content = content.replace(/\n/g, "<br>");
+      }
       var before = Selectors.getValuePe(this, "before");
       if(!Obj.isEmpty(before)){
 	content = Html.tagWrap("before", before.content || "") + content;
@@ -11921,24 +11989,23 @@ var StyleContext = (function(){
        @memberof Nehan.StyleContext
        @return {float | int}
     */
-    getLineRate : function(){
-      return this.lineRate || Display.lineRate || 2;
+    getLineHeight : function(){
+      return this.lineHeight || Display.lineHeight || 2;
     },
     /**
        @memberof Nehan.StyleContext
        @return {int}
     */
-    getEmphaLineExtent : function(){
-      return this.getFontSize() * 3;
+    getEmphaTextBlockExtent : function(){
+      return this.getFontSize() * 2;
     },
     /**
        @memberof Nehan.StyleContext
        @return {int}
     */
-    getRubyLineExtent : function(){
-      var line_rate = this.getLineRate();
+    getRubyTextBlockExtent : function(){
       var base_font_size = this.getFontSize();
-      var extent = Math.floor(base_font_size * line_rate);
+      var extent = Math.floor(base_font_size * (1 + Display.rubyRate));
       return (base_font_size % 2 === 0)? extent : extent + 1;
     },
     /**
@@ -11946,7 +12013,7 @@ var StyleContext = (function(){
        @return {int}
     */
     getAutoLineExtent : function(){
-      return Math.floor(this.getFontSize() * this.getLineRate());
+      return Math.floor(this.getFontSize() * this.getLineHeight());
     },
     /**
        @memberof Nehan.StyleContext
@@ -11994,9 +12061,10 @@ var StyleContext = (function(){
     },
     /**
        @memberof Nehan.StyleContext
+       @param block {Nehan.Box}
        @return {Object}
     */
-    getCssBlock : function(){
+    getCssBlock : function(block){
       // notice that box-size, box-edge is box local variable,<br>
       // so style of box-size(content-size) and edge-size are generated at Box::getCssBlock
       var css = {};
@@ -12023,47 +12091,91 @@ var StyleContext = (function(){
 	css["z-index"] = this.zIndex;
       }
       this.unmanagedCss.copyValuesTo(css);
-      //css.overflow = "hidden"; // to avoid margin collapsing
+      Args.copy(css, block.size.getCss(this.flow)); // content size
+      if(block.edge){
+	Args.copy(css, block.edge.getCss());
+      }
+      Args.copy(css, block.css); // some dynamic values
       return css;
     },
     /**
        @memberof Nehan.StyleContext
+       @param line {Nehan.Box}
        @return {Object}
     */
-    getCssInline : function(){
+    getCssLineBlock : function(line){
       // notice that line-size, line-edge is box local variable,
-      // so style of line-size(content-size) and edge-size are generated at Box::getCssInline
+      // so style of line-size(content-size) and edge-size are generated at Box::getBoxCss
       var css = {};
+      Args.copy(css, line.size.getCss(this.flow));
+      if(line.edge){
+	Args.copy(css, line.edge.getCss());
+      }
+      if(this.isRootLine()){
+	Args.copy(css, this.flow.getCss());
+      }
       if(this.font){
 	Args.copy(css, this.font.getCss());
       }
       if(this.color){
 	Args.copy(css, this.color.getCss());
       }
-      // anonymous line block need to follow parent blockflow.
       if(this.isRootLine()){
-	Args.copy(css, this.flow.getCss());
+	css["line-height"] = this.getFontSize() + "px";
       }
       if(this.isTextVertical()){
+	css["display"] = "block";
+      }
+      this.unmanagedCss.copyValuesTo(css);
+      Args.copy(css, line.css);
+      return css;
+    },
+    /**
+       @memberof Nehan.StyleContext
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssTextBlock : function(line){
+      // notice that line-size, line-edge is box local variable,
+      // so style of line-size(content-size) and edge-size are generated at Box::getCssInline
+      var css = {};
+      Args.copy(css, line.size.getCss(this.flow));
+      if(line.edge){
+	Args.copy(css, line.edge.getCss());
+      }
+      if(this.isTextVertical()){
+	css["display"] = "block";
 	css["line-height"] = "1em";
 	if(Nehan.Env.client.isAppleMobileFamily()){
 	  css["letter-spacing"] = "-0.001em";
 	}
-	if(this.markup.getName() !== "ruby"){
-	  css["margin-left"] = css["margin-right"] = "auto";
-	  css["text-align"] = "center";
-	}
       } else {
+	Args.copy(css, this.flow.getCss());
+	css["line-height"] = line.maxFontSize + "px";
+
 	// enable line-height only when horizontal mode.
 	// this logic is required for drop-caps of horizontal mode.
 	// TODO: more simple solution.
-	var line_height = this.getCssAttr("line-height");
+	var line_height = this.getCssAttr("line-height")
 	if(line_height){
 	  css["line-height"] = this._computeUnitSize(line_height, this.font.size) + "px";
 	}
+	if(this.getMarkupName() === "ruby" || this.isTextEmphaEnable()){
+	  css["display"] = "inline-block";
+	}
       }
       this.unmanagedCss.copyValuesTo(css);
+      Args.copy(css, line.css);
       return css;
+    },
+    /**
+       @memberof Nehan.StyleContext
+       @param line {Nehan.Box}
+       @param image {Nehan.Box}
+       @return {Object}
+    */
+    getCssHoriInlineImage : function(line, image){
+      return this.flow.getCss();
     },
     _computeContentMeasure : function(outer_measure){
       switch(this.boxSizing){
@@ -12141,29 +12253,40 @@ var StyleContext = (function(){
 	Args.copy(line.css, padding.getCss());
       }
     },
-    _setVertBaseline : function(elements, decorated_elements, max_font_size, max_extent){
-      var flow = this.flow;
-      var base_font_size = this.getFontSize();
-      var text_center = Math.floor(max_extent / 2); // center line offset
-
-      // before align baseline, align all extents of children to max_extent.
-      List.iter(elements, function(element){
-	if(element instanceof Box && element.style.getMarkupName() !== "img" && element.style.display !== "inline-block"){
-	  element.size.setExtent(flow, max_extent);
-	}
-      });
-
-      List.iter(decorated_elements, function(element){
-	var font_size = element.style.getFontSize();
-	var text_center_offset = text_center - Math.floor(font_size / 2); // text displayed at half font-size minus from center line.
-	if(text_center_offset > 0){
-	  var edge = element.style.edge? element.style.edge.clone() : new BoxEdge();
-	  edge.padding.setAfter(flow, text_center_offset); // set offset to padding
-
+    // argument 'baseline' is not used yet.
+    // baseline: central | alphabetic
+    // ----------------------------------------------------------------
+    // In nehan.js, 'central' is used when vertical writing mode.
+    // see http://dev.w3.org/csswg/css-writing-modes-3/#text-baselines
+    _setVertBaseline : function(root_line, baseline){
+      List.iter(root_line.elements, function(element){
+	var font_size = element.maxFontSize;
+	var from_after = Math.floor((root_line.maxFontSize - font_size) / 2);
+	if (from_after > 0){
+	  var edge = element.edge || null;
+	  edge = edge? edge.clone() : new BoxEdge();
+	  edge.padding.setAfter(this.flow, from_after); // set offset to padding
+	  element.size.width = (root_line.maxExtent - from_after);
+	  
 	  // set edge to dynamic css, it has higher priority over static css(given by element.style.getCssInline)
-	  Args.copy(element.css, edge.getCss(flow));
+	  Args.copy(element.css, edge.getCss(this.flow));
 	}
-      });
+      }.bind(this));
+    },
+    _setHoriBaseline : function(root_line, baseline){
+      List.iter(root_line.elements, function(element){
+	var font_size = element.maxFontSize;
+	var from_after = root_line.maxExtent - element.maxExtent;
+	if (from_after > 0){
+	  var edge = element.edge || null;
+	  edge = edge? edge.clone() : new BoxEdge();
+	  edge.padding.setBefore(this.flow, from_after); // set offset to padding
+	  //element.size.width = (root_line.maxExtent - from_after);
+	  
+	  // set edge to dynamic css, it has higher priority over static css(given by element.style.getCssInline)
+	  Args.copy(element.css, edge.getCss(this.flow));
+	}
+      }.bind(this));
     },
     _loadSelectorCss : function(markup, parent){
       switch(markup.getName()){
@@ -12233,7 +12356,14 @@ var StyleContext = (function(){
       }
     },
     _loadDisplay : function(){
-      return this.getCssAttr("display", "inline");
+      switch(this.getMarkupName()){
+      case "first-line":
+      case "li-marker":
+      case "li-body":
+	return "block";
+      default:
+	return this.getCssAttr("display", "inline");
+      }
     },
     _loadFlow : function(){
       var value = this.getCssAttr("flow", "inherit");
@@ -12381,12 +12511,12 @@ var StyleContext = (function(){
       }
       return border;
     },
-    _loadLineRate : function(){
-      var value = this.getCssAttr("line-rate", "inherit");
-      if(value === "inherit" && this.parent && this.parent.lineRate){
-	return this.parent.lineRate;
+    _loadLineHeight : function(){
+      var value = this.getCssAttr("line-height", "inherit");
+      if(value === "inherit" && this.parent && this.parent.lineHeight){
+	return this.parent.lineHeight;
       }
-      return parseFloat(value || Display.lineRate);
+      return parseFloat(value || Display.lineHeight);
     },
     _loadTextAlign : function(){
       var value = this.getCssAttr("text-align", "inherit");
@@ -12541,6 +12671,20 @@ var CursorContext = (function(){
     },
     /**
        @memberof Nehan.CursorContext
+       @return {int}
+    */
+    getBlockLineNo : function(){
+      return this.block.getLineNo();
+    },
+    /**
+       @memberof Nehan.CursorContext
+       @return {int}
+    */
+    incBlockLineNo : function(){
+      return this.block.incLineNo();
+    },
+    /**
+       @memberof Nehan.CursorContext
        @param is_last_block {boolean}
        @return {Object} {before:[int value], after:[int value]}
     */
@@ -12586,22 +12730,23 @@ var CursorContext = (function(){
        @param element {Nehan.Box}
        @param measure {int}
     */
-    addInlineElement : function(element, measure){
-      this.inline.addElement(element, measure);
+    addInlineBoxElement : function(element, measure){
+      this.inline.addBoxElement(element, measure);
+    },
+    /**
+       @memberof Nehan.CursorContext
+       @param element {Nehan.Box}
+       @param measure {int}
+    */
+    addInlineTextElement : function(element, measure){
+      this.inline.addTextElement(element, measure);
     },
     /**
        @memberof Nehan.CursorContext
        @return {Nehan.Char | Nehan.Word | Nehan.Tcy}
     */
-    getInlineLastText : function(){
-      return this.inline.getLastText();
-    },
-    /**
-       @memberof Nehan.CursorContext
-       @return {Array.<Nehan.Char | Nehan.Word | Nehan.Tcy>}
-    */
-    getInlineTexts : function(){
-      return this.inline.getTexts();
+    getInlineLastElement : function(){
+      return this.inline.getLastElement();
     },
     /**
        @memberof Nehan.CursorContext
@@ -12689,6 +12834,7 @@ var BlockContext = (function(){
     this.breakAfter = false;
     this.contextEdge = opt.contextEdge || {before:0, after:0};
     this.isFirstBlock = (typeof opt.isFirstBlock === "undefined")? true : opt.isFirstBlock;
+    this.lineNo = opt.lineNo || 0;
   }
 
   BlockContext.prototype = {
@@ -12786,6 +12932,20 @@ var BlockContext = (function(){
     },
     /**
        @memberof Nehan.BlockContext
+       @return {int} max available size of this block context
+    */
+    getLineNo : function(){
+      return this.lineNo;
+    },
+    /**
+       @memberof Nehan.BlockContext
+       @return {int} max available size of this block context
+    */
+    incLineNo : function(){
+      return this.lineNo++;
+    },
+    /**
+       @memberof Nehan.BlockContext
        @return {Array.<Nehan.Box>} current elements added to this block context
     */
     getElements : function(){
@@ -12814,7 +12974,6 @@ var InlineContext = (function(){
     this.maxExtent = 0;
     this.maxFontSize = 0;
     this.elements = [];
-    this.texts = [];
     this.lineBreak = false; // is line-break included in line?
     this.breakAfter = false; // is break-after incuded in line?
   }
@@ -12868,43 +13027,39 @@ var InlineContext = (function(){
        @param element {Nehan.Box}
        @param measure {int}
     */
-    addElement : function(element, measure){
+    addTextElement : function(element, measure){
       this.elements.push(element);
-      if(Token.isText(element)){
-	this.texts.push(element);
-	if(element.getCharCount){
-	  this.charCount += element.getCharCount();
-	}
-      } else if(element instanceof Box){
-	if(element.maxExtent){
-	  this.maxExtent = Math.max(this.maxExtent, element.maxExtent);
-	} else {
-	  this.maxExtent = Math.max(this.maxExtent, element.getLayoutExtent());
-	}
-	if(element.maxFontSize){
-	  this.maxFontSize = Math.max(this.maxFontSize, element.maxFontSize);
-	}
-	if(element.breakAfter){
-	  this.breakAfter = true;
-	}
-      }
       this.curMeasure += measure;
+      if(element.getCharCount){
+	this.charCount += element.getCharCount();
+      }
+    },
+    /**
+       @memberof Nehan.InlineContext
+       @param element {Nehan.Box}
+       @param measure {int}
+    */
+    addBoxElement : function(element, measure){
+      this.elements.push(element);
+      this.curMeasure += measure;
+      if(element.maxExtent){
+	this.maxExtent = Math.max(this.maxExtent, element.maxExtent);
+      } else {
+	this.maxExtent = Math.max(this.maxExtent, element.getLayoutExtent());
+      }
+      if(element.maxFontSize){
+	this.maxFontSize = Math.max(this.maxFontSize, element.maxFontSize);
+      }
+      if(element.breakAfter){
+	this.breakAfter = true;
+      }
     },
     /**
        @memberof Nehan.InlineContext
        @return {Nehan.Char | Nehan.Word | Nehan.Tcy}
     */
-    getLastText : function(){
-      return List.last(this.texts);
-    },
-    /**
-       get text elements.
-
-       @memberof Nehan.InlineContext
-       @return {Array}
-    */
-    getTexts : function(){
-      return this.texts;
+    getLastElement : function(){
+      return List.last(this.elements);
     },
     /**
        get all elements.
@@ -12941,7 +13096,7 @@ var InlineContext = (function(){
        @return {int}
     */
     getMaxExtent : function(){
-      return this.maxExtent;
+      return this.isEmpty()? 0 : this.maxExtent;
     },
     /**
        @memberof Nehan.InlineContext
@@ -12958,13 +13113,6 @@ var InlineContext = (function(){
       return this.charCount;
     },
     /**
-       @memberof Nehan.InlineContext
-       @return {Nehan.Char | Nehan.Word | Nehan.Tcy}
-    */
-    getLastChar : function(){
-      return List.last(this.texts);
-    },
-    /**
        justify inline element with next head character, return null if nothing happend, or return new tail char if justified.
 
        @memberof Nehan.InlineContext
@@ -12972,9 +13120,9 @@ var InlineContext = (function(){
        @return {Nehan.Char | null}
     */
     justify : function(head){
-      var last = this.texts.length - 1, ptr = last, tail;
+      var last = this.elements.length - 1, ptr = last, tail;
       while(ptr >= 0){
-	tail = this.texts[ptr];
+	tail = this.elements[ptr];
 	if(head && head.isHeadNg && head.isHeadNg() || tail.isTailNg && tail.isTailNg()){
 	  // if tail and head is not continuous elmenet, for example
 	  // [tail(pos=29)][inline element(pos=30)][head(pos=31)]
@@ -13016,8 +13164,8 @@ var LayoutGenerator = (function(){
   function LayoutGenerator(style, stream){
     this.style = style;
     this.stream = stream;
-    this._parentLayout = null;
-    this._childLayout = null;
+    this._parent = null;
+    this._child = null;
     this._cachedElements = [];
     this._terminate = false; // used to force terminate generator.
   }
@@ -13055,8 +13203,8 @@ var LayoutGenerator = (function(){
      @param generator {Nehan.LayoutGenerator}
   */
   LayoutGenerator.prototype.setChildLayout = function(generator){
-    this._childLayout = generator;
-    generator._parentLayout = this;
+    this._child = generator;
+    generator._parent = this;
   };
 
   /**
@@ -13083,7 +13231,7 @@ var LayoutGenerator = (function(){
      @return {boolean}
   */
   LayoutGenerator.prototype.hasChildLayout = function(){
-    if(this._childLayout && this._childLayout.hasNext()){
+    if(this._child && this._child.hasNext()){
       return true;
     }
     return false;
@@ -13105,7 +13253,7 @@ var LayoutGenerator = (function(){
      @return {Nehan.Box}
   */
   LayoutGenerator.prototype.yieldChildLayout = function(context){
-    var next = this._childLayout.yield(context);
+    var next = this._child.yield(context);
     return next;
   };
 
@@ -13165,26 +13313,27 @@ var LayoutGenerator = (function(){
     }
   };
 
-  // called when each time generator yields element of output, and added it.
-  LayoutGenerator.prototype._onAddElement = function(block){
+  // called 'after' generated each element of target output is added to each context.
+  LayoutGenerator.prototype._onAddElement = function(context, block){
   };
 
-  // called when each time generator yields output.
+  // called 'after' output element is generated.
   LayoutGenerator.prototype._onCreate = function(context, output){
   };
 
-  // called when generator yields final output.
+  // called 'after' final output element is generated.
   LayoutGenerator.prototype._onComplete = function(context, output){
   };
 
   LayoutGenerator.prototype._createStartContext = function(){
-    return new CursorContext(
+    var context = new CursorContext(
       new BlockContext(this.style.contentExtent, {
 	isFirstBlock:true,
 	contextEdge:this.style.getBlockContextEdge()
       }),
       new InlineContext(this.style.contentMeasure)
     );
+    return context;
   };
 
   LayoutGenerator.prototype._createChildContext = function(parent_context){
@@ -13194,6 +13343,7 @@ var LayoutGenerator = (function(){
     return new CursorContext(
       new BlockContext(max_extent, {
 	isFirstBlock:is_first_block,
+	lineNo:parent_context.lineNo,
 	contextEdge:context_edge
       }),
       new InlineContext(this.style.contentMeasure)
@@ -13303,6 +13453,13 @@ var LayoutGenerator = (function(){
     }
   };
 
+  LayoutGenerator.prototype._createTextGenerator = function(style, text){
+    var content = text.getContent();
+    var lexer = new TextLexer(content);
+    var stream = new TokenStream(content, lexer);
+    return new TextGenerator(this.style, stream);
+  };
+
   LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, context){
     if(style.isInlineBlock()){
       return new InlineBlockGenerator(style, stream);
@@ -13311,6 +13468,8 @@ var LayoutGenerator = (function(){
       return new LazyGenerator(style, style.createLine({content:style.getContent()}));
     }
     switch(style.getMarkupName()){
+    case "ruby":
+      return new TextGenerator(style, stream);
     case "img":
       // if inline img, no content text is included in img tag, so we yield it by lazy generator.
       return new LazyGenerator(style, style.createImage());
@@ -13383,11 +13542,28 @@ var BlockGenerator = (function(){
   BlockGenerator.prototype.popCache = function(context){
     var cache = LayoutGenerator.prototype.popCache.call(this);
 
-    // if cache is inline(with no <br>), and measure size is not same as current block measure, reget it.
-    // this is caused by float-generator, because in floating layout, inline measure is changed by it's cursor position.
-    if(cache && cache.display === "inline" && cache.getLayoutMeasure(this.style.flow) < this.style.contentMeasure && !cache.br && this._childLayout && this._childLayout.rollback){
-      this._childLayout.rollback(cache);
-      return this.yieldChildLayout(context);
+    if(cache && cache.display === "inline"){
+      // restore cached line with correct line no
+      if(context.getBlockLineNo() === 0){
+	cache.lineNo = 0;
+	context.incBlockLineNo(); // cached line is next first line, so increment line no in block level context.
+      }
+      // if cache is inline(with no <br>), and measure size is not same as current block measure, reget it.
+      // this is caused by float-generator, because in floating layout, inline measure is changed by it's cursor position.
+      if(cache.getLayoutMeasure(this.style.flow) < this.style.contentMeasure && this._child){
+	//console.info("inline float fix, line = %o(%s), context = %o, child_gen = %o", cache, cache.toString(), context, this._child);
+
+	// resume inline context
+	var context2 = this._createChildContext(context);
+	context2.inline.elements = cache.elements;
+	context2.inline.curMeasure = cache.getLayoutMeasure(this.style.flow);
+	context2.inline.maxFontSize = cache.maxFontSize || this.style.getFontSize();
+	context2.inline.maxExtent = cache.maxExtent || 0;
+	context2.inline.charCount = cache.charCount || 0;
+	var line = this._child._yield(context2);
+	//console.log("line:%o(line no = %d)", line, line.lineNo);
+	return line;
+      }
     }
     return cache;
   };
@@ -13409,16 +13585,15 @@ var BlockGenerator = (function(){
       return null;
     }
 
-    // skip while-space in block-level.
-    if(Token.isWhiteSpace(token)){
-      this.stream.skipUntil(Token.isWhiteSpace);
-      return this._getNext(context);
-    }
+    //console.log("block token:%o", token);
 
-    // if text, push back stream and restart current style and stream as child inline generator.
-    if(Token.isText(token)){
-      this.stream.prev();
-      this.setChildLayout(new InlineGenerator(this.style, this.stream));
+    // text block
+    if(token instanceof Text){
+      if(token.isWhiteSpaceOnly()){
+	return this._getNext(context);
+      }
+      var text_gen = this._createTextGenerator(this.style, token);
+      this.setChildLayout(new InlineGenerator(this.style, this.stream, text_gen));
       return this.yieldChildLayout(context);
     }
 
@@ -13446,7 +13621,6 @@ var BlockGenerator = (function(){
     }
 
     // if child inline or child inline-block,
-    // delegate current style and stream to child inline-generator with first child inline generator.
     if(child_style.isInlineBlock() || child_style.isInline()){
       var first_inline_gen = this._createChildInlineGenerator(child_style, child_stream, context);
       this.setChildLayout(new InlineGenerator(this.style, this.stream, first_inline_gen));
@@ -13459,11 +13633,8 @@ var BlockGenerator = (function(){
   };
 
   BlockGenerator.prototype._addElement = function(context, element, extent){
-    if(element === null){
-      return;
-    }
     context.addBlockElement(element, extent);
-    this._onAddElement(element);
+    this._onAddElement(context, element);
   };
 
   BlockGenerator.prototype._createOutput = function(context, is_last_block){
@@ -13491,6 +13662,7 @@ var BlockGenerator = (function(){
     if(!this.hasNext()){
       this._onComplete(context, block);
     }
+    //console.log(">> block output:%o:(m=%d, e=%d):(%s)", block, block.size.height, block.size.width, block.toString());
     return block;
   };
 
@@ -13530,11 +13702,6 @@ var InlineGenerator = (function(){
   }
   Class.extend(InlineGenerator, LayoutGenerator);
 
-  var __get_line_start_pos = function(line){
-    var head = line.elements[0];
-    return (head instanceof Box)? head.style.getMarkupPos() : head.pos;
-  };
-
   InlineGenerator.prototype._yield = function(context){
     if(!context.hasInlineSpaceFor(1)){
       return null;
@@ -13560,27 +13727,6 @@ var InlineGenerator = (function(){
     return this._createOutput(context);
   };
 
-  /**
-     rollback stream position by cached element of parent generator.
-
-     @memberof Nehan.InlineGenerator
-     @param parent_cache {Nehan.Box}
-  */
-  InlineGenerator.prototype.rollback = function(parent_cache){
-    if(this.stream === null){
-      return;
-    }
-    var start_pos = (parent_cache instanceof Box)? __get_line_start_pos(parent_cache) : parent_cache.pos;
-    this.stream.setPos(start_pos); // rewind stream to the head of line.
-
-    var cache = this.popCache();
-
-    // inline child is always inline, so repeat this rollback while cache exists.
-    if(cache && this._childLayout && this._childLayout.rollback){
-      this._childLayout.rollback(cache);
-    }
-  };
-
   InlineGenerator.prototype._createChildContext = function(context){
     return new CursorContext(
       context.block, // inline generator inherits block context as it is.
@@ -13589,28 +13735,27 @@ var InlineGenerator = (function(){
   };
 
   InlineGenerator.prototype._createOutput = function(context){
-    // no like-break, no page-break, no element
     if(context.isInlineEmpty()){
       return null;
     }
-    // justify if this line is generated by overflow(not line-break).
-    if(!context.hasLineBreak() && Config.justify){
-      this._justifyLine(context);
-    }
     var line = this.style.createLine({
+      lineNo:context.getBlockLineNo(),
       lineBreak:context.hasLineBreak(), // is line break included in?
       breakAfter:context.hasBreakAfter(), // is break after included in?
       measure:context.getInlineCurMeasure(), // actual measure
       elements:context.getInlineElements(), // all inline-child, not only text, but recursive child box.
-      texts:context.getInlineTexts(), // elements but text element only.
       charCount:context.getInlineCharCount(),
-      maxExtent:context.getInlineMaxExtent(),
+      maxExtent:(context.getInlineMaxExtent() || this.style.getFontSize()),
       maxFontSize:context.getInlineMaxFontSize()
     });
 
     // set position in parent stream.
-    if(this._parentLayout && this._parentLayout.stream){
-      line.pos = Math.max(0, this._parentLayout.stream.getPos() - 1);
+    if(this._parent && this._parent.stream){
+      line.pos = Math.max(0, this._parent.stream.getPos() - 1);
+    }
+
+    if(this.style.isRootLine()){
+      context.incBlockLineNo();
     }
 
     // call _onCreate callback for 'each' output
@@ -13620,22 +13765,8 @@ var InlineGenerator = (function(){
     if(!this.hasNext()){
       this._onComplete(context, line);
     }
+    //console.log(">> line:%o, context = %o", line, context);
     return line;
-  };
-
-  InlineGenerator.prototype._justifyLine = function(context){
-    // before justify, skip single <br> to avoid double line-break.
-    var stream_next = this.stream? this.stream.peek() : null;
-    if(stream_next && Token.isTag(stream_next) && stream_next.getName() === "br"){
-      this.stream.get(); // skip <br>
-    }
-    // by stream.getToken(), stream pos has been moved to next pos already, so cur pos is the next head.
-    var next_head = this.peekLastCache() || this.stream.peek();
-    var new_head = context.justify(next_head); // if justify is occured, new_tail token is gained.
-    if(new_head){
-      this.stream.setPos(new_head.pos);
-      this.clearCache(); // stream position changed, so disable cache.
-    }
   };
 
   InlineGenerator.prototype._getNext = function(context){
@@ -13645,7 +13776,9 @@ var InlineGenerator = (function(){
     }
 
     if(this.hasChildLayout()){
-      return this.yieldChildLayout();
+      // block context is delegated, but inline context is always re-constructed.
+      // see LayoutGenerator::_createChildContext
+      return this.yieldChildLayout(context);
     }
 
     // read next token
@@ -13654,24 +13787,19 @@ var InlineGenerator = (function(){
       return null;
     }
 
-    // inline text
-    if(Token.isText(token)){
-      // if tcy, wrap all content and return Tcy object and force generator terminate.
-      if(this.style.getTextCombine() === "horizontal"){
-	return this._getTcy(context, token);
+    //console.log("inline token:%o", token);
+
+    // text block
+    if(token instanceof Text){
+      if(token.isWhiteSpaceOnly()){
+	return this._getNext(context);
       }
-      // if white-space
-      if(Token.isWhiteSpace(token)){
-	return this._getWhiteSpace(context, token);
-      }
-      return this._getText(context, token);
+      this.setChildLayout(this._createTextGenerator(this.style, token));
+      return this.yieldChildLayout(context);
     }
 
-    // if tag token, inherit style
-    var child_style = this.style;
-    if(token instanceof Tag){
-      child_style = new StyleContext(token, this.style, {cursorContext:context});
-    }
+    // if not text, it's tag token, inherit style
+    var child_style = new StyleContext(token, this.style, {cursorContext:context});
 
     if(child_style.isDisabled()){
       return this._getNext(context); // just skip
@@ -13721,118 +13849,25 @@ var InlineGenerator = (function(){
 
   InlineGenerator.prototype._breakInline = function(block_gen){
     this.setTerminate(true);
-    if(this._parentLayout === null){
+    if(this._parent === null){
       return;
     }
-    if(this._parentLayout instanceof InlineGenerator){
-      this._parentLayout._breakInline(block_gen);
+    if(this._parent instanceof InlineGenerator){
+      this._parent._breakInline(block_gen);
     } else {
-      this._parentLayout.setChildLayout(block_gen);
+      this._parent.setChildLayout(block_gen);
     }
-  };
-
-  InlineGenerator.prototype._getTcy = function(context, token){
-    this.setTerminate(true);
-    var tcy = new Tcy(this.style.getMarkupContent());
-    return this._getText(context, tcy);
-  };
-
-  InlineGenerator.prototype._getWhiteSpace = function(context, token){
-    if(this.style.isPre()){
-      if(Token.isNewLine(token)){
-	return null; // break line at new-line char.
-      }
-      return this._getText(context, token); // read as normal text
-    }
-
-    // if not pre, skip continuous white-spaces.
-    this.stream.skipUntil(Token.isNewLine);
-
-    // if white-space is new-line, ignore it.
-    if(Token.isNewLine(token)){
-      return this._getNext(context);
-    }
-    // if white-space is not new-line, use first one.
-    return this._getText(context, token);
-  };
-
-  InlineGenerator.prototype._getText = function(context, token){
-    if(!token.hasMetrics()){
-      this._setTextMetrics(context, token);
-    }
-    if(token instanceof Ruby){
-      return token;
-    }
-    switch(token._type){
-    case "char":
-    case "tcy":
-      return token;
-      case "word":
-      return this._getWord(context, token);
-    }
-  };
-
-  InlineGenerator.prototype._setTextMetrics = function(context, token){
-    // if charactor token, set kerning before setting metrics.
-    // because some additional space is added if kerning is enabled or not.
-    if(token instanceof Char && Config.kerning){
-      this._setCharKerning(context, token);
-    }
-    token.setMetrics(this.style.flow, this.style.font);
-  };
-
-  InlineGenerator.prototype._setCharKerning = function(context, char_token){
-    var next_token = this.stream.peek();
-    var prev_text = context.getInlineLastText();
-    var next_text = next_token && Token.isText(next_token)? next_token : null;
-    Kerning.set(char_token, prev_text, next_text);
-  };
-
-  InlineGenerator.prototype._getWord = function(context, token){
-    var rest_measure = context.getInlineRestMeasure();
-    var advance = token.getAdvance(this.style.flow, this.style.letterSpacing || 0);
-    
-    // if there is enough space for this word, just return.
-    if(advance <= rest_measure){
-      token.setDivided(false);
-      return token;
-    }
-    // at this point, this word is larger than rest space.
-    // but if this word size is less than max_measure and 'word-berak' is not 'break-all',
-    // just break line and show it at the head of next line.
-    if(advance <= context.getInlineMaxMeasure() && !this.style.isWordBreakAll()){
-      this.stream.prev();
-      return null;
-    }
-    // at this point, situations are
-    // 1. advance is larger than rest_measure and 'word-break' is set to 'break-all'.
-    // 2. or word itself is larger than max_measure.
-    // in these case, we must cut this word into some parts.
-    var part = token.cutMeasure(this.style.getFontSize(), rest_measure); // get sliced word
-    part.setMetrics(this.style.flow, this.style.font); // metrics for first half
-    token.setMetrics(this.style.flow, this.style.font); // metrics for second half
-    if(token.data !== "" && token.bodySize > 0){
-      this.stream.prev(); // re-parse this token because rest part is still exists.
-    }
-    part.bodySize = Math.min(rest_measure, part.bodySize); // sometimes overflows. more accurate logic is required in the future.
-    return part;
   };
 
   InlineGenerator.prototype._getMeasure = function(element){
-    if(element instanceof Box){
-      return element.getLayoutMeasure(this.style.flow);
-    }
-    if(element.getAdvance){
-      return element.getAdvance(this.style.flow, this.style.letterSpacing || 0);
-    }
-    return 0; // TODO
+    return element.getLayoutMeasure(this.style.flow);
   };
 
   InlineGenerator.prototype._addElement = function(context, element, measure){
-    context.addInlineElement(element, measure);
+    context.addInlineBoxElement(element, measure);
 
     // call _onAddElement callback for each 'element' of output.
-    this._onAddElement(element);
+    this._onAddElement(context, element);
   };
 
   return InlineGenerator;
@@ -13872,6 +13907,245 @@ var InlineBlockGenerator = (function (){
 
   return InlineBlockGenerator;
 })();
+
+var TextGenerator = (function(){
+  /**
+     @memberof Nehan
+     @class TextGenerator
+     @classdesc inline level generator, output inline level block.
+     @constructor
+     @extends {Nehan.LayoutGenerator}
+     @param style {Nehan.StyleContext}
+     @param stream {Nehan.TokenStream}
+     @param child_generator {Nehan.LayoutGenerator}
+  */
+  function TextGenerator(style, stream){
+    LayoutGenerator.call(this, style, stream);
+  }
+  Class.extend(TextGenerator, LayoutGenerator);
+
+  var __find_head_text = function(element){
+    return (element instanceof Box)? __find_head_text(element.elements[0]) : element;
+  };
+
+  TextGenerator.prototype._yield = function(context){
+    if(!context.hasInlineSpaceFor(1)){
+      return null;
+    }
+    while(this.hasNext()){
+      var element = this._getNext(context);
+      //console.log("element:%o", (element? (element.data || "?") : "null"));
+      if(element === null){
+	break;
+      }
+      var measure = this._getMeasure(element);
+      if(measure === 0){
+	break;
+      }
+      if(!context.hasInlineSpaceFor(measure)){
+	//console.log("!> text overflow:%o(m=%d)", element, measure);
+	this.pushCache(element);
+	break;
+      }
+      this._addElement(context, element, measure);
+      //console.log("cur measure:%d", context.inline.curMeasure);
+      if(!context.hasInlineSpaceFor(1)){
+	break;
+      }
+    }
+    return this._createOutput(context);
+  };
+
+  TextGenerator.prototype._createChildContext = function(context){
+    return new CursorContext(
+      context.block, // inline generator inherits block context as it is.
+      new InlineContext(context.getInlineRestMeasure())
+    );
+  };
+
+  TextGenerator.prototype._createOutput = function(context){
+    if(context.isInlineEmpty()){
+      return null;
+    }
+    // justify if this line is generated by overflow(not line-break).
+    if(Config.justify && !context.isInlineEmpty() && !context.hasLineBreak()){
+      this._justifyLine(context);
+    }
+    var line = this.style.createTextBlock({
+      lineBreak:context.hasLineBreak(), // is line break included in?
+      breakAfter:context.hasBreakAfter(), // is break after included in?
+      measure:context.getInlineCurMeasure(), // actual measure
+      elements:context.getInlineElements(), // all inline-child, not only text, but recursive child box.
+      charCount:context.getInlineCharCount(),
+      maxExtent:context.getInlineMaxExtent(),
+      maxFontSize:context.getInlineMaxFontSize(),
+      isEmpty:context.isInlineEmpty()
+    });
+
+    // set position in parent stream.
+    if(this._parent && this._parent.stream){
+      line.pos = Math.max(0, this._parent.stream.getPos() - 1);
+    }
+
+    // call _onCreate callback for 'each' output
+    this._onCreate(context, line);
+
+    // call _onComplete callback for 'final' output
+    if(!this.hasNext()){
+      this._onComplete(context, line);
+    }
+    //console.log(">> texts:[%s], context = %o, stream pos:%d, stream:%o", line.toString(), context, this.stream.getPos(), this.stream);
+    return line;
+  };
+
+  TextGenerator.prototype._justifyLine = function(context){
+    // before justify, skip single <br> to avoid double line-break.
+    var stream_next = this.stream? this.stream.peek() : null;
+    if(stream_next && Token.isTag(stream_next) && stream_next.getName() === "br"){
+      this.stream.get(); // skip <br>
+    }
+    // by stream.getToken(), stream pos has been moved to next pos already, so cur pos is the next head.
+    var next_head = this.peekLastCache() || this.stream.peek();
+    var new_head = context.justify(next_head); // if justify is occured, new_tail token is gained.
+    if(new_head){
+      this.stream.setPos(new_head.pos);
+      this.clearCache(); // stream position changed, so disable cache.
+    }
+  };
+
+  TextGenerator.prototype._getNext = function(context){
+    if(this.hasCache()){
+      var cache = this.popCache(context);
+      return cache;
+    }
+
+    // read next token
+    var token = this.stream.get();
+    if(token === null){
+      return null;
+    }
+
+    //console.log("text token:%o", token);
+
+    // if white-space
+    if(Token.isWhiteSpace(token)){
+      return this._getWhiteSpace(context, token);
+    }
+
+    // if tcy, wrap all content and return Tcy object and force generator terminate.
+    if(this.style.getTextCombine() === "horizontal"){
+      return this._getTcy(context, token);
+    }
+    return this._getText(context, token);
+  };
+
+  TextGenerator.prototype._breakInline = function(block_gen){
+    this.setTerminate(true);
+    if(this._parent === null){
+      return;
+    }
+    if(this._parent instanceof TextGenerator){
+      this._parent._breakInline(block_gen);
+    } else {
+      this._parent.setChildLayout(block_gen);
+    }
+  };
+
+  TextGenerator.prototype._getTcy = function(context, token){
+    this.setTerminate(true);
+    var tcy = new Tcy(this.style.getMarkupContent());
+    return this._getText(context, tcy);
+  };
+
+  TextGenerator.prototype._getWhiteSpace = function(context, token){
+    if(this.style.isPre()){
+      return this._getText(context, token); // read as normal text
+    }
+    // if not pre, skip continuous white-spaces.
+    //this.stream.skipUntil(Token.isNewLine);
+
+    if(Token.isNewLine(token)){
+      // skip continuous white-spaces.
+      this.stream.skipUntil(Token.isNewLine);
+      return this._getNext(context);
+    }
+    // if white-space is not new-line, use first one.
+    return this._getText(context, token);
+  };
+
+  TextGenerator.prototype._getText = function(context, token){
+    if(!token.hasMetrics()){
+      this._setTextMetrics(context, token);
+    }
+    switch(token._type){
+    case "char":
+    case "tcy":
+    case "ruby":
+      return token;
+    case "word":
+      return this._getWord(context, token);
+    }
+  };
+
+  TextGenerator.prototype._setTextMetrics = function(context, token){
+    // if charactor token, set kerning before setting metrics.
+    // because some additional space is added if kerning is enabled or not.
+    if(token instanceof Char && Config.kerning){
+      this._setCharKerning(context, token);
+    }
+    token.setMetrics(this.style.flow, this.style.font);
+  };
+
+  TextGenerator.prototype._setCharKerning = function(context, char_token){
+    var next_token = this.stream.peek();
+    var prev_text = context.getInlineLastElement();
+    var next_text = next_token && Token.isText(next_token)? next_token : null;
+    Kerning.set(char_token, prev_text, next_text);
+  };
+
+  TextGenerator.prototype._getWord = function(context, token){
+    var rest_measure = context.getInlineRestMeasure();
+    var advance = token.getAdvance(this.style.flow, this.style.letterSpacing || 0);
+    
+    // if there is enough space for this word, just return.
+    if(advance <= rest_measure){
+      token.setDivided(false);
+      return token;
+    }
+    // at this point, this word is larger than rest space.
+    // but if this word size is less than max_measure and 'word-berak' is not 'break-all',
+    // just break line and show it at the head of next line.
+    if(advance <= context.getInlineMaxMeasure() && !this.style.isWordBreakAll()){
+      return token; // overflow and cached
+    }
+    // at this point, situations are
+    // 1. advance is larger than rest_measure and 'word-break' is set to 'break-all'.
+    // 2. or word itself is larger than max_measure.
+    // in these case, we must cut this word into some parts.
+    var part = token.cutMeasure(this.style.getFontSize(), rest_measure); // get sliced word
+    part.setMetrics(this.style.flow, this.style.font); // metrics for first half
+    token.setMetrics(this.style.flow, this.style.font); // metrics for second half
+    if(token.data !== "" && token.bodySize > 0){
+      this.stream.prev(); // re-parse this token because rest part is still exists.
+    }
+    part.bodySize = Math.min(rest_measure, part.bodySize); // sometimes overflows. more accurate logic is required in the future.
+    return part;
+  };
+
+  TextGenerator.prototype._getMeasure = function(element){
+    return element.getAdvance(this.style.flow, this.style.letterSpacing || 0);
+  };
+
+  TextGenerator.prototype._addElement = function(context, element, measure){
+    context.addInlineTextElement(element, measure);
+
+    // call _onAddElement callback for each 'element' of output.
+    this._onAddElement(context, element);
+  };
+
+  return TextGenerator;
+})();
+
 
 var LinkGenerator = (function(){
   var __add_anchor = function(style){
@@ -13921,12 +14195,15 @@ var FirstLineGenerator = (function(){
   }
   Class.extend(FirstLineGenerator, BlockGenerator);
 
-  FirstLineGenerator.prototype._onAddElement = function(element){
-    if(element.display === "inline" && typeof this._first === "undefined"){
-      this._first = true; // flag that first line is already generated.
-      this.style = this.style.parent; // first-line yieled, so switch style to parent one.
-      if(this._childLayout){
-	this._childLayout.style = this.style;
+  FirstLineGenerator.prototype._onAddElement = function(context, element){
+    // first-line yieled, so switch style to parent one.
+    if(context.getBlockLineNo() === 1){
+      this.style = this.style.parent;
+      var child = this._child, parent = this;
+      while(child){
+	child.style = parent.style;
+	parent = child;
+	child = child._child;
       }
     }
   };
@@ -14203,13 +14480,10 @@ var FloatGenerator = (function(){
      @return {boolean}
   */
   FloatGenerator.prototype.hasNext = function(){
-    if(this._hasNextFloat()){
-      return true;
-    }
-    if(this._termFloat && !this.hasCache()){
+    if(this._terminate){
       return false;
     }
-    return LayoutGenerator.prototype.hasNext.call(this);
+    return this._hasNextFloat() || this.hasCache();
   };
 
   FloatGenerator.prototype._hasNextFloat = function(){
@@ -14220,23 +14494,21 @@ var FloatGenerator = (function(){
 
   FloatGenerator.prototype._yield = function(context){
     var stack = this._yieldFloatStack(context);
-
-    // if float generators are still available but output nothing bacause of too short rest-extent,
-    // break current page and output continuous block in next page.
-    if(this._hasNextFloat() && stack.isEmpty()){
-      return null;
-    }
     var rest_measure = context.getInlineRestMeasure();
     var rest_extent = stack.getExtent();
     var start_measure = rest_measure;
+    if(rest_measure <= 0 || rest_extent <= 0){
+      return null;
+    }
     return this._yieldFloat(context, stack, start_measure, rest_measure, rest_extent);
   };
 
   FloatGenerator.prototype._yieldFloat = function(context, stack, start_measure, rest_measure, rest_extent){
+    //console.log("_yieldFloat(start_rest_m:%d, rest_m:%d, rest_e:%d)", start_measure, rest_measure, rest_extent);
+
     if(rest_measure <= 0){
       return null;
     }
-    var flow = this.style.flow;
 
     // no more floated layout, just yield rest area.
     if(stack.isEmpty()){
@@ -14250,6 +14522,7 @@ var FloatGenerator = (function(){
       |       |                |
       --------------------------
     */
+    var flow = this.style.flow;
     var group = stack.pop(); // pop float group(notice that this stack is ordered by extent asc, so largest one is first obtained).
     var rest_rest_measure = rest_measure - group.getMeasure(flow); // rest of 'rest measure'
     var rest = this._yieldFloat(context, stack, start_measure, rest_rest_measure, group.getExtent(flow)); // yield rest area of this group in inline-flow(recursive).
@@ -14273,15 +14546,16 @@ var FloatGenerator = (function(){
     // float generator is terminated when
     // 1. rest space is all sweeped, and cursor is now at original inline start position.
     // 2. simply stream data is exhausted.
-    if(!this._hasNextFloat() && (start_measure === rest_measure || !this.stream.hasNext())){
-      this._termFloat = true;
+    if(!this._hasNextFloat() && !this.hasNext() && (start_measure === rest_measure || !this.stream.hasNext())){
+      //console.log("float finish!!, gen:%o, context:%o, rest_m:%d, rest_e:%d, rest_extent_space:%d", this, context, rest_measure, rest_extent, rest_extent_space);
+      this._terminate = true;
 
       // delegate cache and child to original parent.
-      this._parentLayout._cachedElements = this._childLayout._cachedElements;
-      this._parentLayout._childLayout = this._childLayout._childLayout || null;
-      if(this._parentLayout._childLayout){
-	this._parentLayout._childLayout.style.forceUpdateContextSize(start_measure, rest_extent_space);
-	this._parentLayout._childLayout._parentLayout = this._parentLayout;
+      this._parent._cachedElements = this._child._cachedElements;
+      this._parent._child = this._child._child || null;
+      if(this._parent._child){
+	this._parent._child.style.forceUpdateContextSize(start_measure, rest_extent_space);
+	this._parent._child._parent = this._parent;
       }
       return group_set;
     }
@@ -14303,22 +14577,21 @@ var FloatGenerator = (function(){
     */
     // if there is space in block-flow direction, yield rest space and wrap tfloated-set and rest-space as one.
     var space = this._yieldFloatSpace(context, rest_measure, rest_extent_space);
-    return this._wrapBlock(group_set, space);
+    return this._wrapBlocks([group_set, space]);
   };
   
   FloatGenerator.prototype._sortFloatRest = function(floated, rest){
     var floated_elements = floated.getElements();
-    return floated.isFloatStart()? floated_elements.concat(rest) : [rest].concat(floated_elements);
+    var elements = floated.isFloatStart()? floated_elements.concat(rest) : [rest].concat(floated_elements);
+    return List.filter(elements, function(element){ return element !== null; });
   };
 
-  FloatGenerator.prototype._wrapBlock = function(block1, block2){
+  FloatGenerator.prototype._wrapBlocks = function(blocks){
     var flow = this.style.flow;
-    var measure = block1.getLayoutMeasure(flow); // block2 has same measure
-    var extent = block1.getLayoutExtent(flow) + (block2? block2.getLayoutExtent(flow) : 0);
-    var elements = block2? [block1, block2] : [block1];
-    var break_after = List.exists(elements, function(element){
-      return (element && element.breakAfter)? true : false;
-    });
+    var elements = List.filter(blocks, function(block){ return block !== null; });
+    var measure = elements[0].getLayoutMeasure(flow); // block1 and block2 has same measure
+    var extent = List.sum(elements, 0, function(element){ element.getLayoutExtent(flow); });
+    var break_after = List.exists(elements, function(element){ return element.breakAfter; });
 
     // wrapping block always float to start direction
     return this.style.createChild("div", {"float":"start", measure:measure}).createBlock({
@@ -14331,10 +14604,8 @@ var FloatGenerator = (function(){
   FloatGenerator.prototype._wrapFloat = function(floated, rest, measure){
     var flow = this.style.flow;
     var extent = floated.getExtent(flow);
-    var elements = this._sortFloatRest(floated, rest);
-    var break_after = List.exists(elements, function(element){
-      return (element && element.breakAfter)? true : false;
-    });
+    var elements = this._sortFloatRest(floated, rest || null);
+    var break_after = List.exists(elements, function(element){ return element.breakAfter; });
     return this.style.createChild("div", {"float":"start", measure:measure}).createBlock({
       elements:elements,
       breakAfter:break_after,
@@ -14343,7 +14614,8 @@ var FloatGenerator = (function(){
   };
   
   FloatGenerator.prototype._yieldFloatSpace = function(context, measure, extent){
-    this._childLayout.style.forceUpdateContextSize(measure, extent);
+    //console.log("yieldFloatSpace(c = %o, m = %d, e = %d)", context, measure, extent);
+    this._child.style.forceUpdateContextSize(measure, extent);
     return this.yieldChildLayout();
   };
   
@@ -15022,21 +15294,27 @@ var LayoutEvaluator = (function(){
       div.style.clear = clear || "both";
       return div;
     },
+    _appendChild : function(root, child){
+      if(child instanceof Array){
+	List.iter(child, function(child){
+	  this._appendChild(root, child);
+	}.bind(this));
+      } else {
+	root.appendChild(child);
+      }
+    },
     _evaluate : function(tree, opt){
-      opt = opt || {};
-      var self = this;
-      var elements = List.filter(tree.elements, function(element){ return element !== null; });
-      var root = this._evalTreeRoot(tree, opt);
-      return root.innerHTML? root : List.fold(elements, root, function(ret, child){
-	root.appendChild(self._evalTreeChild(tree, child));
+      var root = this._evalTreeRoot(tree, opt || {});
+      return root.innerHTML? root : List.fold(tree.elements, root, function(ret, child){
+	this._appendChild(root, this._evalTreeChild(tree, child));
 	if(child.withBr){ // annotated to add extra br element
-	  root.appendChild(document.createElement("br"));
+	  this._appendChild(root, document.createElement("br"));
 	}
 	if(child.withClearFix){ // annotated to add extra clear fix element
-	  root.appendChild(self._createClearFix());
+	  this._appendChild(root, this._createClearFix());
 	}
 	return root;
-      });
+      }.bind(this));
     },
     _evalTreeRoot : function(tree, opt){
       opt = opt || {};
@@ -15048,7 +15326,7 @@ var LayoutEvaluator = (function(){
 	content:(opt.content || tree.getContent()),
 	rootBlockId:tree.rootBlockId,
 	blockId:tree.blockId,
-	css:(opt.css || tree.getCssRoot()),
+	css:(opt.css || tree.getBoxCss()),
 	styleContext:tree.style
       });
     },
@@ -15078,10 +15356,13 @@ var LayoutEvaluator = (function(){
       case "img":
 	return this._evalInlineImage(parent, element);
       case "a":
-	return this._evalLink(element);
+	return this._evalLink(parent, element);
       default:
-	return this._evalInlineChildTree(element);
+	return this._evalInlineChildTree(parent, element);
       }
+    },
+    _evalInlineChildTree : function(parent, element){
+      return this._evaluate(element);
     },
     _evalInlineChildText : function(parent, element){
       if(parent.style.isTextEmphaEnable() && Token.isEmphaTargetable(element)){
@@ -15096,7 +15377,7 @@ var LayoutEvaluator = (function(){
       return this._evalImage(image);
     },
     // if link uri has anchor address, add page-no to dataset where the anchor is defined.
-    _evalLink : function(link){
+    _evalLink : function(line, link){
       var uri = new Uri(link.style.getMarkupAttr("href"));
       var anchor_name = uri.getAnchorName();
       if(anchor_name){
@@ -15104,7 +15385,7 @@ var LayoutEvaluator = (function(){
 	link.classes.push("nehan-anchor-link");
 	link.style.markup.setAttr("data-page", page_no);
       }
-      return this._evaluate(link, {name:"a"});
+      return this._evalLinkElement(line, link)
     },
     _evalTextElement : function(line, text){
       switch(text._type){
@@ -15140,26 +15421,17 @@ var VertEvaluator = (function(){
   }
   Class.extend(VertEvaluator, LayoutEvaluator);
 
-  VertEvaluator.prototype._evalInlineChildTree = function(tree){
-    return this._evaluate(tree);
-  };
-
-  VertEvaluator.prototype._evalInlineImage = function(line, image){
-    image.withBr = true;
-    return this._evalTreeRoot(image, {
-      name:"img",
-      css:image.getCssInline()
+  VertEvaluator.prototype._evalLinkElement = function(line, link){
+    return this._evaluate(link, {
+      name:(link.isTextBlock()? "div" : "a")
     });
   };
 
   VertEvaluator.prototype._evalRuby = function(line, ruby){
-    var div = this._createElement("div", {
-      className:"nehan-ruby-body",
-      styleContext:line.style
-    });
-    div.appendChild(this._evalRb(line, ruby));
-    div.appendChild(this._evalRt(line, ruby));
-    return div;
+    return [
+      this._evalRb(line, ruby),
+      this._evalRt(line, ruby)
+    ];
   };
 
   VertEvaluator.prototype._evalRb = function(line, ruby){
@@ -15265,6 +15537,7 @@ var VertEvaluator = (function(){
     return this._createElement("div", {
       content:tcy.data,
       className:"nehan-tcy",
+      css:tcy.getCssVert(line),
       styleContext:line.style
     });
   };
@@ -15285,11 +15558,12 @@ var VertEvaluator = (function(){
       return this._evalPaddingChar(line, chr);
     } else if(line.letterSpacing){
       return this._evalCharLetterSpacing(line, chr);
+    } else if(chr.isSingleHalfChar()){
+      return this._evalCharSingleHalfChar(line, chr);
     }
     return this._evalCharWithBr(line, chr);
   };
 
-  // to inherit style of parent, we use <br> to keep elements in 'inline-level'.
   // for example, if we use <div> instead, parent bg-color is not inherited.
   VertEvaluator.prototype._evalCharWithBr = function(line, chr){
     chr.withBr = true;
@@ -15304,27 +15578,42 @@ var VertEvaluator = (function(){
     });
   };
 
-  VertEvaluator.prototype._evalEmpha = function(line, chr){
-    var char_body = this._createElement("span", {
+  VertEvaluator.prototype._evalCharSingleHalfChar = function(line, chr){
+    return this._createElement("div", {
       content:chr.getData(),
-      className:"nehan-empha-src",
-      css:chr.getCssVertEmphaTarget(line),
+      css:chr.getCssVertSingleHalfChar(line),
       styleContext:line.style
     });
-    var empha_body = this._createElement("span", {
-      content:line.style.textEmpha.getText(),
-      className:"nehan-empha-text",
-      css:chr.getCssVertEmphaText(line),
-      styleContext:line.style
-    });
+  };
+
+  VertEvaluator.prototype._evalEmpha = function(line, chr){
+    var char_part = this._evalEmphaSrc(line, chr);
+    var empha_part = this._evalEmphaText(line, chr);
     var wrap = this._createElement("div", {
       className:"nehan-empha-wrap",
       css:line.style.textEmpha.getCssVertEmphaWrap(line, chr),
       styleContext:line.style
     });
-    wrap.appendChild(char_body);
-    wrap.appendChild(empha_body);
+    wrap.appendChild(char_part);
+    wrap.appendChild(empha_part);
     return wrap;
+  };
+
+  VertEvaluator.prototype._evalEmphaSrc = function(line, chr){
+    return this._createElement("span", {
+      content:chr.getData(),
+      className:"nehan-empha-src",
+      styleContext:line.style
+    });
+  };
+
+  VertEvaluator.prototype._evalEmphaText = function(line, chr){
+    return this._createElement("span", {
+      content:line.style.textEmpha.getText(),
+      className:"nehan-empha-text",
+      css:chr.getCssVertEmphaText(line),
+      styleContext:line.style
+    });
   };
 
   VertEvaluator.prototype._evalPaddingChar = function(line, chr){
@@ -15392,19 +15681,30 @@ var HoriEvaluator = (function(){
   }
   Class.extend(HoriEvaluator, LayoutEvaluator);
 
-  HoriEvaluator.prototype._evalInlineChildTree = function(tree){
-    return this._evaluate(tree, {name:"span"});
+  HoriEvaluator.prototype._evalInlineChildTree = function(line, tree){
+    return this._evaluate(tree, {
+      name:"span"
+    });
+  };
+
+  HoriEvaluator.prototype._evalLinkElement = function(line, link){
+    return this._evaluate(link, {
+      name:(link.isTextBlock()? "span" : "a")
+    });
+  };
+
+  HoriEvaluator.prototype._evalInlineImage = function(line, image){
+    return this._evalTreeRoot(image, {
+      name:"img",
+      css:image.getCssHoriInlineImage(line)
+    });
   };
 
   HoriEvaluator.prototype._evalRuby = function(line, ruby){
-    var span = this._createElement("span", {
-      className:"nehan-ruby-body",
-      css:ruby.getCssHoriRuby(line),
-      styleContext:line.style
-    });
-    span.appendChild(this._evalRt(line, ruby));
-    span.appendChild(this._evalRb(line, ruby));
-    return span;
+    return [
+      this._evalRt(line, ruby),
+      this._evalRb(line, ruby)
+    ];
   };
 
   HoriEvaluator.prototype._evalRb = function(line, ruby){
@@ -15431,7 +15731,17 @@ var HoriEvaluator = (function(){
   };
 
   HoriEvaluator.prototype._evalTcy = function(line, tcy){
+    if(tcy.data.length === 1){
+      return this._evalTcySingleHalfChar(line, tcy);
+    } 
     return document.createTextNode(Html.unescape(tcy.data));
+  };
+
+  HoriEvaluator.prototype._evalTcySingleHalfChar = function(line, tcy){
+    return this._createElement("span", {
+      css:tcy.getCssHoriSingleHalfChar(line),
+      content:tcy.data
+    });
   };
 
   HoriEvaluator.prototype._evalChar = function(line, chr){
@@ -15448,18 +15758,8 @@ var HoriEvaluator = (function(){
   };
 
   HoriEvaluator.prototype._evalEmpha = function(line, chr){
-    var char_part = this._createElement("div", {
-      content:chr.data,
-      className:"nehan-empha-src",
-      css:chr.getCssHoriEmphaTarget(line),
-      styleContext:line.style
-    });
-    var empha_part = this._createElement("div", {
-      content:line.style.textEmpha.getText(),
-      className:"nehan-empha-text",
-      css:chr.getCssHoriEmphaText(line),
-      styleContext:line.style
-    });
+    var char_part = this._evalEmphaSrc(line, chr);
+    var empha_part = this._evalEmphaText(line, chr);
     var wrap = this._createElement("span", {
       css:line.style.textEmpha.getCssHoriEmphaWrap(line, chr),
       styleContext:line.style
@@ -15467,6 +15767,24 @@ var HoriEvaluator = (function(){
     wrap.appendChild(empha_part);
     wrap.appendChild(char_part);
     return wrap;
+  };
+
+  HoriEvaluator.prototype._evalEmphaSrc = function(line, chr){
+    return this._createElement("div", {
+      content:chr.data,
+      className:"nehan-empha-src",
+      css:chr.getCssHoriEmphaSrc(line),
+      styleContext:line.style
+    });
+  };
+
+  HoriEvaluator.prototype._evalEmphaText = function(line, chr){
+    return this._createElement("div", {
+      content:line.style.textEmpha.getText(),
+      className:"nehan-empha-text",
+      css:chr.getCssHoriEmphaText(line),
+      styleContext:line.style
+    });
   };
 
   HoriEvaluator.prototype._evalKerningChar = function(line, chr){
