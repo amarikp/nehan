@@ -13965,7 +13965,7 @@ var TextGenerator = (function(){
       if(measure === 0){
 	break;
       }
-      // if token is at the last of stream(maybe), check tail/head NG between two inline generators.
+      // if token is last one and maybe tail text, check tail/head NG between two inline generators.
       if(!this.stream.hasNext() && !context.hasInlineSpaceFor(measure + font_size)){
 	// avoid tail NG between two generators
 	if(element instanceof Char && element.isTailNg()){
@@ -14042,10 +14042,10 @@ var TextGenerator = (function(){
   TextGenerator.prototype._peekParentNextToken = function(){
     var root_line = this._parent;
     while(root_line && root_line instanceof InlineGenerator){
-      root_line = root_line._parent;
+      root_line = root_line._parent || null;
     }
     root_line = root_line || this._parent;
-    return root_line? (root_line.stream? root_line.stream.peek() : null) : null;
+    return (root_line && root_line.stream)? root_line.stream.peek() : null;
   };
 
   TextGenerator.prototype._justifyLine = function(context){
