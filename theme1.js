@@ -1,7 +1,11 @@
 Nehan.setStyles({
   "body":{
     "font-size":16,
-    "padding":"10px 16px",
+    "padding":{
+      "start":"10px",
+      "end":"10px",
+      "after":"10px"
+    },
     "border-color":"wheat",
     "border-style":"solid",
     "border-width":"5px",
