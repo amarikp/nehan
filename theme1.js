@@ -3,8 +3,7 @@ Nehan.setStyles({
     "font-size":16,
     "padding":{
       "start":"10px",
-      "end":"10px",
-      "after":"10px"
+      "end":"10px"
     },
     "border-color":"wheat",
     "border-style":"solid",
