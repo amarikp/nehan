@@ -11014,7 +11014,7 @@ var StyleContext = (function(){
       if(edge){
 	this.edge = edge;
 	if(this.edge.margin){
-	  this._cancelMargin();
+	  this._collapseMargin();
 	}
       }
       var line_height = this._loadLineHeight();
@@ -12554,28 +12554,28 @@ var StyleContext = (function(){
       return margin;
     },
     // precondition: this.edge.margin is available
-    _cancelMargin : function(){
+    _collapseMargin : function(){
       if(this.parent && this.parent.edge && this.parent.edge.margin){
-	this._cancelMarginParent();
+	this._collapseMarginParent();
       }
       if(this.prev && this.prev.isBlock() && this.prev.edge){
 	// cancel margin between previous sibling and cur element.
 	if(this.prev.edge.margin && this.edge.margin){
-	  this._cancelMarginSibling();
+	  this._collapseMarginSibling();
 	}
       }
     },
     // cancel margin between parent and current element
-    _cancelMarginParent : function(){
+    _collapseMarginParent : function(){
       if(this.isFirstChild()){
-	this._cancelMarginFirstChild();
+	this._collapseMarginFirstChild();
       }
       if(this.isLastChild()){
-	this._cancelMarginLastChild();
+	this._collapseMarginLastChild();
       }
     },
     // cancel margin between parent and first-child(current element)
-    _cancelMarginFirstChild : function(){
+    _collapseMarginFirstChild : function(){
       if(this.flow === this.parent.flow){
 	this._collapseMarginBetween(
 	  {flow:this.flow, edge:this.parent.edge, target:"before"},
@@ -12584,7 +12584,7 @@ var StyleContext = (function(){
       }
     },
     // cancel margin between parent and first-child(current element)
-    _cancelMarginLastChild : function(){
+    _collapseMarginLastChild : function(){
       if(this.flow === this.parent.flow){
 	this._collapseMarginBetween(
 	  {flow:this.flow, edge:this.parent.edge, target:"after"},
@@ -12593,7 +12593,7 @@ var StyleContext = (function(){
       }
     },
     // cancel margin prev sibling and current element
-    _cancelMarginSibling : function(){
+    _collapseMarginSibling : function(){
       if(this.flow === this.prev.flow){
 	// both prev and cur are floated to same direction
 	if(this.isFloated() && this.prev.isFloated()){
@@ -12649,13 +12649,13 @@ var StyleContext = (function(){
       }
       var prev_size = prev.edge.margin.getByName(prev.flow, prev.target);
       var cur_size = cur.edge.margin.getByName(cur.flow, cur.target);
-      cur.edge.margin.setByName(cur.flow, cur.target, 0);
+
       // we use float for layouting each block element in evaluation phase,
       // so standard margin collapsing doesn't work.
-      // that is because we set 'differene' of margin.
-      if(prev_size < cur_size){
-	cur.edge.margin.setByName(cur.flow, cur.target, cur_size - prev_size);
-      }
+      // that is because we use 'differene' of margin for collapsed size.
+      var new_size = (prev_size > cur_size)? 0 : cur_size - prev_size;
+
+      cur.edge.margin.setByName(cur.flow, cur.target, new_size);
     },
     _loadBorder : function(flow, font_size){
       var edge_size = this._loadEdgeSize(font_size, "border-width");
