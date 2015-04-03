@@ -1263,10 +1263,7 @@ var Style = {
     "border-color":"#a8a8a8",
     "border-style":"solid",
     //"border-spacing":"5px", // TODO: support batch style like "5px 10px".
-    "border-width":{
-      "start":"1px",
-      "before":"1px"
-    },
+    "border-width":"1px",
     "margin":{
       "start":"0.5em",
       "end":"0.5em",
@@ -1280,9 +1277,7 @@ var Style = {
   "td":{
     "display":"table-cell",
     "section-root":true,
-    "border-width":{
-      "end":"1px"
-    },
+    "border-width":"1px",
     "border-color":"#a8a8a8",
     "border-collapse":"inherit",
     "border-style":"solid",
@@ -1300,6 +1295,7 @@ var Style = {
   },
   "tfoot":{
     "display":"table-footer-group",
+    "border-width":"1px",
     "border-color":"#a8a8a8",
     "border-collapse":"inherit",
     "border-style":"solid",
@@ -1308,9 +1304,7 @@ var Style = {
   "th":{
     "display":"table-cell",
     "line-height":"1.4em",
-    "border-width":{
-      "end":"1px"
-    },
+    "border-width":"1px",
     "border-color":"#a8a8a8",
     "border-collapse":"inherit",
     "border-style":"solid",
@@ -1325,6 +1319,7 @@ var Style = {
     "display":"table-header-group",
     "font-weight":"bold",
     "background-color":"#c3d9ff",
+    "border-width":"1px",
     "border-color":"#a8a8a8",
     "border-collapse":"inherit",
     "border-style":"solid"
@@ -1339,10 +1334,8 @@ var Style = {
     "display":"table-row",
     "border-collapse":"inherit",
     "border-color":"#a8a8a8",
-    "border-style":"solid",
-    "border-width":{
-      "after":"1px"
-    }
+    "border-width":"1px",
+    "border-style":"solid"
   },
   "track":{
   },
@@ -7153,6 +7146,12 @@ var Radius2d = (function(){
   }
 
   Radius2d.prototype = {
+    clone : function(){
+      var radius2d = new Radius2d();
+      radius2d.hori = this.hori;
+      radius2d.vert = this.vert;
+      return radius2d;
+    },
     /**
        @memberof Nehan.Radius2d
        @param value {Array<int>} - 2 length array, value[0] as horizontal radius, value[1] as vertical radius.
@@ -7197,6 +7196,14 @@ var BorderRadius = (function(){
   }
 
   BorderRadius.prototype = {
+    clone : function(){
+      var radius = new BorderRadius();
+      radius.topLeft = this.topLeft.clone();
+      radius.topRight = this.topRight.clone();
+      radius.bottomRight = this.bottomRight.clone();
+      radius.bottomLeft = this.bottomLeft.clone();
+      return radius;
+    },
     /**
        @memberof Nehan.BorderRadius
        @method getArray
@@ -7533,8 +7540,7 @@ var Border = (function(){
     var border = this.copyTo(new Border());
     if(this.radius){
       // TODO
-      // border.radius = this.radius.clone();
-      border.radius = this.radius;
+      border.radius = this.radius.clone();
     }
     if(this.style){
       // TODO
@@ -10624,85 +10630,6 @@ var PartitionHashSet = (function(){
 })();
 
 
-/**
-   table partition parser module
-
-   @namespace Nehan.TablePartitionParser
-*/
-var TablePartitionParser = {
-  /**
-    @memberof Nehan.TablePartitionParser
-    @param style {Nehan.StyleContext}
-    @param stream {Nehan.TokenStream}
-    @return {Nehan.PartitionHashSet}
-  */
-  parse : function(style, stream){
-    var pset = new PartitionHashSet();
-    while(stream.hasNext()){
-      var token = stream.get();
-      if(token === null){
-	break;
-      }
-      if(!Token.isTag(token)){
-	continue;
-      }
-      switch(token.getName()){
-      case "tbody": case "thead": case "tfoot":
-	var pset2 = this.parse(style, this._getRowStream(token));
-	pset = pset.union(pset2);
-	break;
-
-      case "tr":
-	var cell_tags = this._getCellStream(token).getTokens();
-	var cell_count = cell_tags.length;
-	var partition = this._getPartition(style, cell_tags);
-	pset.add(cell_count, partition);
-	break;
-      }
-    }
-    return pset;
-  },
-  _getPartition : function(style, cell_tags){
-    var self = this;
-    var partition_count = cell_tags.length;
-    var partition_units = List.map(cell_tags, function(cell_tag){
-      return self._getPartitionUnit(style, cell_tag, partition_count);
-    });
-    return new Partition(partition_units);
-  },
-  _getPartitionUnit : function(style, cell_tag, partition_count){
-    var measure = cell_tag.getAttr("measure") || cell_tag.getAttr("width") || null;
-    if(measure){
-      return new PartitionUnit({weight:measure, isStatic:true});
-    }
-    var content = cell_tag.getContent();
-    var lines = cell_tag.getContent().replace(/<br \/>/g, "\n").replace(/<br>/g, "\n").split("\n");
-    // this sizing algorithem is not strict, but still effective,
-    // especially for text only table.
-    var max_line = List.maxobj(lines, function(line){ return line.length; });
-    var max_weight = Math.floor(style.contentMeasure / 2);
-    var min_weight = Math.floor(style.contentMeasure / (partition_count * 2));
-    var weight = max_line.length * style.getFontSize();
-    // less than 50% of parent size, but more than 50% of average partition size.
-    weight = Math.max(min_weight, Math.min(weight, max_weight));
-
-    // but confirm that weight is more than single font size of parent style.
-    weight = Math.max(style.getFontSize(), weight);
-    return new PartitionUnit({weight:weight, isStatic:false});
-  },
-  _getCellStream : function(tag){
-    return new TokenStream(tag.getContent(), {
-      filter:Closure.isTagName(["td", "th"])
-    });
-  },
-  _getRowStream : function(tag){
-    return new TokenStream(tag.getContent(), {
-      filter:Closure.isTagName(["tr"])
-    });
-  }
-};
-
-
 var SelectorPropContext = (function(){
   /**
      @memberof Nehan
@@ -10963,7 +10890,15 @@ var StyleContext = (function(){
       // initialize tree
       if(parent){
 	parent.appendChild(this);
+	/*
+	console.log("%s(%s) > %s(%s)",
+		    parent.markup.name,
+		    parent.markup.content.replace(/[\s\n]/g, "").replace(/</g, "[").replace(/>/g, "]").substring(0,10),
+		    this.markup.name,
+		    this.markup.content.replace(/[\s\n]/g, "").replace(/</g, "[").replace(/>/g, "]").substring(0,10));
+		    */
       }
+
 
       // create context for each functional css property.
       this.selectorPropContext = new SelectorPropContext(this, args.cursorContext || null);
@@ -11009,6 +10944,10 @@ var StyleContext = (function(){
       var position = this._loadPosition();
       if(position){
 	this.position = position;
+      }
+      var border_collapse = this._loadBorderCollapse();
+      if(border_collapse){
+	this.borderCollapse = border_collapse;
       }
       var edge = this._loadEdge(this.flow, this.getFontSize());
       if(edge){
@@ -11063,11 +11002,6 @@ var StyleContext = (function(){
       // 2. parent size
       // 3. current edge size.
       this.initContextSize(this.staticMeasure, this.staticExtent);
-
-      // load partition set after context size is calculated.
-      if(this.display === "table" && this.getCssAttr("table-layout") === "auto"){
-	this.tablePartition = TablePartitionParser.parse(this, new TokenStream(this.getContent()));
-      }
 
       // disable some unmanaged css properties depending on loaded style values.
       this._disableUnmanagedCssProps(this.unmanagedCss);
@@ -11141,17 +11075,37 @@ var StyleContext = (function(){
        * (a) outer_size
        * 1. if direct size is given, use it as outer_size.
        * 2. else if parent exists, use content_size of parent.
-       * 3. else if parent not exists(root), use layout size defined in layout.js.
+       * 3. else if parent not exists(root), use layout size defined in display.js.
       
        * (b) content_size
-       * 1. if edge(margin/padding/border) is defined, content_size = [outer_size] - [edge_size]
-       * 2. else(no edge),  content_size = [outer_size]
+       * 1. if edge(margin/padding/border) is defined, content_size = outer_size - edge_size
+       * 2. else(no edge),  content_size = outer_size
        *</pre>
     */
     initContextSize : function(measure, extent){
+      this.initContextMeasure(measure);
+      this.initContextExtent(extent);
+    },
+    /**
+       calculate contexual box measure
+
+       @memberof Nehan.StyleContext
+       @method initContextMeasure
+       @param measure {int}
+    */
+    initContextMeasure : function(measure){
       this.outerMeasure = measure  || (this.parent? this.parent.contentMeasure : Display.getMeasure(this.flow));
-      this.outerExtent = extent || (this.parent? this.parent.contentExtent : Display.getExtent(this.flow));
       this.contentMeasure = this._computeContentMeasure(this.outerMeasure);
+    },
+    /**
+       calculate contexual box extent
+
+       @memberof Nehan.StyleContext
+       @method initContextExtent
+       @param extent {int}
+    */
+    initContextExtent : function(extent){
+      this.outerExtent = extent || (this.parent? this.parent.contentExtent : Display.getExtent(this.flow));
       this.contentExtent = this._computeContentExtent(this.outerExtent);
     },
     /**
@@ -11290,6 +11244,21 @@ var StyleContext = (function(){
       if(this.parent && opt.extent){
 	extent = this.staticExtent || opt.extent;
       }
+      var edge = this.edge || null;
+
+      /* TODO
+      if(edge && (!opt.isFirts || !opt.isLast) && this.display !== "list-item"){
+	edge = edge.clone();
+	if(!opt.isFirst){
+	  //console.log("[%s]clear before", this.markupName);
+	  edge.clearBefore(this.flow);
+	}
+	if(!opt.isLast){
+	  //console.log("[%s]clear after", this.markupName);
+	  edge.clearAfter(this.flow);
+	}
+      }*/
+
       var classes = ["nehan-block", "nehan-" + this.getMarkupName()].concat(this.markup.getClasses());
       var box_size = this.flow.getBoxSize(measure, extent);
       var box = new Box(box_size, this);
@@ -11304,7 +11273,7 @@ var StyleContext = (function(){
       }
       box.blockId = opt.blockId;
       box.display = (this.display === "inline-block")? this.display : "block";
-      box.edge = this.edge || null;
+      box.edge = edge;
       box.elements = elements;
       box.classes = classes;
       box.charCount = List.fold(elements, 0, function(total, element){
@@ -11312,6 +11281,8 @@ var StyleContext = (function(){
       });
       box.breakAfter = this.isBreakAfter() || opt.breakAfter || false;
       box.content = opt.content || null;
+      box.isFirst = opt.isFirst || false;
+      box.isLast = opt.isLast || false;
       if(this.isPushed()){
 	box.pushed = true;
       } else if(this.isPulled()){
@@ -11319,20 +11290,6 @@ var StyleContext = (function(){
       }
       return box;
     },
-    /* TODO
-    _createBlockContextEdge : function(edge, is_first, is_last){
-      if(!is_first && !is_last){
-	return edge;
-      }
-      var context_edge = edge.clone();
-      if(is_first){
-	context_edge.clearAfter(this.flow);
-      }
-      if(is_last){
-	context_edge.clearBefore(this.flow);
-      }
-      return context_edge;
-    },*/
     /**
        @memberof Nehan.StyleContext
        @param opt
@@ -11962,6 +11919,16 @@ var StyleContext = (function(){
     },
     /**
        @memberof Nehan.StyleContext
+       @return {String}
+    */
+    getBorderCollapse : function(){
+      if(this.borderCollapse){
+	return (this.borderCollapse === "inherit")? this.parent.getBorderCollapse() : this.borderCollapse;
+      }
+      return null;
+    },
+    /**
+       @memberof Nehan.StyleContext
        @return {int}
     */
     getChildCount : function(){
@@ -12099,6 +12066,22 @@ var StyleContext = (function(){
     getEdgeExtent : function(flow){
       var edge = this.edge || null;
       return edge? edge.getExtent(flow || this.flow) : 0;
+    },
+    /**
+       @memberof Nehan.StyleContext
+       @return {int}
+    */
+    getEdgeBefore : function(flow){
+      var edge = this.edge || null;
+      return edge? edge.getBefore(flow || this.flow) : 0;
+    },
+    /**
+       @memberof Nehan.StyleContext
+       @return {int}
+    */
+    getEdgeAfter : function(flow){
+      var edge = this.edge || null;
+      return edge? edge.getAfter(flow || this.flow) : 0;
     },
     /**
        @memberof Nehan.StyleContext
@@ -12477,6 +12460,9 @@ var StyleContext = (function(){
       });
       return position;
     },
+    _loadBorderCollapse : function(){
+      return this.getCssAttr("border-collapse");
+    },
     _loadColor : function(){
       var value = this.getCssAttr("color", "inherit");
       if(value !== "inherit"){
@@ -12553,6 +12539,111 @@ var StyleContext = (function(){
       }
       return margin;
     },
+    _findParentEnableBorder : function(style, target){
+      if(style.edge && style.edge.border && style.edge.border.getByName(this.flow, target) > 0){
+	return style.edge.border;
+      }
+      return style.parent? this._findParentEnableBorder(style.parent, target) : null;
+    },
+    _collapseBorder : function(border){
+      switch(this.display){
+      case "table-header-group":
+      case "table-row-group":
+      case "table-footer-group":
+      case "table-row":
+	this._collapseBorderTableRow(border);
+	break;
+      case "table-cell":
+	this._collapseBorderTableCell(border);
+	break;
+      }
+    },
+    _collapseBorderTableRow : function(border){
+      var parent_start_border = this._findParentEnableBorder(this.parent, "start");
+      if(parent_start_border){
+	this._collapseBorderBetween(
+	  {border:parent_start_border, target:"start"},
+	  {border:border, target:"start"}
+	);
+      }
+      var parent_end_border = this._findParentEnableBorder(this.parent, "end");
+      if(parent_end_border){
+	this._collapseBorderBetween(
+	  {border:parent_end_border, target:"end"},
+	  {border:border, target:"end"}
+	);
+      }
+      if(this.prev && this.prev.edge && this.prev.edge.border){
+	this._collapseBorderBetween(
+	  {border:this.prev.edge.border, target:"after"},
+	  {border:border, target:"before"}
+	);
+      }
+      if(this.isFirstChild()){
+	var parent_before_border = this._findParentEnableBorder(this.parent, "before");
+	if(parent_before_border){
+	  this._collapseBorderBetween(
+	    {border:parent_before_border, target:"before"},
+	    {border:border, target:"before"}
+	  );
+	}
+      }
+      if(this.isLastChild()){
+	var parent_after_border = this._findParentEnableBorder(this.parent, "after");
+	if(parent_after_border){
+	  this._collapseBorderBetween(
+	    {border:parent_after_border, target:"after"},
+	    {border:border, target:"after"}
+	  );
+	}
+      }
+    },
+    _collapseBorderTableCell : function(border){
+      if(this.prev && this.prev.edge && this.prev.edge.border){
+	this._collapseBorderBetween(
+	  {border:this.prev.edge.border, target:"end"},
+	  {border:border, target:"start"}
+	);
+      }
+      var parent_before_border = this._findParentEnableBorder(this.parent, "before");
+      if(parent_before_border){
+	this._collapseBorderBetween(
+	  {border:parent_before_border, target:"before"},
+	  {border:border, target:"before"}
+	);
+      }
+      var parent_after_border = this._findParentEnableBorder(this.parent, "after");
+      if(parent_after_border){
+	this._collapseBorderBetween(
+	  {border:parent_after_border, target:"after"},
+	  {border:border, target:"after"}
+	);
+      }
+      if(this.isFirstChild()){
+	var parent_start_border = this._findParentEnableBorder(this.parent, "start");
+	if(parent_start_border){
+	  this._collapseBorderBetween(
+	    {border:parent_start_border, target:"start"},
+	    {border:border, target:"start"}
+	  );
+	}
+      }
+      if(this.isLastChild()){
+	var parent_end_border = this._findParentEnableBorder(this.parent, "end");
+	if(parent_end_border){
+	  this._collapseBorderBetween(
+	    {border:parent_end_border, target:"end"},
+	    {border:border, target:"end"}
+	  );
+	}
+      }
+    },
+    _collapseBorderBetween : function(prev, cur){
+      var prev_size = prev.border.getByName(this.flow, prev.target);
+      var cur_size = cur.border.getByName(this.flow, cur.target);
+      var new_size = Math.max(0, cur_size - prev_size);
+      cur.border.setByName(this.flow, cur.target, new_size);
+    },
     // precondition: this.edge.margin is available
     _collapseMargin : function(){
       if(this.parent && this.parent.edge && this.parent.edge.margin){
@@ -12578,8 +12669,8 @@ var StyleContext = (function(){
     _collapseMarginFirstChild : function(){
       if(this.flow === this.parent.flow){
 	this._collapseMarginBetween(
-	  {flow:this.flow, edge:this.parent.edge, target:"before"},
-	  {flow:this.flow, edge:this.edge, target:"before"}
+	  {edge:this.parent.edge, target:"before"},
+	  {edge:this.edge, target:"before"}
 	);
       }
     },
@@ -12587,8 +12678,8 @@ var StyleContext = (function(){
     _collapseMarginLastChild : function(){
       if(this.flow === this.parent.flow){
 	this._collapseMarginBetween(
-	  {flow:this.flow, edge:this.parent.edge, target:"after"},
-	  {flow:this.flow, edge:this.edge, target:"after"}
+	  {edge:this.parent.edge, target:"after"},
+	  {edge:this.edge, target:"after"}
 	);
       }
     },
@@ -12600,41 +12691,41 @@ var StyleContext = (function(){
 	  if(this.isFloatStart() && this.prev.isFloatStart()){
 	    // [start] x [start]
 	    this._collapseMarginBetween(
-	      {flow:this.prev.flow, edge:this.prev.edge, target:"end"},
-	      {flow:this.flow, edge:this.edge, target:"start"}
+	      {edge:this.prev.edge, target:"end"},
+	      {edge:this.edge, target:"start"}
 	    );
 	  } else if(this.isFloatEnd() && this.prev.isFloatEnd()){
 	    // [end] x [end]
 	    this._collapseMarginBetween(
-	      {flow:this.prev.flow, edge:this.prev.edge, target:"start"},
-	      {flow:this.flow, edge:this.edge, target:"end"}
+	      {edge:this.prev.edge, target:"start"},
+	      {edge:this.edge, target:"end"}
 	    );
 	  }
 	} else if(!this.isFloated() && !this.prev.isFloated()){
 	  // [block] x [block]
 	  this._collapseMarginBetween(
-	    {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
-	    {flow:this.flow, edge:this.edge, target:"before"}
+	    {edge:this.prev.edge, target:"after"},
+	    {edge:this.edge, target:"before"}
 	  );
 	}
       } else if(this.prev.isTextHorizontal() && this.isTextVertical()){
 	// [hori] x [vert]
 	this._collapseMarginBetween(
-	  {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
-	  {flow:this.flow, edge:this.edge, target:"before"}
+	  {edge:this.prev.edge, target:"after"},
+	  {edge:this.edge, target:"before"}
 	);
       } else if(this.prev.isTextVertical() && this.isTextHorizontal()){
 	if(this.prev.flow.isBlockRightToLeft()){
 	  // [vert:tb-rl] x [hori]
 	  this._collapseMarginBetween(
-	    {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
-	    {flow:this.flow, edge:this.edge, target:"end"}
+	    {edge:this.prev.edge, target:"after"},
+	    {edge:this.edge, target:"end"}
 	  );
 	} else {
 	  // [vert:tb-lr] x [hori]
 	  this._collapseMarginBetween(
-	    {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
-	    {flow:this.flow, edge:this.edge, target:"start"}
+	    {edge:this.prev.edge, target:"after"},
+	    {edge:this.edge, target:"start"}
 	  );
 	}
       }
@@ -12643,19 +12734,19 @@ var StyleContext = (function(){
     _collapseMarginBetween : function(prev, cur){
       // before collapsing, check if border between to edge exsits.
       // if border exists between two edge, margin collapsing is ignored.
-      if(prev.edge.border && prev.edge.border.getByName(prev.flow, prev.target) ||
-	 cur.edge.border && cur.edge.border.getByName(cur.flow, cur.target)){
+      if(prev.edge.border && prev.edge.border.getByName(this.flow, prev.target) ||
+	 cur.edge.border && cur.edge.border.getByName(this.flow, cur.target)){
 	return;
       }
-      var prev_size = prev.edge.margin.getByName(prev.flow, prev.target);
-      var cur_size = cur.edge.margin.getByName(cur.flow, cur.target);
+      var prev_size = prev.edge.margin.getByName(this.flow, prev.target);
+      var cur_size = cur.edge.margin.getByName(this.flow, cur.target);
 
       // we use float for layouting each block element in evaluation phase,
       // so standard margin collapsing doesn't work.
       // that is because we use 'differene' of margin for collapsed size.
       var new_size = (prev_size > cur_size)? 0 : cur_size - prev_size;
 
-      cur.edge.margin.setByName(cur.flow, cur.target, new_size);
+      cur.edge.margin.setByName(this.flow, cur.target, new_size);
     },
     _loadBorder : function(flow, font_size){
       var edge_size = this._loadEdgeSize(font_size, "border-width");
@@ -12665,6 +12756,12 @@ var StyleContext = (function(){
       var border = new Border();
       border.setSize(flow, edge_size);
 
+      if(this.getBorderCollapse() === "collapse" && this.display !== "table"){
+	var before = border.clone();
+	//console.log("[%s]collapse before:%o", this.markupName, before);
+	this._collapseBorder(border);
+	//console.log("[%s]collapse after:%o", this.markupName, border);
+      }
       var border_radius = this.getCssAttr("border-radius");
       if(border_radius){
 	border.setRadius(flow, this._computeCornerSize(border_radius, font_size));
@@ -13495,7 +13592,16 @@ var LayoutGenerator = (function(){
 
   LayoutGenerator.prototype._createStream = function(style){
     switch(style.getMarkupName()){
-    case "ruby": return new RubyTokenStream(style.getMarkupContent());
+    case "ruby":
+      return new RubyTokenStream(style.getMarkupContent());
+    case "tbody": case "thead": case "tfoot":
+      return new TokenStream(style.getContent(), {
+	filter:Closure.isTagName(["tr"])
+      });
+    case "tr":
+      return new TokenStream(style.getContent(), {
+	filter:Closure.isTagName(["td", "th"])
+      });
     default: return new TokenStream(style.getContent());
     } 
   };
@@ -13542,11 +13648,6 @@ var LayoutGenerator = (function(){
 
     case "table":
       return new TableGenerator(style, stream);
-
-    case "table-header-group":
-    case "table-row-group":
-    case "table-footer-group":
-      return new TableRowGroupGenerator(style, stream);
 
     case "table-row":
       return new TableRowGenerator(style, stream);
@@ -13791,6 +13892,7 @@ var BlockGenerator = (function(){
       extent:extent,
       elements:elements,
       breakAfter:context.hasBreakAfter(),
+      localPageNo:this._yieldCount,
       isFirst:this.isFirstOutput(),
       isLast:!this.hasNext()
     };
@@ -13806,7 +13908,10 @@ var BlockGenerator = (function(){
     if(!this.hasNext()){
       this._onComplete(context, block);
     }
-    //console.log(">> block output:%o:(m=%d, e=%d):(%s)", block, block.size.height, block.size.width, block.toString());
+    /*
+    console.log("[%s] block output:%o:(m=%d, e=%d, maxe=%d):(%s), first:%o, last:%o",
+		this.style.markupName, block, block.size.height, block.size.width, context.block.maxExtent, block.toString().substring(0,10), this.isFirstOutput(), !this.hasNext());
+    */
     return block;
   };
 
@@ -15059,33 +15164,76 @@ var TableGenerator = (function(){
   */
   function TableGenerator(style, stream){
     BlockGenerator.call(this, style, stream);
+
+    // load partition set after context size is calculated.
+    if(style.getCssAttr("table-layout") === "auto"){
+      style.tablePartition = this._createAutoPartition(stream);
+      stream.rewind();
+    }
   }
   Class.extend(TableGenerator, BlockGenerator);
 
+  TableGenerator.prototype._createAutoPartition = function(stream){
+    var pset = new PartitionHashSet();
+    while(stream.hasNext()){
+      var token = stream.get();
+      if(token === null){
+	break;
+      }
+      if(!Token.isTag(token)){
+	continue;
+      }
+      switch(token.getName()){
+      case "tbody": case "thead": case "tfoot":
+	var pset2 = this._createAutoPartition(new TokenStream(token.getContent(), {
+	  filter:Closure.isTagName(["tr"])
+	}));
+	pset = pset.union(pset2);
+	break;
+
+      case "tr":
+	var cell_tags = new TokenStream(token.getContent(), {
+	  filter:Closure.isTagName(["td", "th"])
+	}).getTokens();
+	var cell_count = cell_tags.length;
+	var partition = this._getPartition(cell_tags);
+	pset.add(cell_count, partition);
+	break;
+      }
+    }
+    return pset;
+  };
+
+  TableGenerator.prototype._getPartition = function(cell_tags){
+    var partition_count = cell_tags.length;
+    var partition_units = List.map(cell_tags, function(cell_tag){
+      return this._getPartitionUnit(cell_tag, partition_count);
+    }.bind(this));
+    return new Partition(partition_units);
+  };
+
+  TableGenerator.prototype._getPartitionUnit = function(cell_tag, partition_count){
+    var measure = cell_tag.getAttr("measure") || cell_tag.getAttr("width") || null;
+    if(measure){
+      return new PartitionUnit({weight:measure, isStatic:true});
+    }
+    var content = cell_tag.getContent();
+    var lines = cell_tag.getContent().replace(/<br \/>/g, "\n").replace(/<br>/g, "\n").split("\n");
+    // this sizing algorithem is not strict, but still effective,
+    // especially for text only table.
+    var max_line = List.maxobj(lines, function(line){ return line.length; });
+    var max_weight = Math.floor(this.style.contentMeasure / 2);
+    var min_weight = Math.floor(this.style.contentMeasure / (partition_count * 2));
+    var weight = max_line.length * this.style.getFontSize();
+    // less than 50% of parent size, but more than 50% of average partition size.
+    weight = Math.max(min_weight, Math.min(weight, max_weight));
+
+    // but confirm that weight is more than single font size of parent style.
+    weight = Math.max(this.style.getFontSize(), weight);
+    return new PartitionUnit({weight:weight, isStatic:false});
+  };
+
   return TableGenerator;
-})();
-
-
-// parent : table
-// tag : tbody, thead, tfoot
-// stream : [tr]
-// yield : [tr]
-var TableRowGroupGenerator = (function(){
-  /**
-     @memberof Nehan
-     @class TabeRowGroupGenerator
-     @classdesc generator of table group(tbody, thead, tfoo) content.
-     @constructor
-     @extends {Nehan.BlockGenerator}
-     @param style {Nehan.StyleContext}
-     @param stream {Nehan.TagStream}
-  */
-  function TableRowGroupGenerator(style, stream){
-    BlockGenerator.call(this, style, stream);
-  }
-  Class.extend(TableRowGroupGenerator, BlockGenerator);
-
-  return TableRowGroupGenerator;
 })();
 
 
@@ -15110,15 +15258,15 @@ var TableRowGenerator = (function(){
   Class.extend(TableRowGenerator, ParallelGenerator);
 
   TableRowGenerator.prototype._getGenerators = function(style_tr, stream){
-    var child_tags = this._getChildTags(stream);
-    var child_styles = this._getChildStyles(style_tr, child_tags);
+    var child_styles = this._getChildStyles(style_tr, stream);
     return List.map(child_styles, function(child_style){
-      return new TableCellGenerator(child_style, new TokenStream(child_style.getMarkupContent()));
-    });
+      return new TableCellGenerator(child_style, this._createStream(child_style));
+    }.bind(this));
   };
 
-  TableRowGenerator.prototype._getChildStyles = function(style_tr, child_tags){
+  TableRowGenerator.prototype._getChildStyles = function(style_tr, stream){
     var self = this;
+    var child_tags = stream.getTokens();
     var rest_measure = style_tr.contentMeasure;
     var partition = style_tr.getTablePartition();
     var part_sizes = partition? partition.getSizes({
@@ -15133,10 +15281,9 @@ var TableRowGenerator = (function(){
 	measure = part_sizes[i];
       }
       rest_measure -= measure;
-      return default_style.clone({
-	"float":"start",
-	"measure":measure
-      });
+      default_style.floatDirection = FloatDirections.get("start");
+      default_style.initContextMeasure(measure);
+      return default_style;
     });
   };
 
