@@ -12577,7 +12577,7 @@ var StyleContext = (function(){
     // cancel margin between parent and first-child(current element)
     _cancelMarginFirstChild : function(){
       if(this.flow === this.parent.flow){
-	this._setCancelMarginBetween(
+	this._collapseMarginBetween(
 	  {flow:this.flow, edge:this.parent.edge, target:"before"},
 	  {flow:this.flow, edge:this.edge, target:"before"}
 	);
@@ -12586,7 +12586,7 @@ var StyleContext = (function(){
     // cancel margin between parent and first-child(current element)
     _cancelMarginLastChild : function(){
       if(this.flow === this.parent.flow){
-	this._setCancelMarginBetween(
+	this._collapseMarginBetween(
 	  {flow:this.flow, edge:this.parent.edge, target:"after"},
 	  {flow:this.flow, edge:this.edge, target:"after"}
 	);
@@ -12599,57 +12599,62 @@ var StyleContext = (function(){
 	if(this.isFloated() && this.prev.isFloated()){
 	  if(this.isFloatStart() && this.prev.isFloatStart()){
 	    // [start] x [start]
-	    this._setCancelMarginBetween(
+	    this._collapseMarginBetween(
 	      {flow:this.prev.flow, edge:this.prev.edge, target:"end"},
 	      {flow:this.flow, edge:this.edge, target:"start"}
 	    );
 	  } else if(this.isFloatEnd() && this.prev.isFloatEnd()){
 	    // [end] x [end]
-	    this._setCancelMarginBetween(
+	    this._collapseMarginBetween(
 	      {flow:this.prev.flow, edge:this.prev.edge, target:"start"},
 	      {flow:this.flow, edge:this.edge, target:"end"}
 	    );
 	  }
 	} else if(!this.isFloated() && !this.prev.isFloated()){
 	  // [block] x [block]
-	  this._setCancelMarginBetween(
+	  this._collapseMarginBetween(
 	    {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
 	    {flow:this.flow, edge:this.edge, target:"before"}
 	  );
 	}
       } else if(this.prev.isTextHorizontal() && this.isTextVertical()){
 	// [hori] x [vert]
-	this._setCancelMarginBetween(
+	this._collapseMarginBetween(
 	  {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
 	  {flow:this.flow, edge:this.edge, target:"before"}
 	);
       } else if(this.prev.isTextVertical() && this.isTextHorizontal()){
 	if(this.prev.flow.isBlockRightToLeft()){
 	  // [vert:tb-rl] x [hori]
-	  this._setCancelMarginBetween(
+	  this._collapseMarginBetween(
 	    {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
 	    {flow:this.flow, edge:this.edge, target:"end"}
 	  );
 	} else {
 	  // [vert:tb-lr] x [hori]
-	  this._setCancelMarginBetween(
+	  this._collapseMarginBetween(
 	    {flow:this.prev.flow, edge:this.prev.edge, target:"after"},
 	    {flow:this.flow, edge:this.edge, target:"start"}
 	  );
 	}
       }
     },
-    // 1. if prev_margin > cur_margin, just clear cur_margin.
-    // 2. if prev_margin < cur_margin, clear cur_margin and add extra 'padding' to cur_block instead.
-    //    because two margin is canceled by native browser,
-    //    but edge of prev is unnabled to cancel as it is displayed already.
-    _setCancelMarginBetween : function(prev, cur){
+    // if prev_margin > cur_margin, just clear cur_margin.
+    _collapseMarginBetween : function(prev, cur){
+      // before collapsing, check if border between to edge exsits.
+      // if border exists between two edge, margin collapsing is ignored.
+      if(prev.edge.border && prev.edge.border.getByName(prev.flow, prev.target) ||
+	 cur.edge.border && cur.edge.border.getByName(cur.flow, cur.target)){
+	return;
+      }
       var prev_size = prev.edge.margin.getByName(prev.flow, prev.target);
       var cur_size = cur.edge.margin.getByName(cur.flow, cur.target);
       cur.edge.margin.setByName(cur.flow, cur.target, 0);
+      // we use float for layouting each block element in evaluation phase,
+      // so standard margin collapsing doesn't work.
+      // that is because we set 'differene' of margin.
       if(prev_size < cur_size){
-	cur.edge.padding = cur.edge.padding || new Padding();
-	cur.edge.padding.setByName(cur.flow, cur.target, cur.edge.padding.getByName(cur.flow, cur.target) + cur_size - prev_size);
+	cur.edge.margin.setByName(cur.flow, cur.target, cur_size - prev_size);
       }
     },
     _loadBorder : function(flow, font_size){
@@ -13286,6 +13291,7 @@ var LayoutGenerator = (function(){
     this._child = null;
     this._cachedElements = [];
     this._terminate = false; // used to force terminate generator.
+    this._yieldCount = 0;
   }
 
   /**
@@ -13299,7 +13305,14 @@ var LayoutGenerator = (function(){
     var context = parent_context? this._createChildContext(parent_context) : this._createStartContext();
 
     // call _yield implemented in inherited class.
-    return this._yield(context);
+    var result = this._yield(context);
+
+    // increment inner yield count
+    if(result !== null){
+      this._yieldCount++;
+    }
+
+    return result;
   };
 
   LayoutGenerator.prototype._yield = function(context){
@@ -13362,6 +13375,15 @@ var LayoutGenerator = (function(){
   */
   LayoutGenerator.prototype.hasCache = function(){
     return this._cachedElements.length > 0;
+  };
+
+  /**
+     @memberof Nehan.LayoutGenerator
+     @method isFirstOutput
+     @return {boolean}
+  */
+  LayoutGenerator.prototype.isFirstOutput = function(){
+    return this._yieldCount === 0;
   };
 
   /**
@@ -13768,7 +13790,9 @@ var BlockGenerator = (function(){
       blockId:this.blockId,
       extent:extent,
       elements:elements,
-      breakAfter:context.hasBreakAfter()
+      breakAfter:context.hasBreakAfter(),
+      isFirst:this.isFirstOutput(),
+      isLast:!this.hasNext()
     };
     if(typeof this.rootBlockId !== "undefined"){
       block_args.rootBlockId = this.rootBlockId;
@@ -13782,7 +13806,7 @@ var BlockGenerator = (function(){
     if(!this.hasNext()){
       this._onComplete(context, block);
     }
-     //console.log(">> block output:%o:(m=%d, e=%d):(%s)", block, block.size.height, block.size.width, block.toString());
+    //console.log(">> block output:%o:(m=%d, e=%d):(%s)", block, block.size.height, block.size.width, block.toString());
     return block;
   };
 
