@@ -11314,20 +11314,17 @@ var StyleContext = (function(){
       if(this.parent && opt.extent){
 	extent = this.staticExtent || opt.extent;
       }
-      var edge = this.edge || null;
 
-      /* TODO
-      if(edge && (!opt.isFirts || !opt.isLast) && this.display !== "list-item"){
+      var edge = this.edge || null;
+      if(edge && (!opt.useBeforeEdge || !opt.useAfterEdge)){
 	edge = edge.clone();
-	if(!opt.isFirst){
-	  //console.log("[%s]clear before", this.markupName);
+	if(!opt.useBeforeEdge){
 	  edge.clearBefore(this.flow);
 	}
-	if(!opt.isLast){
-	  //console.log("[%s]clear after", this.markupName);
+	if(!opt.useAfterEdge){
 	  edge.clearAfter(this.flow);
 	}
-      }*/
+      }
 
       var classes = ["nehan-block", "nehan-" + this.getMarkupName()].concat(this.markup.getClasses());
       var box_size = this.flow.getBoxSize(measure, extent);
@@ -12166,18 +12163,6 @@ var StyleContext = (function(){
     getEdgeAfter : function(flow){
       var edge = this.edge || null;
       return edge? edge.getAfter(flow || this.flow) : 0;
-    },
-    /**
-       @memberof Nehan.StyleContext
-       @return {Object} {before:xxx, after:yyy}
-    */
-    getBlockContextEdge : function(flow){
-      flow = flow || this.flow;
-      var edge = this.edge || null;
-      return {
-	before:(edge? edge.getBefore(flow) : 0),
-	after:(edge? edge.getAfter(flow) : 0)
-      };
     },
     /**
        @memberof Nehan.StyleContext
@@ -13830,11 +13815,9 @@ var LayoutGenerator = (function(){
   };
 
   LayoutGenerator.prototype._createStartContext = function(){
+    var edge_size = this._getContextEdgeSize();
     var context = new CursorContext(
-      new BlockContext(this.style.contentExtent, {
-	isFirstBlock:true,
-	contextEdge:this.style.getBlockContextEdge()
-      }),
+      new BlockContext(this.style.outerExtent - edge_size),
       new InlineContext(this.style.contentMeasure)
     );
     //console.info("[%s]start context:%o", this.style.markupName, context);
@@ -13842,19 +13825,20 @@ var LayoutGenerator = (function(){
   };
 
   LayoutGenerator.prototype._createChildContext = function(parent_context){
-    var context_edge = this.style.getBlockContextEdge();
-    var is_first_block = this.stream? this.stream.isHead() : true;
-    var max_extent = parent_context.getBlockRestExtent() - context_edge.before - context_edge.after;
+    var edge_size = this._getContextEdgeSize();
+    var max_extent = parent_context.getBlockRestExtent() - edge_size;
     var child_context = new CursorContext(
       new BlockContext(max_extent, {
-	isFirstBlock:is_first_block,
-	lineNo:parent_context.lineNo,
-	contextEdge:context_edge
+	lineNo:parent_context.lineNo
       }),
       new InlineContext(this.style.contentMeasure)
     );
     //console.info("[%s]child context:%o", this.style.markupName, child_context);
     return child_context;
+  };
+
+  LayoutGenerator.prototype._getContextEdgeSize = function(style){
+    return this.isFirstOutput()? this.style.getEdgeBefore() : 0;
   };
 
   LayoutGenerator.prototype._createStream = function(style){
@@ -14154,14 +14138,14 @@ var BlockGenerator = (function(){
     if(extent === 0 || elements.length === 0){
       return null;
     }
+    var after_edge_size = this.style.getEdgeAfter();
     var block_args = {
       blockId:this.blockId,
       extent:extent,
       elements:elements,
       breakAfter:context.hasBreakAfter(),
-      localPageNo:this._yieldCount,
-      isFirst:this.isFirstOutput(),
-      isLast:!this.hasNext(),
+      useBeforeEdge:this.isFirstOutput(),
+      useAfterEdge:(!this.hasNext() && after_edge_size <= context.getBlockRestExtent()),
       restMeasure:context.getInlineRestMeasure(),
       restExtent:context.getBlockRestExtent()
     };
@@ -15216,7 +15200,7 @@ var ParallelGenerator = (function(){
     if(blocks === null){
       return null;
     }
-    var wrap_block = this._wrapBlocks(blocks);
+    var wrap_block = this._wrapBlocks(context, blocks);
     var wrap_extent = wrap_block.getLayoutExtent(this.style.flow);
     if(!context.hasBlockSpaceFor(wrap_extent)){
       this.pushCache(wrap_block);
@@ -15273,13 +15257,18 @@ var ParallelGenerator = (function(){
     });
   };
 
-  ParallelGenerator.prototype._wrapBlocks = function(blocks){
+  ParallelGenerator.prototype._wrapBlocks = function(context, blocks){
     var flow = this.style.flow;
     var max_block = this._findMaxBlock(blocks);
-    var uniformed_blocks = this._alignContentExtent(blocks, max_block.getContentExtent(flow));
+    var wrap_extent = max_block.getContentExtent(flow);
+    var rest_extent = context.getBlockRestExtent() - wrap_extent;
+    var after_edge_size = this.style.getEdgeAfter();
+    var uniformed_blocks = this._alignContentExtent(blocks, wrap_extent);
     return this.style.createBlock({
       elements:uniformed_blocks,
-      extent:max_block.getLayoutExtent(flow)
+      extent:max_block.getLayoutExtent(flow),
+      useBeforeEdge:this.isFirstOutput(),
+      useAfterEdge:(!this.hasNext() && after_edge_size <= rest_extent)
     });
   };
 
