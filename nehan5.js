@@ -3932,10 +3932,7 @@ var TagAttrParser = (function(){
 	  this._attrs[this._left] = "true";
 	  this._left = null;
 	}
-      } else if(token === "="){
-	if(this._left === null){
-	  throw "TagAttrParser::syntax error(=)";
-	}
+      } else if(token === "=" && this._left){
 	this._attrs[this._left] = this._lexer.get() || "true";
 	this._left = null;
 	return;
@@ -8556,7 +8553,7 @@ var HtmlLexer = (function (){
 
   HtmlLexer.prototype = {
     _normalize : function(src){
-      var src = src.replace(/(<\/.+?>)(?:[\s]*)/gm, function(str, p1){
+      var src = src.replace(/(<\/.+?>)/gm, function(str, p1){
 	  return p1.toLowerCase();
       }); // convert close tag to lower case(for innerHTML of IE)
       src = __replace_single_close_tags(src);
@@ -14464,7 +14461,7 @@ var TextGenerator = (function(){
 
     while(this.hasNext()){
       var element = this._getNext(context);
-      //console.log("element:[%o]", (element? (element.data || "?") : "null"));
+      //console.log("element:%o(%s)", element, (element? (element.data || "?") : "null"));
       if(element === null){
 	break;
       }
@@ -15122,8 +15119,17 @@ var FloatGenerator = (function(){
     // if no more rest extent is left, continuous layout is displayed in context of parent generator.
     if(rest_extent_space <= 0){
       if(!this.hasNext()){
-	this._child.style.forceUpdateContextSize(root_measure, this._parent.style.contentExtent);
-	this._parent._child = this._child;
+	// before: [root] -> [float(this)] -> [root(clone)] -> [child]
+	//  after: [root] -> [child]
+	var root = this._parent;
+	var root_clone = this._child;
+	var root_child = root_clone._child || null;
+	if(root_child){
+	  root_child._parent = root;
+	  root_child.style.forceUpdateContextSize(root_measure, root.style.contentExtent);
+	}
+	root._child = root_child;
+	root._cachedElements = root_clone._cachedElements || [];
       }
       return group_set;
     }
