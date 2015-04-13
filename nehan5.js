@@ -11211,6 +11211,10 @@ var StyleContext = (function(){
        @param extent {int}
     */
     forceUpdateContextSize : function(measure, extent){
+      // measure block size of marker block size or table is always fixed.
+      if(this.markupName === "li-marker" || this.display === "table"){
+	return;
+      }
       this.initContextSize(measure, extent);
 
       // force re-culculate context-size of children based on new context-size of parent.
