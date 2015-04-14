@@ -13628,6 +13628,9 @@ var InlineContext = (function(){
 	  break;
 	}
       }
+      if(ptr < 0){
+	return this.elements.pop();
+      }
       // if ptr moved, justification is executed.
       if(0 <= ptr && ptr < last){
 	// disable text after new tail pos.
@@ -14465,7 +14468,6 @@ var TextGenerator = (function(){
 
     while(this.hasNext()){
       var element = this._getNext(context);
-      //console.log("element:%o(%s)", element, (element? (element.data || "?") : "null"));
       if(element === null){
 	break;
       }
