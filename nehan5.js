@@ -4964,6 +4964,9 @@ var Char = (function(){
 	this._setCnv("&#8593;"); break;
       case 8220: // left double quotation mark
       case 8221: // right double quotateion mark
+	this.vscale = 0.5;
+	this._setRotate(90);
+	break;
       case 8786: // approximately equal to
 	this._setRotate(90); break;
       }
