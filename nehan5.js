@@ -4823,6 +4823,7 @@ var Char = (function(){
       this.rotate = angle;
     },
     _setRotateOrImg : function(angle, img, vscale){
+      this.vscale = vscale || 1;
       if(Nehan.Env.isTransformEnable){
 	this._setRotate(angle);
 	return;
@@ -5374,15 +5375,20 @@ var Tcy = (function(){
     getCssVert : function(line){
       var css = {};
       css["text-align"] = "center";
+      if(this.data.length >= 2){
+	css["width"] = "1.2em"; // a little wider
+      }
       return css;
     },
     /**
        @memberof Nehan.Char
        @return {Object}
     */
-    getCssHoriSingleHalfChar : function(line){
+    getCssHori : function(line){
       var css = {};
-      css["text-align"] = "center";
+      if(this.data.length === 1){
+	css["margin-left"] = "0.25em";
+      }
       return css;
     },
     /**
@@ -5398,7 +5404,11 @@ var Tcy = (function(){
        @param font {Nehan.Font}
     */
     setMetrics : function(flow, font){
-      this.bodySize = font.size;
+      if(flow.isTextVertical()){
+	this.bodySize = font.size;
+      } else {
+	this.bodySize = (this.data.length <= 1)? font.size : Math.floor(1.2 * font.size);
+      }
     }
   };
 
@@ -8232,7 +8242,7 @@ var Box = (function(){
   function Box(size, style, type){
     this.size = size;
     this.style = style;
-    this.type = type || "block";
+    this._type = type || "block";
     this.elements = [];
     this.css = {};
   }
@@ -8269,14 +8279,14 @@ var Box = (function(){
        @return {boolean}
     */
     isLine : function(){
-      return this.type === "line-block";
+      return this._type === "line-block";
     },
     /**
        @memberof Nehan.Box
        @return {boolean}
     */
     isTextBlock : function(){
-      return this.type === "text-block";
+      return this._type === "text-block";
     },
     /**
        @memberof Nehan.Box
@@ -16175,6 +16185,9 @@ var VertEvaluator = (function(){
     } else if(chr.isHalfSpaceChar(chr)){
       return this._evalHalfSpaceChar(line, chr);
     } else if(chr.isRotateChar()){
+      if(chr.isVertGlyphEnable()){
+	return this._evalVerticalGlyph(line, chr);
+      }
       return this._evalRotateChar(line, chr);
     } else if(chr.isSmallKana()){
       return this._evalSmallKana(line, chr);
@@ -16344,15 +16357,8 @@ var HoriEvaluator = (function(){
   };
 
   HoriEvaluator.prototype._evalTcy = function(line, tcy){
-    if(tcy.data.length === 1){
-      return this._evalTcySingleHalfChar(line, tcy);
-    } 
-    return document.createTextNode(Html.unescape(tcy.data));
-  };
-
-  HoriEvaluator.prototype._evalTcySingleHalfChar = function(line, tcy){
     return this._createElement("span", {
-      css:tcy.getCssHoriSingleHalfChar(line),
+      css:tcy.getCssHori(line),
       content:tcy.data
     });
   };
