@@ -4713,11 +4713,20 @@ var Char = (function(){
        @memberof Nehan.Char
        @return {Object}
     */
+    getCssHoriHalfSpaceChar : function(line){
+      var css = {};
+      css.display = "inline-block";
+      css.width = this.bodySize + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
     getCssVertHalfSpaceChar : function(line){
-      var css = {}, font_size = line.style.getFontSize();
-      var half = Math.round(font_size / 2);
-      css.height = half + "px";
-      css["line-height"] = half + "px";
+      var css = {};
+      css.height = this.bodySize + "px";
+      css["line-height"] = this.bodySize + "px";
       return css;
     },
     /**
@@ -6033,8 +6042,10 @@ var TextMetrics = (function(){
     */
     getMeasure : function(font, text){
       var metrics = this.getMetrics(font, text);
-      var space = Math.floor(Display.vertWordSpaceRate * font.size);
-      return metrics.width + space;
+      //var space = Math.floor(Display.vertWordSpaceRate * font.size);
+      //var measure = metrics.width + space;
+      //return measure;
+      return metrics.width;
     }
   };
 })();
@@ -14551,7 +14562,7 @@ var TextGenerator = (function(){
 	break;
       }
       var measure = this._getMeasure(element);
-      //console.log("[%s]%o(%s)element:%s, m = %d (%d/%d)", this.style.markupName, element, (element.data || ""), measure, context.inline.curMeasure, context.inline.maxMeasure);
+      //console.log("[%s]%o(%s), m = %d (%d/%d, rest=%d)", this.style.markupName, element, (element.data || ""), measure, context.inline.curMeasure, context.inline.maxMeasure);
       if(measure === 0){
 	break;
       }
@@ -16446,7 +16457,7 @@ var HoriEvaluator = (function(){
 
   HoriEvaluator.prototype._evalChar = function(line, chr){
     if(chr.isHalfSpaceChar()){
-      return document.createTextNode(chr.data);
+      return this._evalHalfSpaceChar(line, chr);
     }
     if(chr.isCharRef()){
       return document.createTextNode(Html.unescape(chr.data));
@@ -16517,6 +16528,13 @@ var HoriEvaluator = (function(){
     return this._createElement("span", {
       content:chr.data,
       css:chr.getCssPadding(line)
+    });
+  };
+
+  HoriEvaluator.prototype._evalHalfSpaceChar = function(line, chr){
+    return this._createElement("span", {
+      content:"&nbsp;",
+      css:chr.getCssHoriHalfSpaceChar(line)
     });
   };
 
