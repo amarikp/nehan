@@ -4748,14 +4748,14 @@ var Char = (function(){
        @return {Float | Int}
     */
     getHoriScale : function(){
-      return this.hscale? this.hscale : 1;
+      return this.hscale || 1;
     },
     /**
        @memberof Nehan.Char
        @return {Float | Int}
     */
     getVertScale : function(){
-      return this.vscale? this.vscale : 1;
+      return this.vscale || 1;
     },
     /**
        @memberof Nehan.Char
@@ -4802,10 +4802,6 @@ var Char = (function(){
        @param font {Nehan.Font}
     */
     setMetrics : function(flow, font){
-      if(this.isHalfSpaceChar()){
-	this.bodySize = Math.floor(font.size * Display.halfSpaceSizeRate);
-	return;
-      }
       var is_vert = flow.isTextVertical();
       var step_scale = is_vert? this.getVertScale() : this.getHoriScale();
       this.bodySize = (step_scale != 1)? Math.round(font.size * step_scale) : font.size;
@@ -4829,6 +4825,7 @@ var Char = (function(){
     },
     _setCnv : function(cnv, vscale, hscale){
       this.cnv = cnv;
+      this.isRef = true;
       this.vscale = vscale || 1;
       this.hscale = hscale || this.vscale;
     },
@@ -4847,16 +4844,18 @@ var Char = (function(){
       switch(c1){
       case "&lt;":
 	this._setRotateOrImg(90, "kakko7", 0.5);
+	this.hscale = 0.5;
 	break;
       case "&gt;":
 	this._setRotateOrImg(90, "kakko8", 0.5);
+	this.hscale = 0.5;
 	break;
       }
     },
     _setupNormal : function(code){
       switch(code){
       case 32: // half scape char
-	this._setCnv("&nbsp;", 0.5, 0.5); break;
+	this._setCnv("&nbsp;", Display.halfSpaceSizeRate, Display.halfSpaceSizeRate); break;
       case 12300:
 	this._setImg("kakko1", 0.5); break;
       case 65378:
@@ -8643,15 +8642,17 @@ var HtmlLexer = (function (){
       if(this.buff === ""){
 	return null;
       }
-      var match;
+      var match, content;
       match = this.buff.match(__rex_tag);
       if(match === null){
-	return new Text(this._stepBuff(this.buff.length));
+	content = this._stepBuff(this.buff.length);
+	return new Text(content);
       }
       if(match.index === 0){
 	return this._parseTag(match[0]);
       }
-      return new Text(this._stepBuff(match.index));
+      content = this._stepBuff(match.index);
+      return new Text(content);
     },
     _getTagContent : function(tag_name){
       // why we added [\\s|>] for open_tag_rex?
@@ -8691,7 +8692,7 @@ var HtmlLexer = (function (){
     },
     _parseChildContentTag : function(tag){
       var result = this._getTagContent(tag.name);
-      tag.setContent(Utils.trimCRLF(result.content));
+      tag.setContent(result.content);
       if(result.closed){
 	this._stepBuff(result.content.length + tag.name.length + 3); // 3 = "</>".length
       } else {
@@ -8707,7 +8708,7 @@ var HtmlLexer = (function (){
 
 var TextLexer = (function (){
   var __rex_tcy = /\d\d|!\?|!!|\?!|\?\?/;
-  var __rex_word = /^[\w!\.\?\/\:#;"',]+/;
+  var __rex_word = /^[a-zA-Z0-9.?\/:#;"',_]+/;
   var __rex_char_ref = /^&[^;\s]+;/;
 
   /**
@@ -9772,6 +9773,15 @@ var TokenStream = (function(){
     getSeekPercent : function(){
       var seek_pos = this.getSeekPos();
       return this.lexer.getSeekPercent(seek_pos);
+    },
+    /**
+       get stream src text
+
+       @memberof Nehan.TokenStream
+       @return {string}
+    */
+    getSrc : function(){
+      return this.lexer.getSrc();
     },
     /**
        iterate tokens by [fn].
@@ -11094,6 +11104,10 @@ var StyleContext = (function(){
       if(word_break){
 	this.wordBreak = word_break;
       }
+      var white_space = this._loadWhiteSpace();
+      if(white_space){
+	this.whiteSpace = white_space;
+      }
       // static size is defined in selector or tag attr, hightest priority
       this.staticMeasure = this._loadStaticMeasure();
       this.staticExtent = this._loadStaticExtent();
@@ -11702,8 +11716,7 @@ var StyleContext = (function(){
        @return {boolean}
     */
     isPre : function(){
-      var white_space = this.getCssAttr("white-space", "normal");
-      return white_space === "pre";
+      return this.whiteSpace === "pre";
     },
     /**
        @memberof Nehan.StyleContext
@@ -11953,9 +11966,6 @@ var StyleContext = (function(){
     */
     getContent : function(){
       var content = this.getCssAttr("content") || this.markup.getContent();
-      if(this.isPre()){
-	content = content.replace(/\n/g, "<br>");
-      }
       var before = Selectors.getValuePe(this, "before");
       if(!Obj.isEmpty(before)){
 	content = Html.tagWrap("before", before.content || "") + content;
@@ -12954,6 +12964,10 @@ var StyleContext = (function(){
     },
     _loadWordBreak : function(){
       return this.getCssAttr("word-break");
+    },
+    _loadWhiteSpace : function(){
+      var inherit = this.parent? this.parent.whiteSpace : "normal";
+      return this.getCssAttr("white-space", inherit);
     },
     _loadListStyle : function(){
       var list_style_type = this.getCssAttr("list-style-type", "none");
@@ -14330,6 +14344,7 @@ var InlineGenerator = (function(){
 	break;
       }
       var measure = this._getMeasure(element);
+      //console.log("[%s]%o(%s), m = %d (%d/%d)", this.style.markupName, element, (element.toString() || ""), measure, context.inline.curMeasure, context.inline.maxMeasure);
       if(measure === 0){
 	break;
       }
@@ -14415,9 +14430,6 @@ var InlineGenerator = (function(){
 
     // text block
     if(token instanceof Text){
-      if(token.isWhiteSpaceOnly()){
-	return this._getNext(context);
-      }
       this.setChildLayout(this._createTextGenerator(this.style, token));
       return this.yieldChildLayout(context);
     }
@@ -14453,6 +14465,11 @@ var InlineGenerator = (function(){
 
     case "br":
       context.setLineBreak(true);
+      if(!this.style.isPre()){
+	this.stream.skipUntil(function(token){
+	  return (token instanceof Text && token.isWhiteSpaceOnly());
+	});
+      }
       return null;
 
     case "page-break": case "pbr": case "end-page":
@@ -14564,7 +14581,7 @@ var TextGenerator = (function(){
 	break;
       }
       var measure = this._getMeasure(element);
-      //console.log("[%s]%o(%s), m = %d (%d/%d, rest=%d)", this.style.markupName, element, (element.data || ""), measure, context.inline.curMeasure, context.inline.maxMeasure);
+      //console.log("[%s]%o(%s), m = %d (%d/%d)", this.style.markupName, element, (element.data || ""), measure, context.inline.curMeasure, context.inline.maxMeasure);
       if(measure === 0){
 	break;
       }
@@ -14740,7 +14757,7 @@ var TextGenerator = (function(){
 
   TextGenerator.prototype._getWhiteSpace = function(context, token){
     if(this.style.isPre()){
-      return this._getText(context, token); // read as normal text
+      return this._getWhiteSpacePre(context, token);
     }
     if(Token.isNewLine(token)){
       // skip continuous white-spaces.
@@ -14749,6 +14766,14 @@ var TextGenerator = (function(){
     }
     // if white-space is not new-line, use first one.
     return this._getText(context, token);
+  };
+
+  TextGenerator.prototype._getWhiteSpacePre = function(context, token){
+    if(Token.isNewLine(token)){
+      context.setLineBreak(true);
+      return null;
+    }
+    return this._getText(context, token); // read as normal text
   };
 
   TextGenerator.prototype._getText = function(context, token){
