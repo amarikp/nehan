@@ -9715,7 +9715,9 @@ var TokenStream = (function(){
     */
     get : function(){
       var token = this.peek();
-      this.pos++;
+      if(token){
+	this.pos++;
+      }
       return token;
     },
     /**
@@ -13724,7 +13726,7 @@ var InlineContext = (function(){
     justify : function(head){
       var last = this.elements.length - 1, ptr = last, tail = null;
       // if element is only Tcy('a.'), then stream last is '.'(head NG) but element last(Tcy) is not head NG.
-      if(head && head instanceof Char && head.isHeadNg() && this.elements.length === 1 && !(this.elements[0] instanceof Tcy)){
+      if(head && head.isHeadNg && head.isHeadNg() && this.elements.length === 1 && !(this.elements[0] instanceof Tcy)){
 	return this.elements.pop();
       }
       while(ptr >= 0){
@@ -13743,7 +13745,7 @@ var InlineContext = (function(){
 	}
       }
       // even if first element is tail ng, sweep it out to the head of next line.
-      if(ptr < 0 && tail && tail.isTailNg()){
+      if(ptr < 0 && tail && tail.isTailNg && tail.isTailNg()){
 	return tail;
       }
       // if ptr moved, justification is executed.
@@ -14241,7 +14243,6 @@ var BlockGenerator = (function(){
 
     // if disabled style, just skip
     if(child_style.isDisabled()){
-      this.style.removeChild(child_style);
       return this._getNext(context);
     }
 
@@ -14288,7 +14289,12 @@ var BlockGenerator = (function(){
     var extent = context.getBlockCurExtent();
     var elements = context.getBlockElements();
     if(extent === 0 || elements.length === 0){
-      console.log("void layout found:cache=%o, has_next:%o, child:%o", this._cachedElements, this.hasNext(), this._child);
+      /*
+      var cache = (this._cachedElements.length > 0)? this._cachedElements[0] : null;
+      var cache_str = cache? cache.toString() : "null";
+      var flow_str = this.style.isTextVertical()? "v" : "h";
+      //console.log("void(flow=%s), gen:%o, context:%o, cache:%o(%s), stream at:%d(has next:%o)", flow_str, this, context, cache, cache_str, this.stream.getPos(), this.stream.hasNext());
+      */
       return null;
     }
     var after_edge_size = this.style.getEdgeAfter();
