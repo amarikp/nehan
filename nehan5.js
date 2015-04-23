@@ -491,7 +491,7 @@ var Display = {
 
      @memberof Nehan.Display
   */
-  boldRate:0.5,
+  boldRate:0.12,
   /**
      standard line-height.
 
@@ -5289,10 +5289,11 @@ var Word = (function(){
     */
     setMetrics : function(flow, font){
       if(Config.useStrictWordMetrics && TextMetrics.isEnable()){
+	// caution: sometimes bold style is not correctly calculated.
 	this.bodySize = Math.round(TextMetrics.getMeasure(font, this.data));
-	return;
+      } else {
+	this.bodySize = Math.round(this.data.length * font.size * 0.5);
       }
-      this.bodySize = Math.round(this.data.length * font.size * 0.5);
       if(font.isBold()){
 	this.bodySize += Math.round(Display.boldRate * this.bodySize);
       }
@@ -9784,15 +9785,6 @@ var TokenStream = (function(){
       return this.lexer.getSeekPercent(seek_pos);
     },
     /**
-       get stream src text
-
-       @memberof Nehan.TokenStream
-       @return {string}
-    */
-    getSrc : function(){
-      return this.lexer.getSrc();
-    },
-    /**
        iterate tokens by [fn].
 
        @memberof Nehan.TokenStream
@@ -11471,7 +11463,6 @@ var StyleContext = (function(){
     createLine : function(opt){
       opt = opt || {};
       var is_root_line = this.isRootLine();
-      var is_line_break = opt.isLineBreak || false;
       var elements = opt.elements || [];
       var max_font_size = opt.maxFontSize || this.getFontSize();
       var max_extent = opt.maxExtent || this.staticExtent || 0;
@@ -11498,10 +11489,6 @@ var StyleContext = (function(){
       // anonymous line block('aaa' and 'ccc') is already edged by <p> in block level.
       // so if line is anonymous, edge must be ignored.
       line.edge = (this.edge && !is_root_line)? this.edge : null;
-
-      if(is_line_break){
-	line.css["background-color"] = "transparent";
-      }
 
       // backup other line data. mainly required to restore inline-context.
       if(is_root_line){
@@ -12336,6 +12323,7 @@ var StyleContext = (function(){
       }
       this.unmanagedCss.copyValuesTo(css);
       Args.copy(css, line.css);
+      css["background-color"] = this.getCssAttr("background-color", "transparent");
       return css;
     },
     /**
@@ -12374,6 +12362,7 @@ var StyleContext = (function(){
       }
       this.unmanagedCss.copyValuesTo(css);
       Args.copy(css, line.css);
+      css["background-color"] = this.getCssAttr("background-color", "transparent");
       return css;
     },
     /**
@@ -14265,7 +14254,6 @@ var BlockGenerator = (function(){
     // if line-break, output empty line(extent = font-size).
     if(child_style.isLineBreak()){
       return this.style.createLine({
-	isLineBreak:true,
 	maxExtent:this.style.getFontSize()
       });
     }
