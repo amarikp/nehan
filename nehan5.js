@@ -16142,7 +16142,7 @@ var LayoutEvaluator = (function(){
       case "img":
 	return this._evalImage(element);
       case "a":
-	return this._evalLink(element);
+	return this._evalLink(parent, element);
       default:
 	return this.evaluate(element);
       }
