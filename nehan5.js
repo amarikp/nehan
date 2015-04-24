@@ -4856,9 +4856,9 @@ var Char = (function(){
       }
     },
     _setupNormal : function(code){
-      // for half-size char, rotate 90 and half-scale by default.
+      // for half-size char, rotate 90 and half-scale in horizontal by default.
       if(this.isHankaku()){
-	this.vscale = this.hscale = 0.5;
+	this.hscale = 0.5;
 	this._setRotate(90);
       }
       switch(code){
@@ -8717,7 +8717,7 @@ var HtmlLexer = (function (){
 
 var TextLexer = (function (){
   var __rex_tcy = /\d\d|!\?|!!|\?!|\?\?/;
-  var __rex_word = /^[a-zA-Z0-9.?\/:$#;"',_%]+/;
+  var __rex_word = /^[a-zA-Z0-9.!?\/:$#;"',_%]+/;
   var __rex_char_ref = /^&[^;\s]+;/;
 
   /**
