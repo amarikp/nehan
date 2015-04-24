@@ -4617,13 +4617,14 @@ var Char = (function(){
     */
     getCssVertGlyph : function(line){
       var css = {};
+      var is_zenkaku = this.isZenkaku();
       var is_kakko_start = this.isKakkoStart();
       var is_kakko_end = this.isKakkoEnd();
       var padding_enable = this.isPaddingEnable();
-      if(is_kakko_start && !padding_enable){
+      if(is_zenkaku && is_kakko_start && !padding_enable){
 	css.height = "1em";
 	css["margin-top"] = "-0.5em";
-      } else if(is_kakko_end && !padding_enable){
+      } else if(is_zenkaku && is_kakko_end && !padding_enable){
 	css.height = "1em";
 	css["margin-bottom"] = "-0.5em";
       } else if(!is_kakko_start && !is_kakko_end && this.vscale < 1){
@@ -5289,12 +5290,12 @@ var Word = (function(){
     */
     setMetrics : function(flow, font){
       if(Config.useStrictWordMetrics && TextMetrics.isEnable()){
-	this.bodySize = Math.round(TextMetrics.getMeasure(font, this.data));
+	this.bodySize = Math.ceil(TextMetrics.getMeasure(font, this.data));
 	return;
       }
-      this.bodySize = Math.round(this.data.length * font.size * 0.5);
+      this.bodySize = Math.ceil(this.data.length * font.size * 0.5);
       if(font.isBold()){
-	this.bodySize += Math.round(Display.boldRate * this.bodySize);
+	this.bodySize += Math.floor(Display.boldRate * this.bodySize);
       }
     },
     /**
@@ -6045,6 +6046,7 @@ var TextMetrics = (function(){
     */
     getMeasure : function(font, text){
       var metrics = this.getMetrics(font, text);
+      //console.log("[%s] - %f", text, metrics.width);
       return metrics.width;
     }
   };
