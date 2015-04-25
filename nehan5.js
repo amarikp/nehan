@@ -339,17 +339,17 @@ var Config = {
      max yield count to block infinite loop.
      @memberof Nehan.Config
      @type {int}
-     @default 2000
+     @default 20000
   */
-  maxYieldCount:2000,
+  maxYieldCount:20000,
 
   /**
      max available page count for each engine.
      @memberof Nehan.Config
      @type {int}
-     @default 10000
+     @default 5000
   */
-  maxPageCount:10000,
+  maxPageCount:5000,
 
   /**
      use vertical glyph if browser support 'writing-mode'.
@@ -11043,6 +11043,18 @@ var StyleContext = (function(){
     return List.exists(__callback_css_props, Closure.eq(prop));
   };
 
+  var __std_font = (function(){
+    var font = new Font(Display.fontSize);
+    font.family = Display.fontFamily;
+    font.weight = "normal";
+    font.style = "normal";
+    return font;
+  })();
+
+  var __std_values = {
+    font:__std_font
+  };
+
   /**
      @memberof Nehan
      @class StyleContext
@@ -12071,25 +12083,45 @@ var StyleContext = (function(){
       return this.markup.getHeaderRank();
     },
     /**
+       get managed style object by name
+
+       @memberof Nehan.StyleContext
+       @param name {String}
+       @return {Object}
+    */
+    getStyleObject : function(name){
+      if(this[name]){
+	return this[name];
+      }
+      if(this.parent){
+	return this.parent.getStyleObject(name);
+      }
+      var std_value = __std_values[name] || null;
+      if(std_value === null){
+	throw "undefined style object(" + name + ")";
+      }
+      return std_value;
+    },
+    /**
        @memberof Nehan.StyleContext
        @return {Nehan.Font}
     */
     getFont : function(){
-      return this.font || this.parent.getFont();
+      return this.getStyleObject("font");
     },
     /**
        @memberof Nehan.StyleContext
        @return {int}
     */
     getFontSize : function(){
-      return this.font.size;
+      return this.getFont().size;
     },
     /**
        @memberof Nehan.StyleContext
        @return {String}
     */
     getFontFamily : function(){
-      return this.font.family || Display.fontFamily;
+      return this.getFont().family;
     },
     /**
        @memberof Nehan.StyleContext
@@ -12430,7 +12462,7 @@ var StyleContext = (function(){
 	// TODO: more simple solution.
 	var line_height = this.getCssAttr("line-height")
 	if(line_height){
-	  css["line-height"] = this._computeUnitSize(line_height, this.font.size) + "px";
+	  css["line-height"] = this._computeUnitSize(line_height, this.getFontSize()) + "px";
 	}
 	if(this.getMarkupName() === "ruby" || this.isTextEmphaEnable()){
 	  css["display"] = "inline-block";
@@ -12682,24 +12714,25 @@ var StyleContext = (function(){
       }
     },
     _loadFont : function(){
-      var parent_font_size = this.parent? this.parent.font.size : Display.fontSize;
-      var font = new Font(parent_font_size);
-      var font_size = this.getCssAttr("font-size", "inherit");
-      if(font_size !== "inherit"){
-	font.size = this._computeFontSize(font_size, parent_font_size);
+      var parent_font = this.getFont();
+      var font_size = this.getCssAttr("font-size");
+      var font_family = this.getCssAttr("font-family");
+      var font_weight = this.getCssAttr("font-weight");
+      var font_style = this.getCssAttr("font-style");
+      if(font_size === null && font_family === null && font_weight === null && font_style === null){
+	return parent_font;
       }
-      var font_family = this.getCssAttr("font-family", "inherit");
-      if(font_family !== "inherit"){
+      var font = new Font(parent_font.size);
+      if(font_size !== null){
+	font.size = this._computeFontSize(font_size, parent_font.size);
+      }
+      if(font_family !== null){
 	font.family = font_family;
-      } else if(this.parent === null){
-	font.family = Display.fontFamily;
       }
-      var font_weight = this.getCssAttr("font-weight", "inherit");
-      if(font_weight !== "inherit"){
+      if(font_weight !== null){
 	font.weight = font_weight;
       }
-      var font_style = this.getCssAttr("font-style", "inherit");
-      if(font_style !== "inherit"){
+      if(font_style !== null){
 	font.style = font_style;
       }
       return font;
@@ -13079,13 +13112,13 @@ var StyleContext = (function(){
       var prop = this.flow.getPropMeasure();
       var max_size = this.getParentContentMeasure();
       var static_size = this.getAttr(prop) || this.getAttr("measure") || this.getCssAttr(prop) || this.getCssAttr("measure");
-      return static_size? this._computeUnitSize(static_size, this.font.size, max_size) : null;
+      return static_size? this._computeUnitSize(static_size, this.getFontSize(), max_size) : null;
     },
     _loadStaticExtent : function(){
       var prop = this.flow.getPropExtent();
       var max_size = this.getParentContentExtent();
       var static_size = this.getAttr(prop) || this.getAttr("extent") || this.getCssAttr(prop) || this.getCssAttr("extent");
-      return static_size? this._computeUnitSize(static_size, this.font.size, max_size) : null;
+      return static_size? this._computeUnitSize(static_size, this.getFontSize(), max_size) : null;
     }
   };
 
@@ -14924,7 +14957,7 @@ var TextGenerator = (function(){
     if(token instanceof Char && token.isKerningChar() && Config.kerning){
       this._setCharKerning(context, token);
     }
-    token.setMetrics(this.style.flow, this.style.font);
+    token.setMetrics(this.style.flow, this.style.getFont());
   };
 
   TextGenerator.prototype._setCharKerning = function(context, char_token){
