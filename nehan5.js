@@ -511,13 +511,17 @@ var Display = {
   */
   lineHeight: 2.0,
   /**
-     size rate of half size space.
+     various kind of spacing rate
 
      @memberof Nehan.Display
-     @type {Float}
-     @default 0.25
+     @type {Array.<Float>}
   */
-  halfSpaceSizeRate: 0.38,
+  spaceSizeRate:{
+    thinsp:0.2, // &thinsp;
+    nbsp:0.38,  // &nbsp;
+    ensp:0.5,   // &ensp;
+    emsp:1.0    // &emsp;
+  },
   /**
      count of tab space
 
@@ -4743,7 +4747,7 @@ var Char = (function(){
        @memberof Nehan.Char
        @return {Object}
     */
-    getCssHoriHalfSpaceChar : function(line){
+    getCssHoriSpaceChar : function(line){
       var css = {};
       css.display = "inline-block";
       css.width = this.bodySize + "px";
@@ -4763,7 +4767,7 @@ var Char = (function(){
        @memberof Nehan.Char
        @return {Object}
     */
-    getCssVertHalfSpaceChar : function(line){
+    getCssVertSpaceChar : function(line){
       var css = {};
       css.height = this.bodySize + "px";
       css["line-height"] = this.bodySize + "px";
@@ -4895,7 +4899,16 @@ var Char = (function(){
       this.cnv = c1;
       switch(c1){
       case "&nbsp;":
-	this._setupHalfSpace();
+	this._setupNbsp();
+	break;
+      case "&thinsp;":
+	this.vscale = this.hscale = Display.spaceSizeRate.thinsp;
+	break;
+      case "&ensp;":
+	this.vscale = this.hscale = Display.spaceSizeRate.ensp;
+	break;
+      case "&emsp;":
+	this.vscale = this.hscale = Display.spaceSizeRate.emsp;
 	break;
       case "&#09;":
 	this._setupTabSpace();
@@ -4908,8 +4921,8 @@ var Char = (function(){
 	break;
       }
     },
-    _setupHalfSpace : function(){
-      this.vscale = this.hscale = Display.halfSpaceSizeRate;
+    _setupNbsp : function(){
+      this.vscale = this.hscale = Display.spaceSizeRate.nbsp;
     },
     _setupTabSpace : function(){
       this.vscale = this.hscale = Math.floor(Display.tabCount / 2);
@@ -4925,7 +4938,7 @@ var Char = (function(){
 	this._setupTabSpace(); break;
 	break;
       case 32: // half scape char
-	this._setupHalfSpace(); break;
+	this._setupNbsp(); break;
       case 12300:
 	this._setImg("kakko1", 0.5, 0.5); break;
       case 65378:
@@ -5055,9 +5068,30 @@ var Char = (function(){
     /**
        @memberof Nehan.Char
        @return {boolean}
-     */
-    isHalfSpace : function(){
+    */
+    isNbsp : function(){
       return (this.data === " " || this.cnv === "&nbsp;");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isThinsp : function(){
+      return this.cnv === "&thinsp;";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isEnsp : function(){
+      return this.cnv === "&ensp;";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isEmsp : function(){
+      return this.cnv === "&emsp;";
     },
     /**
        @memberof Nehan.Char
@@ -5071,7 +5105,7 @@ var Char = (function(){
        @return {boolean}
      */
     isSpace : function(){
-      return this.isHalfSpace() || this.isTabSpace();
+      return this.isNbsp() || this.isTabSpace() || this.isThinsp() || this.isEnsp() || this.isEmsp();
     },
     /**
        @memberof Nehan.Char
@@ -16503,8 +16537,8 @@ var VertEvaluator = (function(){
 	return this._evalVerticalGlyph(line, chr);
       }
       return this._evalImgChar(line, chr);
-    } else if(chr.isHalfSpace()){
-      return this._evalHalfSpaceChar(line, chr);
+    } else if(chr.isSpace()){
+      return this._evalSpace(line, chr);
     } else if(chr.isTabSpace()){
       return this._evalTabChar(line, chr);
     } else if(chr.isRotateChar()){
@@ -16607,11 +16641,11 @@ var VertEvaluator = (function(){
     });
   };
 
-  VertEvaluator.prototype._evalHalfSpaceChar = function(line, chr){
+  VertEvaluator.prototype._evalSpace = function(line, chr){
     return this._createElement("div", {
       content:"&nbsp;",
-      className:"nehan-half-space",
-      css:chr.getCssVertHalfSpaceChar(line)
+      className:"nehan-space",
+      css:chr.getCssVertSpaceChar(line)
     });
   };
 
@@ -16696,8 +16730,8 @@ var HoriEvaluator = (function(){
   };
 
   HoriEvaluator.prototype._evalChar = function(line, chr){
-    if(chr.isHalfSpace()){
-      return this._evalHalfSpaceChar(line, chr);
+    if(chr.isSpace()){
+      return this._evalSpace(line, chr);
     }
     if(chr.isTabSpace()){
       return this._evalTabChar(line, chr);
@@ -16774,11 +16808,11 @@ var HoriEvaluator = (function(){
     });
   };
 
-  HoriEvaluator.prototype._evalHalfSpaceChar = function(line, chr){
+  HoriEvaluator.prototype._evalSpace = function(line, chr){
     return this._createElement("span", {
       content:"&nbsp;",
-      className:"nehan-half-space",
-      css:chr.getCssHoriHalfSpaceChar(line)
+      className:"nehan-space",
+      css:chr.getCssHoriSpaceChar(line)
     });
   };
 
