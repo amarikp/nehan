@@ -3975,7 +3975,7 @@ var TagAttrParser = (function(){
       } else if(this._left){
 	this._attrs[this._left] = "true";
 	this._left = token;
-      } else {
+      } else if(token && token !== "="){ // block invalid left identifier
 	this._left = token;
       }
     }
