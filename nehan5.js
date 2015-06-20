@@ -220,6 +220,5392 @@ Nehan.Env = (function(){
   };
 })();
 
+/**
+   @namespace Nehan.Class
+*/
+Nehan.Class = {};
+
+/**
+   @memberof Nehan.Class
+   @param childCtor {Object}
+   @param parentCtor {Object}
+   @return {Object}
+*/
+Nehan.Class.extend = function(childCtor, parentCtor) {
+  function TempCtor() {}
+  TempCtor.prototype = parentCtor.prototype;
+  childCtor.superClass_ = parentCtor.prototype;
+  childCtor.prototype = new TempCtor();
+  childCtor.prototype.constructor = childCtor;
+};
+
+
+/**
+   list utility module
+
+   @namespace Nehan.List
+*/
+Nehan.List = {
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> ()
+  */
+  iter : function(lst, fn){
+    for(var i = 0, len = lst.length; i < len; i++){
+      fn(lst[i]);
+    }
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun index -> obj -> ()
+  */
+  iteri : function(lst, fn){
+    for(var i = 0, len = lst.length; i < len; i++){
+      fn(i, lst[i]);
+    }
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> ()
+  */
+  reviter : function(lst, fn){
+    for(var i = lst.length - 1; i >= 0; i--){
+      fn(lst[i]);
+    }
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun index -> obj -> ()
+  */
+  reviteri : function(lst, fn){
+    for(var i = lst.length - 1; i >= 0; i--){
+      fn(i, lst[i]);
+    }
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {boolean}
+  */
+  forall : function(lst, fn){
+    for(var i = 0, len = lst.length; i < len; i++){
+      if(!fn(lst[i])){
+	return false;
+      }
+    }
+    return true;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> obj
+     @return {Array}
+  */
+  map : function(lst, fn){
+    var ret = [];
+    for(var i = 0, len = lst.length; i < len; i++){
+      ret.push(fn(lst[i]));
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun index -> obj -> obj
+     @return {Array}
+  */
+  mapi : function(lst, fn){
+    var ret = [];
+    for(var i = 0, len = lst.length; i < len; i++){
+      ret.push(fn(i, lst[i]));
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param acm {foldable_value} - accumulator
+     @param fn {Function} - fun acm -> obj -> acm
+     @return {folded_value}
+  */
+  fold : function(lst, acm, fn){
+    var ret = acm;
+    for(var i = 0, len = lst.length; i < len; i++){
+      ret = fn(ret, lst[i]);
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {Array}
+  */
+  filter : function(lst, fn){
+    var ret = [];
+    for(var i = 0, len = lst.length; i < len; i++){
+      if(fn(lst[i])){
+	ret.push(lst[i]);
+      }
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {first_founded_object}
+  */
+  find : function(lst, fn){
+    for(var i = 0, len = lst.length; i < len; i++){
+      var obj = lst[i];
+      if(fn(obj)){
+	return obj;
+      }
+    }
+    return null;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {first_founded_object}
+  */
+  revfind : function(lst, fn){
+    for(var i = lst.length - 1; i >= 0; i--){
+      var obj = lst[i];
+      if(fn(obj)){
+	return obj;
+      }
+    }
+    return null;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {int}
+  */
+  indexOf : function(lst, fn){
+    for(var i = 0, len = lst.length; i < len; i++){
+      var obj = lst[i];
+      if(fn(obj)){
+	return i;
+      }
+    }
+    return -1;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {boolean}
+  */
+  exists : function(lst, fn){
+    for(var i = 0, len = lst.length; i < len; i++){
+      if(fn(lst[i])){
+	return true;
+      }
+    }
+    return false;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {boolean}
+  */
+  mem : function(lst, val){
+    for(var i = 0, len = lst.length; i < len; i++){
+      if(lst[i] == val){
+	return true;
+      }
+    }
+    return false;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param start {Number}
+     @param fn {Function}
+     @return {Number}
+  */
+  sum : function(lst, start, fn){
+    return this.fold(lst, start, function(ret, obj){
+      return ret + fn(obj);
+    });
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {Number}
+     @return {min_obj}
+  */
+  minobj : function(lst, fn){
+    var min_obj = null, min_val = null;
+    this.iter(lst, function(obj){
+      var val = fn(obj);
+      if(min_val === null || val < min_val){
+	min_obj = obj;
+	min_val = val;
+      }
+    });
+    return min_obj;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {Number}
+     @return {max_obj}
+  */
+  maxobj : function(lst, fn){
+    var max_obj = null, max_val = null;
+    this.iter(lst, function(obj){
+      var val = fn(obj);
+      if(max_val === null || val > max_val){
+	max_obj = obj;
+	max_val = val;
+      }
+    });
+    return max_obj;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @return {Array}
+  */
+  refcopy : function(lst){
+    var ret = [];
+    for(var i = 0, len = lst.length; i < len; i++){
+      ret[i] = lst[i];
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @param fn {Function} - fun obj -> {boolean}
+     @return {int}
+  */
+  count : function(lst, fn){
+    var ret = 0;
+    for(var i = 0, len = lst.length; i < len; i++){
+      if(fn(lst[i])){
+	ret++;
+      }
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param count {int} - array length
+     @param init_val - initialized value filled in new array
+     @return {Array}
+  */
+  create : function(count, init_val){
+    var ret = [];
+    for(var i = 0; i < count; i++){
+      ret.push((typeof init_val !== "undefined")? init_val : i);
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @return {first_object | null}
+  */
+  first : function(lst){
+    return lst[0] || null;
+  },
+  /**
+     @memberof Nehan.List
+     @param lst {Array}
+     @return {last_object | null}
+  */
+  last : function(lst){
+    var len = lst.length;
+    if(len === 0){
+      return null;
+    }
+    return lst[len - 1];
+  },
+  /**
+     @memberof Nehan.List
+     @param lst1 {Array}
+     @param lst2 {Array}
+     @return {Array.<Array>}
+  */
+  zip : function(lst1, lst2){
+    var ret = [];
+    for(var i = 0, len = Math.min(lst1.length, lst2.length); i < len; i++){
+      ret[i] = [lst1[i], lst2[i]];
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.List
+     @param props {Array}
+     @param values {Array}
+     @return {Object}
+     @example
+     * Nehan.List.zipObj(["a", "b", "c"], [1, 2, 3]); // {a:1, b:2, c:3}
+  */
+  zipObj : function(props, values){
+    var ret = {};
+    if(props.length !== values.length){
+      throw "invalid args:List.zipObj";
+    }
+    for(var i = 0, len = props.length; i < len; i++){
+      ret[props[i]] = values[i];
+    }
+    return ret;
+  },
+  /**
+     non destructive reverse
+
+     @memberof Nehan.List
+     @param lst {Array}
+     @return {Array}
+  */
+  reverse : function(lst){
+    var ret = [];
+    this.reviter(lst, function(obj){
+      ret.push(obj);
+    });
+    return ret;
+  }
+};
+
+
+/**
+   @namespace Nehan.Args
+*/
+Nehan.Args = {
+  /**
+     copy all value in [args] to [dst]
+     @memberof Nehan.Args
+     @param {Object} dst
+     @param {Object} args
+     @return {Object} copied dst
+  */
+  copy : function(dst, args){
+    dst = dst || {};
+    for(var prop in args){
+      dst[prop] = args[prop];
+    }
+    return dst;
+  },
+  /**
+     copy all value in [args] to [dst] recursively
+     @memberof Nehan.Args
+     @param {Object} dst
+     @param {Object} args
+     @return {Object} copied dst
+  */
+  copy2 : function(dst, args){
+    dst = dst || {};
+    for(var prop in args){
+      if(typeof dst[prop] === "object"){
+	this.copy2(dst[prop], args[prop]);
+      } else {
+	dst[prop] = args[prop];
+      }
+    }
+    return dst;
+  },
+  /**
+     merge all value in [args] to [dst] with default value by [defaults]
+     @memberof Nehan.Args
+     @param {Object} dst
+     @param {Object} defaults
+     @param {Object} args
+     @return {Object} merged dst
+  */
+  merge : function(dst, defaults, args){
+    dst = dst || {};
+    for(var prop in defaults){
+      dst[prop] = (typeof args[prop] === "undefined")? defaults[prop] : args[prop];
+    }
+    return dst;
+  }
+};
+
+/**
+   object utility module
+
+   @namespace Nehan.Obj
+*/
+Nehan.Obj = (function(){
+  var __clone = function(obj){
+    var copy;
+    if(obj === null || typeof obj !== "object"){
+      return obj;
+    }
+    if(obj instanceof Array) {
+      copy = [];
+      for(var i = 0; i < obj.len; i++){
+        copy[i] = __clone(obj[i]);
+      }
+      return copy;
+    }
+    if (obj instanceof Object) {
+      copy = {};
+      for(var prop in obj){
+        if(obj.hasOwnProperty(prop)){
+	  copy[prop] = __clone(obj[prop]);
+	}
+      }
+      return copy;
+    }
+    throw "Obj::clone(unsupported type)";
+  };
+  return {
+    /**
+       @memberof Nehan.Obj
+       @param obj {Object}
+       @return {boolean}
+    */
+    isEmpty: function(obj){
+      for(var name in obj){
+	return false;
+      }
+      return true;
+    },
+    /**
+       @memberof Nehan.Obj
+       @param obj {Object}
+       @return {Object}
+    */
+    clone: function(obj){
+      return __clone(obj);
+    },
+    /**
+       @memberof Nehan.Obj
+       @param obj {Object}
+       @param fn {Function} - fun prop -> value -> obj
+    */
+    map : function(obj, fn){
+      var ret = {};
+      this.iter(obj, function(prop, value){
+	ret[prop] = fn(prop, value);
+      });
+      return ret;
+    },
+    /**
+       @memberof Nehan.Obj
+       @param obj {Object}
+       @param fn {Function} - fun prop -> value -> {boolean}
+    */
+    filter : function(obj, fn){
+      var ret = {};
+      this.iter(obj, function(prop, value){
+	if(fn(prop, value)){
+	  ret[prop] = value;
+	}
+      });
+      return ret;
+    },
+    /**
+       @memberof Nehan.Obj
+       @param obj {Object}
+       @param fn {Function} - fun prop -> value -> ()
+    */
+    iter : function(obj, fn){
+      for(var prop in obj){
+	fn(prop, obj[prop]);
+      }
+    }
+  };
+})();
+
+/**
+   misc utility module.
+
+   @namespace Nehan.Utils
+*/
+Nehan.Utils = {
+  /**
+     convert [decial] number by [base]
+
+     @memberof Nehan.Utils
+     @param deciaml {int}
+     @param base {int}
+     @return {int}
+  */
+  convBase : function(decimal, base){
+   if(decimal === 0){
+      return [0];
+    }
+    var ret = [];
+    var work = decimal;
+    while(work > 0){
+      ret.unshift(work % base);
+      work = Math.floor(work / base);
+    }
+    return ret;
+  },
+  /**
+     @memberof Nehan.Utils
+     @param str {String}
+  */
+  trimHeadCRLF : function(str){
+    return str.replace(/^\n+/, "");
+  },
+  /**
+     @memberof Nehan.Utils
+     @param str {String}
+  */
+  trimFootCRLF : function(str){
+    return str.replace(/\n+$/, "");
+  },
+  /**
+     @memberof Nehan.Utils
+     @param str {String}
+  */
+  trimCRLF : function(str){
+    return this.trimFootCRLF(this.trimHeadCRLF(str));
+  },
+  /**
+     @memberof Nehan.Utils
+     @param str {String}
+  */
+  trim : function(str){
+    return str.replace(/^\s+/, "").replace(/\s+$/, "");
+  },
+  /**
+     @memberof Nehan.Utils
+     @param str {String}
+  */
+  cutQuote : function(str){
+    return str.replace(/['\"]/g, "");
+  },
+  /**
+     @memberof Nehan.Utils
+     @param str {String}
+     @example
+     * Nehan.Utils.capitalize("japan"); // "Japan"
+  */
+  capitalize : function(str){
+    if(str === ""){
+      return "";
+    }
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  },
+  /**
+     @memberof Nehan.Utils
+     @param p1 {String}
+     @param p2 {String}
+     @example
+     * Nehan.Utils.filenameConcat("/path/to", "foo"); // "/path/to/foo"
+     * Nehan.Utils.filenameConcat("/path/to/", "foo"); // "/path/to/foo"
+  */
+  filenameConcat : function(p1, p2){
+    p1 = (p1==="")? "" : (p1.slice(-1) === "/")? p1 : p1 + "/";
+    p2 = (p2==="")? "" : (p2[0] === "/")? p2.substring(1, p2.length) : p2;
+    return p1 + p2;
+  },
+  /**
+     @memberof Nehan.Utils
+     @param name {String}
+     @example
+     * Nehan.Utils.camelToChain("fontSize"); // "font-size"
+  */
+  camelToChain : function(name){
+    return name.replace(/([A-Z])/g, function(match, p1){
+      return "-" + p1.toLowerCase();
+    });
+  },
+  /**
+     @memberof Nehan.Utils
+     @param name {String}
+     @example
+     * Nehan.Utils.camelize("font-size"); // "fontSize"
+  */
+  camelize : function(name){
+    var self = this;
+    return (name.indexOf("-") < 0)? name : Nehan.List.mapi(name.split("-"), function(i, part){
+      return (i === 0)? part : self.capitalize(part);
+    }).join("");
+  }
+};
+
+/**
+   some set of usefull constant variables.
+   @namespace Nehan.Const
+*/
+Nehan.Const = {
+  /**
+     @memberof Nehan.Const
+     @type {Array.<string>}
+  */
+  cssVenderPrefixes:[
+    "-moz",
+    "-webkit",
+    "-o",
+    "-ms"
+  ],
+  /**
+     @memberof Nehan.Const
+     @type {Array.<string>}
+  */
+  cssCorders:[
+    "top-left",
+    "top-right",
+    "bottom-left",
+    "bottom-right"
+  ],
+  /**
+     @memberof Nehan.Const
+     @type {Array.<string>}
+  */
+  cssBorderRadius:[
+    "border-top-left-radius",
+    "border-top-right-radius",
+    "border-bottom-left-radius",
+    "border-bottom-right-radius"
+  ],
+  /**
+     @memberof Nehan.Const
+     @type {Array.<string>}
+  */
+  cssBoxDirs:[
+    "top",
+    "right",
+    "bottom",
+    "left"
+  ],
+  /**
+     @memberof Nehan.Const
+     @type {Array.<string>}
+  */
+  cssBoxDirsLogical:[
+    "before",
+    "end",
+    "after",
+    "start"
+  ],
+  /**
+     @memberof Nehan.Const
+     @type {Array.<string>}
+  */
+  cssBoxCornersLogical:[
+    "start-before",
+    "end-before",
+    "end-after",
+    "start-after"
+  ],
+  /**
+     @memberof Nehan.Const
+     @type {Array.<int>}
+  */
+  css2dIndex:{
+    1:[0, 0],
+    2:[0, 1]
+  },
+  /**
+     @memberof Nehan.Const
+     @type {Array.<int>}
+  */
+  css4dIndex:{
+    1:[0, 0, 0, 0],
+    2:[0, 1, 0, 1],
+    3:[0, 1, 2, 1],
+    4:[0, 1, 2, 3]
+  },
+  /**
+     @memberof Nehan.Const
+     @type {string}
+  */
+  space:"&nbsp;",
+  /**
+     @memberof Nehan.Const
+     @type {string}
+  */
+  clearFix:"<div style='clear:both'></div>"
+};
+
+/**
+   css utility module
+   @namespace Nehan.Css
+*/
+Nehan.Css = {
+  /**
+     @memberof Nehan.Css
+     @param args {Object}
+     @return {String}
+     @example
+     * Nehan.Css.toString({"color":"red", "font-size":16}); // "color:'red'; 'font-size':16"
+  */
+  toString : function(args){
+    var tmp = [];
+    for(var prop in args){
+      tmp.push(prop + ":" + args[prop]);
+    }
+    return tmp.join(";");
+  },
+  /**
+     @memberof Nehan.Css
+     @param name {String}
+     @return {String}
+     @example
+     * Nehan.Css.addNehanPrefix("foo"); // "nehan-foo"
+  */
+  addNehanPrefix : function(name){
+    return (name.indexOf("nehan-") === 0)? name : "nehan-" + name;
+  },
+  /**
+     @memberof Nehan.Css
+     @param name {String}
+     @return {String}
+     @example
+     * Nehan.Css.addNehanHeaderPrefix("foo"); // "nehan-header-foo"
+  */
+  addNehanHeaderPrefix : function(name){
+    return "nehan-header-" + name;
+  },
+  /**
+     @memberof Nehan.Css
+     @param name {String}
+     @return {String}
+     @example
+     * Nehan.Css.addNehanTocLinkPrefix("foo"); // "nehan-toc-link-foo"
+  */
+  addNehanTocLinkPrefix : function(name){
+    return "nehan-toc-link-" + name;
+  },
+  /**
+     set vender-prefixed css value like(-webkit-opacity, -moz-opacity etc).
+
+     @memberof Nehan.Css
+     @param 
+     @param dst {Object}
+     @param name {String}
+     @param value {String}
+     @return {Object}
+     @example
+     * Nehan.Css.setCssValueWithVender({}, "writing-mode", "vertical-rl");
+  */
+  setCssValueWithVender: function(dst, name, value){
+    dst[name] = value; // no prefixed version
+    Nehan.List.iter(Nehan.Const.cssVenderPrefixes, function(prefix){
+      dst[prefix + "-" + name] = value;
+    });
+    return dst;
+  }
+};
+
+/**
+   html utility module
+
+   @namespace Nehan.Html
+*/
+Nehan.Html = {
+  /**
+     escape special text like &lt;, &gt;, etc.
+
+     @memberof Nehan.Html
+     @method escape
+     @param str {String}
+     @return {String}
+  */
+  escape : function(str){
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/'/g, "&#039;")
+      .replace(/"/g, "&quot;");
+  },
+  /**
+     unescape special text.
+
+     @memberof Nehan.Html
+     @method unescape
+     @param str {String}
+     @return {String}
+  */
+  unescape : function(str) {
+    var div = document.createElement("div");
+    div.innerHTML = str.replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/ /g, "&nbsp;")
+      .replace(/\r/g, "&#13;")
+      .replace(/\n/g, "&#10;");
+    return div.textContent || div.innerText;
+  },
+  /*
+    generate html attribute string
+
+    @memberof Nehan.Html
+    @method attr
+    @param args {Object}
+    @return {String}
+    @example
+    * Nehan.Html.attr({width:"100", height:"200"}); // width='100' height = '200'
+  */
+  attr : function(args){
+    var tmp = [];
+    for(var prop in args){
+      if(typeof args[prop] !== "undefined" && args[prop] !== ""){
+	tmp.push(prop + "='" + this.escape(args[prop] + "") + "'");
+      }
+    }
+    return (tmp == [])? "" : tmp.join(" ");
+  },
+  /**
+     generate html tag string
+
+     @memberof Nehan.Html
+     @method tagWrap
+     @param name {String} - tag name
+     @param content {String} - tag content text
+     @param args {Object} - tag attributes
+     @return {String}
+     @example
+     * Nehan.Html.tagWrap("a", "homepage", {href:"#"}); // "<a href='#'>homepage</a>"
+  */
+  tagWrap : function(name, content, args){
+    return [this.tagStart(name, args || {}), content, this.tagEnd(name)].join("");
+  },
+  /**
+     generate unwrapped single html tag string
+
+     @memberof Nehan.Html
+     @method tagSingle
+     @param name {String} - tag name
+     @param args {Object} - tag attributes
+     @return {String}
+     @example
+     * Nehan.Html.tagSingle("img", {src:"/path/to/img"}); // "<img src='/path/to/img' />"
+  */
+  tagSingle : function(name, args){
+    return "<" + name + " " + this.attr(args) + "/>";
+  },
+  /**
+     generate open tag string
+
+     @memberof Nehan.Html
+     @method tagStart
+     @return {String}
+     @param name {String} - tag name
+     @param args {Object} - tag attributes
+     @example
+     * Nehan.Html.tagStart("div"); // "<div>"
+  */
+  tagStart : function(name, args){
+    return "<" + name + " " + this.attr(args) + ">";
+  },
+  /**
+     generate enclose tag string
+
+     @memberof Nehan.Html
+     @method tagEnd
+     @return {String}
+     @param name {String} - tag name
+     @example
+     * Nehan.Html.tagEnd("div"); // "</div>"
+  */
+  tagEnd : function(name){
+    return "</" + name + ">";
+  }
+};
+
+Nehan.Uri = (function(){
+  /**
+     @memberof Nehan
+     @class Uri
+     @classdesc abstraction of URI. 
+     @constructor
+     @param address {String}
+  */
+  function Uri(address){
+    this.address = this._normalize(address || "");
+  }
+
+  Uri.prototype = {
+    _normalize : function(address){
+      return address.replace(/\s/g, "");
+    },
+    /**
+       @memberof Nehan.Uri
+       @return {String}
+    */
+    getAddress : function(){
+      return this.address;
+    },
+    /**
+       @memberof Nehan.Uri
+       @return {String}
+       @example
+       * new Uri("http://example.com/top#foo").getAnchorName(); // "foo"
+    */
+    getAnchorName : function(){
+      var sharp_pos = this.address.indexOf("#");
+      if(sharp_pos < 0){
+	return "";
+      }
+      var anchor_name = this.address.substring(sharp_pos + 1);
+      return (anchor_name.length > 0)? anchor_name : "";
+    }
+  };
+
+  return Uri;
+})();
+
+
+Nehan.TagAttrLexer = (function(){
+  var __rex_symbol = /[^=\s]+/;
+
+  /**
+     @memberof Nehan
+     @class TagAttrLexer
+     @classdesc tag attribute string lexer
+     @constructor
+     @param src {String}
+     @description <pre>
+     * [src] is attribute string of original tag source.
+     * so if tag source is "<div class='nehan-float-start'>",
+     * then [src] is "class='nehan-float-start'".
+     </pre>
+  */
+  function TagAttrLexer(src){
+    this.buff = src;
+    this._error = false;
+  }
+
+  TagAttrLexer.prototype = {
+    /**
+       @memberof Nehan.TagAttrLexer
+       @return {boolean}
+    */
+    isEnd : function(){
+      return this._error || (this.buff === "");
+    },
+    /**
+       @memberof Nehan.TagAttrLexer
+       @return {symbol}
+    */
+    get : function(){
+      var c1 = this._peek();
+      if(c1 === null){
+	return null;
+      }
+      switch(c1){
+      case "=":
+	this._step(1);
+	return c1;
+      case "'": case "\"":
+	return this._getLiteral(c1);
+      case " ":
+	this._step(1);
+	return this.get(); // skip space
+      default:
+	return this._getSymbol();
+      }
+    },
+    _peek : function(){
+      return this.buff? this.buff.charAt(0) : null;
+    },
+    _step : function(length){
+      this.buff = this.buff.substring(length);
+    },
+    _getSymbol : function(){
+      //var symbol = HtmlLexer.prototype._getByRex.call(this, __rex_symbol);
+      var match = this.buff.match(__rex_symbol);
+      var symbol = match? match[0] : null;
+      if(symbol){
+	this._step(symbol.length);
+      }
+      return symbol;
+    },
+    _getLiteral : function(quote_char){
+      var quote_end_pos = this.buff.indexOf(quote_char, 1);
+      if(quote_end_pos < 0){
+	console.error("TagAttrLexer::syntax error:literal not closed(%s)", this.buff);
+	this._error = true;
+	return null;
+      }
+      var literal = this.buff.substring(1, quote_end_pos);
+      this._step(quote_end_pos + 1);
+      return literal;
+    }
+  };
+
+  return TagAttrLexer;
+})();
+
+
+Nehan.TagAttrParser = (function(){
+  /**
+     @memberof Nehan
+     @class TagAttrParser
+     @classdesc tag attribute parser
+     @constructor
+     @param src {String}
+  */
+  function TagAttrParser(src){
+    this._lexer = new Nehan.TagAttrLexer(src);
+    this._attrs = {};
+    this._left = null;
+  }
+
+  TagAttrParser.prototype = {
+    /**
+       @memberof Nehan.TagAttrParser
+       @return {Object}
+    */
+    parse : function(){
+      while(!this._isEnd()){
+	this._parseAttr();
+      }
+      return this._attrs;
+    },
+    _isEnd : function(){
+      return this._left === null && this._lexer.isEnd();
+    },
+    _parseAttr : function(){
+      var token = this._lexer.get();
+      if(token === null){
+	if(this._left){
+	  this._attrs[this._left] = "true";
+	  this._left = null;
+	}
+      } else if(token === "=" && this._left){
+	this._attrs[this._left] = this._lexer.get() || "true";
+	this._left = null;
+	return;
+      } else if(this._left){
+	this._attrs[this._left] = "true";
+	this._left = token;
+      } else if(token && token !== "="){ // block invalid left identifier
+	this._left = token;
+      }
+    }
+  };
+
+  return TagAttrParser;
+})();
+
+Nehan.TagAttrs = (function(){
+  /**
+     @memberof Nehan
+     @class TagAttrs
+     @classdesc tag attribute set wrapper
+     @constructor
+     @param src {String}
+  */
+  function TagAttrs(src){
+    var attrs_raw = src? (new Nehan.TagAttrParser(src)).parse() : {};
+    this.classes = this._parseClasses(attrs_raw);
+    this.attrs = this._parseAttrs(attrs_raw, this.classes);
+    this.dataset = this._parseDataset(attrs_raw);
+  }
+
+  var __data_name_of = function(name){
+    return Nehan.Utils.camelize(name.slice(5));
+  };
+
+  TagAttrs.prototype = {
+    /**
+       @memberof Nehan.TagAttrs
+       @param name {String} - attribute name
+       @return {boolean}
+    */
+    hasAttr : function(name){
+      return (typeof this.attrs.name !== "undefined");
+    },
+    /**
+       @memberof Nehan.TagAttrs
+       @param klass {String} - css class name
+       @return {boolean}
+    */
+    hasClass : function(klass){
+      return Nehan.List.exists(this.classes, Nehan.Closure.eq(klass));
+    },
+    /**
+       @memberof Nehan.TagAttrs
+       @param klass {String} - css class name
+       @return {Array.<String>} current css classes
+    */
+    addClass : function(klass){
+      if(!this.hasClass(klass)){
+	this.classes.push(klass);
+	this.setAttr("class", [this.getAttr("class"), klass].join(" "));
+      }
+      return this.classes;
+    },
+    /**
+       @memberof Nehan.TagAttrs
+       @param klass {String} - css class name(prefiex by "nehan-")
+    */
+    removeClass : function(klass){
+      this.classes = Nehan.List.filter(this.classes, function(cls){
+	return cls != klass;
+      });
+      this.setAttr("class", this.classes.join(" "));
+      return this.classes;
+    },
+    /**
+       @memberof Nehan.TagAttrs
+       @param name {String}
+       @param def_value {default_value}
+       @return {attribute_value}
+    */
+    getAttr : function(name, def_value){
+      def_value = (typeof def_value === "undefined")? null : def_value;
+      return (typeof this.attrs[name] === "undefined")? def_value : this.attrs[name];
+    },
+    /**
+       get dataset value
+
+       @memberof Nehan.TagAttrs
+       @param name {String}
+       @param def_value {default_value}
+       @return {dataset_value}
+    */
+    getData : function(name, def_value){
+      def_value = (typeof def_value === "undefined")? null : def_value;
+      return (typeof this.dataset[name] === "undefined")? def_value : this.dataset[name];
+    },
+    /**
+       @memberof Nehan.TagAttrs
+       @param name {String}
+       @param value {attribute_value}
+    */
+    setAttr : function(name, value){
+      if(name.indexOf("data-") === 0){
+	this.setData(__data_name_of(name), value);
+      } else {
+	this.attrs[name] = value;
+      }
+    },
+    /**
+       set dataset value
+
+       @memberof Nehan.TagAttrs
+       @param name {String}
+       @param value {dataset_value}
+    */
+    setData : function(name, value){
+      this.dataset[name] = value;
+    },
+    // <p class='hi hey'>
+    // => ["nehan-hi", "nehan-hey"]
+    _parseClasses : function(attrs_raw){
+      var class_name = attrs_raw["class"] || "";
+      class_name = Nehan.Utils.trim(class_name.replace(/\s+/g, " "));
+      var classes = (class_name === "")? [] : class_name.split(/\s+/);
+
+      // replace 'nehan-' prefix for backword compatibility(version <= 5.1.0).
+      return Nehan.List.map(classes, function(klass){
+	return (klass.indexOf("nehan-") === 0)? klass.replace("nehan-", "") : klass;
+      }); 
+    },
+    _parseAttrs : function(attrs_raw, classes){
+      var attrs = {};
+      Nehan.Obj.iter(attrs_raw, function(name, value){
+	if(name.indexOf("data-") < 0){
+	  attrs[name] = value;
+	}
+      });
+      return attrs;
+    },
+    _parseDatasetValue : function(value){
+      switch(value){
+      case "true": return true;
+      case "false": return false;
+      default: return isNaN(value)? value : Number(value);
+      }
+    },
+    _parseDataset : function(attrs_raw){
+      var dataset = {};
+      for(var name in attrs_raw){
+	if(name.indexOf("data-") === 0){
+	  dataset[__data_name_of(name)] = this._parseDatasetValue(attrs_raw[name]);
+	}
+      }
+      return dataset;
+    }
+  };
+
+  return TagAttrs;
+})();
+
+
+// Important Notice:
+// to avoid name-conflicts about existing name space of stylesheet,
+// all class names and id in nehan.js are forced to be prefixed by "nehan-".
+Nehan.Tag = (function (){
+  /**
+     @memberof Nehan
+     @class Tag
+     @classdesc abstraction of html tag markup.
+     @constructor
+     @param src {String} - string of markup part like "&lt;div class='foo'&gt;"
+     @param content {String} - content text of markup
+  */
+  function Tag(src, content){
+    this._type = "tag";
+    this.src = src;
+    this.content = content || "";
+    this.name = this._parseName(this.src);
+    this.attrs = this._parseTagAttrs(this.name, this.src);
+    this._firstChild = false;
+    this._firstOfType = false;
+    this._lastChild = false;
+    this._lastOfType = false;
+    this._onlyChild = false;
+    this._onlyOfType = false;
+  }
+
+  Tag.prototype = {
+    /**
+       @memberof Nehan.Tag
+       @return {Nehan.Tag}
+    */
+    clone : function(){
+      return new Tag(this.src, this.content);
+    },
+    /**
+       @memberof Nehan.Tag
+       @param content {String}
+    */
+    setContent : function(content){
+      if(this._fixed){
+	return;
+      }
+      this.content = content;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param status {boolean}
+    */
+    setContentImmutable : function(status){
+      this._fixed = status;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param name {String} - alias markup name
+    */
+    setAlias : function(name){
+      this.alias = name;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param name {String}
+       @param value {attribute_value}
+    */
+    setAttr : function(name, value){
+      this.attrs.setAttr(name, value);
+    },
+    /**
+       @memberof Nehan.Tag
+       @param attrs {Object}
+    */
+    setAttrs : function(attrs){
+      for(var name in attrs){
+	this.setAttr(name, attrs[name]);
+      }
+    },
+    /**
+       @memberof Nehan.Tag
+       @param name {String}
+       @param value {dataset_value}
+    */
+    setData : function(name, value){
+      this.attrs.setData(name, value);
+    },
+    /**
+       @memberof Nehan.Tag
+       @param status {Bool}
+    */
+    setFirstChild : function(status){
+      this._firstChild = status;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param status {Bool}
+    */
+    setOnlyChild : function(status){
+      this._onlyChild = status;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param status {Bool}
+    */
+    setOnlyOfType : function(status){
+      this._onlyOfType = status;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param status {Bool}
+    */
+    setFirstOfType : function(status){
+      this._firstOfType = status;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param status {Bool}
+    */
+    setLastChild : function(status){
+      this._lastChild = status;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param status {Bool}
+    */
+    setLastOfType : function(status){
+      this._lastOfType = status;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param klass {String}
+    */
+    addClass : function(klass){
+      this.attrs.addClass(klass);
+    },
+    /**
+       @memberof Nehan.Tag
+       @param klass {String}
+    */
+    removeClass : function(klass){
+      this.attrs.removeClass(klass);
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {String}
+    */
+    getId : function(){
+      return this.attrs.getAttr("id");
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {Array.<String>}
+    */
+    getClasses : function(){
+      return this.attrs.classes;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {String}
+    */
+    getName : function(){
+      return this.alias || this.name;
+    },
+    /**
+       @memberof Nehan.Tag
+       @param name {String}
+       @param def_value {default_value}
+       @return {attribute_value}
+    */
+    getAttr : function(name, def_value){
+      return this.attrs.getAttr(name, def_value);
+    },
+    /**
+       @memberof Nehan.Tag
+       @param name {String}
+       @param def_value {default_value}
+       @return {dataset_value}
+    */
+    getData : function(name, def_value){
+      return this.attrs.getData(name, def_value);
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {String}
+    */
+    getContent : function(){
+      return this.content;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {String}
+    */
+    getSrc : function(){
+      return this.src;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {String}
+    */
+    getWrapSrc : function(){
+      if(this.content === ""){
+	return this.src;
+      }
+      return this.src + this.content + "</" + this.name + ">";
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    hasClass : function(klass){
+      return this.attrs.hasClass(klass);
+    },
+    /**
+       @memberof Nehan.Tag
+       @param name {String}
+       @return {boolean}
+    */
+    hasAttr : function(name){
+      return this.attrs.hasAttr(name);
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isHeaderTag : function(){
+      return Nehan.List.exists(["h1", "h2", "h3", "h4", "h5", "h6"], Nehan.Closure.eq(this.name));
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isAnchorTag : function(){
+      return this.name === "a" && this.getTagAttr("name") !== null;
+    },
+    /**
+       @memberof Nehan.Tag
+    */
+    isAnchorLinkTag : function(){
+      var href = this.getTagAttr("href");
+      return this.name === "a" && href && href.indexOf("#") >= 0;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isPageBreakTag : function(){
+      return this.name === "page-break" || this.name === "end-page" || this.name === "pbr";
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isCloseTag : function(){
+      return this.name.charAt(0) === "/";
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isSingleTag : function(){
+      return this._single || false;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isEmpty : function(){
+      return this.content === "";
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isFirstChild : function(){
+      return this._firstChild;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isOnlyChild : function(){
+      return this._onlyChild;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isOnlyOfType : function(){
+      return this._onlyOfType;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isFirstOfType : function(){
+      return this._firstOfType;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isLastChild : function(){
+      return this._lastChild;
+    },
+    /**
+       @memberof Nehan.Tag
+       @return {boolean}
+    */
+    isLastOfType : function(){
+      return this._lastOfType;
+    },
+    _getTagAttrSrc : function(src){
+      return src
+	.replace(/<[\S]+/, "") // cut tag start
+	.replace(/^\s+/, "") // cut head space
+	.replace("/>", "") // cut tag tail(single tag)
+	.replace(">", "") // cut tag tail(normal tag)
+	.replace(/\s+$/, "") // cut tail space
+	.replace(/\n/g, " ") // conv from multi line to single space
+	.replace(/[　|\s]+/g, " ") // conv from multi space to single space
+	.replace(/\s+=/g, "=") // cut multi space before '='
+	.replace(/=\s+/g, "="); // cut multi space after '='
+    },
+    _parseName : function(src){
+      return src.replace(/</g, "").replace(/\/?>/g, "").split(/\s/)[0].toLowerCase();
+    },
+    _parseTagAttrs : function(tag_name, tag_src){
+      var attr_src = this._getTagAttrSrc(tag_src);
+      if(tag_name.length === attr_src.length){
+	return new Nehan.TagAttrs("");
+      }
+      return new Nehan.TagAttrs(attr_src);
+    }
+  };
+
+  return Tag;
+})();
+
+
+/**
+   closure factory
+   @namespace Nehan.Closure
+*/
+Nehan.Closure = {
+  /**
+     @memberof Nehan.Closure
+     @return {Function}
+     @example
+     * var echo = Nehan.Closure.id();
+     * echo(1); // 1
+     * echo("yo"); // "yo"
+  */
+  id : function(){
+    return function(x){
+      return x;
+    };
+  },
+  /**
+     @memberof Nehan.Closure
+     @return {Function}
+     @example
+     * var is_one = Nehan.Closure.eq(1);
+     * is_one(1); // true
+     * is_one(2); // false
+  */
+  eq : function(x){
+    return function(y){
+      return x == y;
+    };
+  },
+  /**
+     @memberof Nehan.Closure
+     @return {Function}
+     @example
+     * var is_not_one = Nehan.Closure.neq(1);
+     * is_not_one(1); // false
+     * is_not_one(2); // true
+  */
+  neq : function(x){
+    return function(y){
+      return x != y;
+    };
+  },
+  isTagName : function(names){
+    return function(token){
+      if(token instanceof Nehan.Tag === false){
+	return false;
+      }
+      var tag_name = token.getName();
+      return Nehan.List.exists(names, function(name){
+	return name === tag_name;
+      });
+    };
+  }
+};
+
+Nehan.HashSet = (function(){
+  /**
+     @memberof Nehan
+     @class HashSet
+     @classdesc abstraction of (key, value) set.
+     @constructor
+   */
+  function HashSet(values){
+    this._values = Nehan.Obj.clone(values || {});
+  }
+
+  HashSet.prototype = {
+    /**
+       @memberof Nehan.HashSet
+       @param fn {Function}
+    */
+    iter : function(fn){
+      Nehan.Obj.iter(this._values, fn);
+    },
+    /**
+       merge new value to old value with same key. simply overwrite by default.
+
+       @memberof Nehan.HashSet
+       @param old_value
+       @param new_value
+    */
+    merge : function(old_value, new_value){
+      return new_value;
+    },
+    /**
+       return union set between this and [set].
+
+       @memberof Nehan.HashSet
+       @param set {Nehan.HashSet}
+     */
+    union : function(set){
+      set.iter(function(key, value){
+	this.add(key, value);
+      }.bind(this));
+      return this;
+    },
+    /**
+       get value by name(key).
+
+       @memberof Nehan.HashSet
+       @name {String}
+       @return {value}
+    */
+    get : function(name){
+      return this._values[name] || null;
+    },
+    getValues : function(){
+      return this._values;
+    },
+    /**
+       add [value] by [name]. HashSet::merge is called if [name] is already registered.
+
+       @memberof Nehan.HashSet
+       @param name {String}
+       @param value
+    */
+    add : function(name, value){
+      var old_value = this._values[name] || null;
+      var new_value = old_value? this.merge(old_value, value) : value;
+      this._values[name] = new_value;
+    },
+    /**
+     * this function is used when performance matters,<br>
+     * instead of using this.union(new HashSet(values))
+
+       @memberof Nehan.HashSet
+       @param values {Array}
+    */
+    addValues : function(values){
+      for(var prop in values){
+	this.add(prop, values[prop]);
+      }
+    },
+    /**
+       remove value associated with [name].
+
+       @memberof Nehan.HashSet
+       @param name {String}
+    */
+    remove : function(name){
+      delete this._values[name];
+    }
+  };
+
+  return HashSet;
+})();
+
+
+
+
+Nehan.CssHashSet = (function(){
+  /**
+     @memberof Nehan
+     @class CssHashSet
+     @classdesc hash set for css
+     @extends {Nehan.HashSet}
+  */
+  function CssHashSet(values){
+    Nehan.HashSet.call(this, values);
+  }
+  Nehan.Class.extend(CssHashSet, Nehan.HashSet);
+
+  /**
+   * merge css value<br>
+   * 1. if old_value is object, merge each properties.<br>
+   * 2. other case, simplly overwrite new_value to old_value(even if new_value is function).<br>
+
+   @memberof Nehan.CssHashSet
+   @method merge
+   @param old_value
+   @param new_value
+  */
+  CssHashSet.prototype.merge = function(old_value, new_value){
+    if(typeof old_value === "object"){
+      Nehan.Args.copy(old_value, new_value);
+      return old_value;
+    }
+    return new_value;
+  };
+
+  /**
+     @memberof Nehan.CssHashSet
+     @method copyValuesTo
+     @param dst {Object}
+  */
+  CssHashSet.prototype.copyValuesTo = function(dst){
+    return Nehan.Args.copy(dst, this._values);
+  };
+
+  return CssHashSet;
+})();
+
+/**
+<pre>
+  there are css properties that are required to calculate accurate paged-layout,
+  and we call them 'managed css properties'.
+
+  managed css properties
+  ======================
+  after(nehan.js local property, same as 'bottom' if lr-tb)
+  before(nehan.js local property, same as 'top' if lr-tb)
+  border
+  border-width
+  border-radius(rounded corner after/before is cleared if page is divided into multiple pages)
+  box-sizing
+  break-after
+  break-before
+  color(required to switch charactor image src for some client)
+  display
+  end(nehan.js local property, same as 'right' if lr-tb)
+  extent(nehan.js local property)
+  float
+  flow(nehan.js local property)
+  font
+  font-size
+  font-family(required to get accurate text-metrics especially latin words)
+  height
+  letter-spacing
+  line-rate(nehan.js local property)
+  list-style
+  list-style-image
+  list-style-position
+  list-style-type
+  margin
+  measure(nehan.js local property)
+  padding
+  position
+  start(nehan.js local property, same as 'left' if lr-tb)
+  text-align
+  text-combine
+  text-emphasis-style
+  white-space
+  width</pre>
+
+  @namespace Nehan.CssParser
+*/
+Nehan.CssParser = (function(){
+  var __normalize = function(value){
+    return Nehan.Utils.trim(String(value))
+      .replace(/;/g, "")
+      .replace(/\n/g, "");
+  };
+
+  var __split_space = function(value){
+    return (value.indexOf(" ") < 0)? [value] : value.split(/\s+/);
+  };
+
+  var __split_slash = function(value){
+    return (value.indexOf("/") < 0)? [value] : value.split("/");
+  };
+
+  // props: [a,b,c]
+  // values:[1,2,3]
+  // => {a:1, b:2, c:3}
+  var __zip_obj = function(props, values){
+    var ret = {};
+    if(props.length !== values.length){
+      throw "invalid args:__zip_obj";
+    }
+    Nehan.List.iteri(props, function(i, prop){ ret[prop] = values[i]; });
+    return ret;
+  };
+
+  var __get_map_2d = function(len){
+    return Nehan.Const.css2dIndex[Math.min(len, 2)] || [];
+  };
+
+  var __get_map_4d = function(len){
+    return Nehan.Const.css4dIndex[Math.min(len, 4)] || [];
+  };
+
+  // values:[a,b]
+  // map: [0,1,0,1]
+  // => [values[0], values[1], values[0], values[1]]
+  // => [a, b, a, b]
+  var __make_values_by_map = function(values, map){
+    return Nehan.List.map(map, function(index){ return values[index]; });
+  };
+
+  // values:[0] => [0,0]
+  // values:[0,1] => [0,1]
+  var __make_values_2d = function(values){
+    var map = __get_map_2d(values.length);
+    return __make_values_by_map(values, map);
+  };
+
+  // values:[0] => [0,0,0,0],
+  // values:[0,1] => [0, 1, 0, 1]
+  // values:[0,2,3] => [0,1,2,1]
+  // values:[0,1,2,3] => [0,1,2,3]
+  var __make_values_4d = function(values){
+    var map = __get_map_4d(values.length);
+    return __make_values_by_map(values, map);
+  };
+
+  var __make_edge_4d = function(values){
+    var props = Nehan.Const.cssBoxDirsLogical; // len = 4
+    var values_4d = __make_values_4d(values); // len = 4
+    return Nehan.List.zipObj(props, values_4d);
+  };
+
+  var __make_corner_4d = function(values){
+    var props = Nehan.Const.cssBoxCornersLogical; // len = 4
+    var values_4d = __make_values_4d(values); // len = 4
+    return __zip_obj(props, values_4d);
+  };
+
+  var __parse_4d = function(value){
+    return __make_edge_4d(__split_space(value));
+  };
+
+  var __parse_corner_4d = function(value){
+    var values_2d = __make_values_2d(__split_slash(value));
+    var values_4d_2d = Nehan.List.map(values_2d, function(val){
+      return __make_values_4d(__split_space(val));
+    });
+    var values = Nehan.List.zip(values_4d_2d[0], values_4d_2d[1]);
+    return __make_corner_4d(values);
+  };
+
+  var __parse_border_abbr = function(value){
+    var ret = [];
+    var values = __split_space(value);
+    var arg_len = values.length;
+    if(arg_len >= 1){
+      ret.push({"border-width":__parse_4d(values[0])});
+    }
+    return ret;
+  };
+
+  var __parse_list_style_abbr = function(value){
+    var ret = [];
+    var values = __split_space(value);
+    var arg_len = values.length;
+    if(arg_len >= 1){
+      ret.push({"list-style-type":__parse_4d(values[0])});
+    }
+    if(arg_len >= 2){
+      ret.push({"list-style-image":__parse_4d(values[1])});
+    }
+    if(arg_len >= 3){
+      ret.push({"list-style-position":__parse_4d(values[2])});
+    }
+    return ret;
+  };
+
+  var __parse_font_abbr = function(value){
+    return {}; // TODO
+  };
+
+  var __parse_background_abbr = function(value){
+    return {}; // TODO
+  };
+
+  // all subdivided properties are evaluated as unified value.
+  // for example, 'margin-before:1em' => 'margin:1em 0 0 0'.
+  // so subdivided properties must be renamed to unified property('margin-before' => 'margin').
+  var __format_prop = function(prop){
+    prop = Nehan.Utils.camelToChain(prop);
+    if(prop.indexOf("margin-") >= 0 || prop.indexOf("padding-") >= 0 || prop.indexOf("border-width-") >= 0){
+      return prop.split("-")[0];
+    }
+    return prop;
+  };
+
+  var __format_value = function(prop, value){
+    switch(typeof value){
+    case "function": case "object": case "boolean":
+      return value;
+    }
+    value = __normalize(value); // number, string
+    switch(prop){
+      /* TODO: border abbr
+    case "border":
+      return __parse_border_abbr(value);
+      */
+    case "border-width":
+      return __parse_4d(value);
+    case "border-radius":
+      return __parse_corner_4d(value);
+    case "border-color":
+      return __parse_4d(value);
+    case "border-style":
+      return __parse_4d(value);
+
+      /* TODO: font abbr
+    case "font":
+      return __parse_font_abbr(value);
+      */
+
+      /* TODO: list-style abbr
+    case "list-style":
+      return __parse_list_style_abbr(value);
+      */
+    case "margin":
+      return __parse_4d(value);
+    case "padding":
+      return __parse_4d(value);
+
+    // subdivided properties
+    case "margin-before": case "padding-before": case "border-width-before":
+      return {before:value};
+    case "margin-end": case "padding-end": case "border-width-end":
+      return {end:value};
+    case "margin-after": case "padding-after": case "border-width-after":
+      return {after:value};
+    case "margin-start": case "padding-start": case "border-width-start":
+      return {start:value};      
+
+    // unmanaged properties is treated as it is.
+    default: return value;
+    }
+  };
+
+  return {
+    /**
+       @memberof Nehan.CssParser
+       @param prop {String} - css property name
+       @return {String} normalized property name
+       @example
+       * CssParser.formatProp("margin-start"); // => "margin"
+    */
+    formatProp : function(prop){
+      return __format_prop(prop);
+    },
+    /**
+       @memberof Nehan.CssParser
+       @param prop {String} - css property name
+       @param value - css value
+       @return {Object|int|string|boolean|function}
+       @example
+       * CssParser.formatValue("margin-start", "1em"); // => {start:"1em"}
+       * CssParser.formatValue("margin", "1em 1em 0 0"); // => {before:"1em", end:"1em", after:0, start:0}
+    */
+    formatValue : function(prop, value){
+      return __format_value(prop, value);
+    }
+  };
+})();
+
+
+Nehan.AttrSelector = (function(){
+  /**
+     @memberof Nehan
+     @class AttrSelector
+     @classdesc css attribute selector
+     @constructor
+     @param {string} expr - attribute selector string
+     @example
+     * var as = new AttrSelector("[name='taro']");
+  */
+  function AttrSelector(expr){
+    this.expr = this._normalize(expr);
+    this.left = this.op = this.right = null;
+    this._parseExpr(this.expr);
+  }
+
+  var __rex_symbol = /[^=^~|$*\s]+/;
+  var __op_symbols = ["|=", "~=", "^=", "$=", "*=", "="];
+
+  AttrSelector.prototype = {
+    _normalize : function(expr){
+      return expr.replace(/\[/g, "").replace(/\]/g, "");
+    },
+    _parseSymbol : function(expr){
+      var match = expr.match(__rex_symbol);
+      if(match){
+	return match[0];
+      }
+      return "";
+    },
+    _parseOp : function(expr){
+      return Nehan.List.find(__op_symbols, function(symbol){
+	return expr.indexOf(symbol) >= 0;
+      });
+    },
+    _parseExpr : function(expr){
+      this.left = this._parseSymbol(expr);
+      if(this.left){
+	expr = Nehan.Utils.trim(expr.slice(this.left.length));
+      }
+      this.op = this._parseOp(expr);
+      if(this.op){
+	expr = Nehan.Utils.trim(expr.slice(this.op.length));
+	this.right = Nehan.Utils.cutQuote(Nehan.Utils.trim(expr));
+      }
+    },
+    _testHasAttr : function(style){
+      return style.getMarkupAttr(this.left) !== null;
+    },
+    _testEqual : function(style){
+      var value = style.getMarkupAttr(this.left);
+      return value === this.right;
+    },
+    _testCaretEqual : function(style){
+      var value = style.getMarkupAttr(this.left);
+      var rex = new RegExp("^" + this.right);
+      return rex.test(value);
+    },
+    _testDollarEqual : function(style){
+      var value = style.getMarkupAttr(this.left);
+      var rex = new RegExp(this.right + "$");
+      return rex.test(value);
+    },
+    _testTildeEqual : function(style){
+      var value = style.getMarkupAttr(this.left);
+      var values = value? value.split(/\s+/) : [];
+      return Nehan.List.exists(values, Nehan.Closure.eq(this.right));
+    },
+    _testPipeEqual : function(style){
+      var value = style.getMarkupAttr(this.left);
+      return value? (value == this.right || value.indexOf(this.right + "-") >= 0) : false;
+    },
+    _testStarEqual : function(style){
+      var value = style.getMarkupAttr(this.left);
+      return value.indexOf(this.right) >= 0;
+    },
+    _testOp : function(style){
+      switch(this.op){
+      case "=":  return this._testEqual(style);
+      case "^=": return this._testCaretEqual(style);
+      case "$=": return this._testDollarEqual(style);
+      case "|=": return this._testPipeEqual(style);
+      case "~=": return this._testTildeEqual(style);
+      case "*=": return this._testStarEqual(style);
+      }
+      throw "undefined operation:" + this.op;
+    },
+    /**
+       @memberof Nehan.AttrSelector
+       @method test
+       @param style {Nehan.StyleContext}
+       @return {boolean} true if style is matched to this attribute selector.
+    */
+    test : function(style){
+      if(this.op && this.left && this.right){
+	return this._testOp(style);
+      }
+      if(this.left){
+	return this._testHasAttr(style);
+      }
+      return false;
+    }
+  };
+
+  return AttrSelector;
+})();
+
+
+Nehan.PseudoSelector = (function(){
+  /**
+     @memberof Nehan
+     @class PseudoSelector
+     @classdesc abstraction of css pseudo element or pseudo class selector
+     @constructor
+     @param expr {String}
+     @example
+     * var ps = new PseudoSelector("::first-letter").hasPseudoElement(); // true
+  */
+  function PseudoSelector(expr){
+    this.name = this._normalize(expr);
+  }
+
+  PseudoSelector.prototype = {
+    /**
+       @memberof Nehan.PseudoSelector
+       @return {boolean}
+    */
+    hasPseudoElement : function(){
+      return (this.name === "before" ||
+	      this.name === "after" ||
+	      this.name === "first-letter" ||
+	      this.name === "first-line");
+    },
+    /**
+       @memberof Nehan.PseudoSelector
+       @param style {Nehan.StyleContext}
+       @return {boolean}
+    */
+    test : function(style){
+      switch(this.name){
+      // pseudo-element
+      case "before": return true;
+      case "after": return true;
+      case "first-letter": return !style.isMarkupEmpty();
+      case "first-line": return !style.isMarkupEmpty();
+
+      // pseudo-class
+      case "first-child": return style.isFirstChild();
+      case "last-child": return style.isLastChild();
+      case "first-of-type": return style.isFirstOfType();
+      case "last-of-type": return style.isLastOfType();
+      case "only-child": return style.isOnlyChild();
+      case "only-of-type": return style.isOnlyOfType();
+      case "empty": return style.isMarkupEmpty();
+      case "root": return style.isRoot();
+      }
+      return false;
+    },
+    _normalize : function(expr){
+      return expr.replace(/:+/g, "");
+    }
+  };
+
+  return PseudoSelector;
+})();
+
+
+/* 
+   single element type selector
+
+   example:
+
+   1. name selector
+     div {font-size:xxx}
+     /h[1-6]/ {font-weight:xxx}
+
+   2. class selector
+     div.class{font-size:xxx}
+     div.class1.class2{color:yyy}
+
+   3. id selector
+     div#id{font-size:xxx}
+
+   4. attribute selector
+     div[name=value]{font-size:xxx}
+     div[name1=value1][name1^=xxx]{color:yyy}
+
+   5. pseudo-class selector
+     li:first-child{font-weight:bold}
+
+   6. pseudo-element selector
+     div::first-line{font-size:xxx}
+*/
+Nehan.TypeSelector = (function(){
+  /**
+     @memberof Nehan
+     @class TypeSelector
+     @classdesc selector abstraction(name, class, id, attribute, pseudo).
+     @constructor
+     @param opt {Object}
+     @param opt.name {String}
+     @param opt.nameRex {RegExp}
+     @param opt.id {String}
+     @param opt.classes {Array<String>}
+     @param opt.attrs {Array<Nehan.AttrSelector>}
+     @param opt.pseudo {Nehan.PseudoSelector}
+     @description <pre>
+
+     1. name selector
+       div {font-size:xxx}
+       /h[1-6]/ {font-weight:xxx}
+
+     2. class selector
+       div.class{font-size:xxx}
+       div.class1.class2{color:yyy}
+
+     3. id selector
+       div#id{font-size:xxx}
+
+     4. attribute selector
+       div[name=value]{font-size:xxx}
+       div[name1=value1][name1^=xxx]{color:yyy}
+
+     5. pseudo-class selector
+       li:first-child{font-weight:bold}
+
+     6. pseudo-element selector
+       div::first-line{font-size:xxx}
+     </pre>
+  */
+  function TypeSelector(opt){
+    this.name = opt.name || null;
+    this.nameRex = opt.nameRex || null;
+    this.id = opt.id || null;
+    this.classes = opt.classes || [];
+    this.attrs = opt.attrs || [];
+    this.pseudo = opt.pseudo || null;
+    this.classes.sort();
+  }
+  
+  TypeSelector.prototype = {
+    test : function(style){
+      if(style === null){
+	return false;
+      }
+      // name selector
+      if(this.name && !this.testName(style.getMarkupName())){
+	return false;
+      }
+      // name selector(by rex)
+      if(this.nameRex && !this.testNameRex(style.getMarkupName())){
+	return false;
+      }
+      // class selector
+      if(this.classes.length > 0 && !this.testClassNames(style.getMarkupClasses())){
+	return false;
+      }
+      // id selector
+      if(this.id && style.getMarkupId() != this.id){
+	return false;
+      }
+      // attribute selectgor
+      if(this.attrs.length > 0 && !this._testAttrs(style)){
+	return false;
+      }
+      // pseudo-element, pseudo-class selector
+      if(this.pseudo && !this.pseudo.test(style)){
+	return false;
+      }
+      return true;
+    },
+    testName : function(markup_name){
+      if(this.name === null){
+	return false;
+      }
+      if(this.name === "*"){
+	return true;
+      }
+      return markup_name === this.name;
+    },
+    testNameRex : function(markup_name){
+      if(this.nameRex === null){
+	return false;
+      }
+      return this.nameRex.test(markup_name);
+    },
+    testClassNames : function(markup_classes){
+      return Nehan.List.forall(this.classes, function(klass){
+	return Nehan.List.exists(markup_classes, Nehan.Closure.eq(klass));
+      });
+    },
+    getNameSpec : function(){
+      if(this.nameRex){
+	return 1;
+      }
+      if(this.name === null || this.name === "*"){
+	return 0;
+      }
+      return 1;
+    },
+    getIdSpec : function(){
+      return this.id? 1 : 0;
+    },
+    getClassSpec : function(){
+      return this.classes.length;
+    },
+    getAttrSpec : function(){
+      return this.attrs.length;
+    },
+    getPseudoClassSpec : function(){
+      if(this.pseudo){
+	return this.pseudo.hasPseudoElement()? 0 : 1;
+      }
+      return 0;
+    },
+    _testAttrs : function(style){
+      return Nehan.List.forall(this.attrs, function(attr){
+	return attr.test(style);
+      });
+    }
+  };
+
+  return TypeSelector;
+})();
+
+
+Nehan.SelectorLexer = (function(){
+  /**
+     @memberof Nehan
+     @class SelectorLexer
+     @classdesc lexer of css selector
+     @constructor
+  */
+  function SelectorLexer(src){
+    this.buff = this._normalize(src);
+  }
+
+  var __rex_name = /^[\w-_\*!\?]+/;
+  var __rex_name_by_rex = /^\/[^\/]+\//;
+  var __rex_id = /^#[\w-_]+/;
+  var __rex_class = /^\.[\w-_]+/;
+  var __rex_attr = /^\[[^\]]+\]/;
+  var __rex_pseudo = /^:{1,2}[\w-_]+/;
+
+  SelectorLexer.prototype = {
+    /**
+       @memberof Nehan.SelectorLexer
+       @return {Array.<Nehan.TypeSelector>}
+    */
+    getTokens : function(){
+      var tokens = [];
+      while(this.buff !== ""){
+	var token = this._getNextToken();
+	if(token === null){
+	  break;
+	}
+	tokens.push(token);
+      }
+      return tokens;
+    },
+    _getNextToken : function(){
+      this.buff = Nehan.Utils.trim(this.buff);
+      if(this.buff === ""){
+	return null;
+      }
+      var c1 = this.buff.charAt(0);
+      switch(c1){
+      case "+": case "~": case ">": // combinator
+	this._stepBuff(1);
+	return c1;
+      default: // type-selecor
+	return this._getTypeSelector();
+      }
+      throw "invalid selector:[" + this.buff + "]";
+    },
+    _normalize : function(src){
+      return Nehan.Utils.trim(src).replace(/\s+/g, " ");
+    },
+    _stepBuff : function(count){
+      this.buff = Nehan.Utils.trim(this.buff.slice(count));
+    },
+    _getByRex : function(rex){
+      var ret = null;
+      var match = this.buff.match(rex);
+      if(match){
+	ret = match[0];
+	this._stepBuff(ret.length);
+      }
+      return ret;
+    },
+    _getTypeSelector : function(){
+      var buff_len_before = this.buff.length;
+      var name = this._getName();
+      var name_rex = (name === null)? this._getNameRex() : null;
+      var id = this._getId();
+      var classes = this._getClasses();
+      var attrs = this._getAttrs();
+      var pseudo = this._getPseudo();
+
+      // if size of this.buff is not changed, there is no selector element.
+      if(this.buff.length === buff_len_before){
+	throw "invalid selector:[" + this.buff + "]";
+      }
+      return new Nehan.TypeSelector({
+	name:name,
+	nameRex:name_rex,
+	id:id,
+	classes:classes,
+	attrs:attrs,
+	pseudo:pseudo
+      });
+    },
+    _getName : function(){
+      return this._getByRex(__rex_name);
+    },
+    // type name defined by regexp
+    // "/h[1-6]/.nehan-some-class span"
+    // => /h[1-6]/
+    _getNameRex : function(){
+      var name_rex = this._getByRex(__rex_name_by_rex);
+      if(name_rex === null){
+	return null;
+      }
+      return new RegExp(name_rex.replace(/[\/]/g, ""));
+    },
+    _getId : function(){
+      var id = this._getByRex(__rex_id);
+      return id? id.substring(1) : null;
+    },
+    _getClasses : function(){
+      var classes = [];
+      while(true){
+	var klass = this._getClass();
+	if(klass === null){
+	  break;
+	}
+	classes.push(klass);
+      }
+      return classes;
+    },
+    _getClass : function(){
+      var klass = this._getByRex(__rex_class);
+      return klass? klass.substring(1) : null;
+    },
+    _getAttrs : function(){
+      var attrs = [];
+      while(true){
+	var attr = this._getByRex(__rex_attr);
+	if(attr === null){
+	  break;
+	}
+	attrs.push(new Nehan.AttrSelector(attr));
+      }
+      return attrs;
+    },
+    _getPseudo : function(){
+      var pseudo = this._getByRex(__rex_pseudo);
+      return pseudo? new Nehan.PseudoSelector(pseudo) : null;
+    }
+  };
+
+  return SelectorLexer;
+})();
+
+
+/**
+   state machine module to check if some selector is matched to destination style context.
+
+   @namespace Nehan.SelectorStateMachine
+*/
+Nehan.SelectorStateMachine = (function(){
+  var __find_parent = function(style, parent_type){
+    var ptr = style.parent;
+    while(ptr !== null){
+      if(parent_type.test(ptr)){
+	return ptr;
+      }
+      ptr = ptr.parent;
+    }
+    return null;
+  };
+
+  var __find_direct_parent = function(style, parent_type){
+    var ptr = style.parent;
+    if(ptr === null){
+      return null;
+    }
+    return parent_type.test(ptr)? ptr : null;
+  };
+
+  // search adjacent sibling forom 'style' that matches f1 selector.
+  var __find_adj_sibling = function(style, f1){
+    var sibling_index = style.getChildIndex();
+    var prev_sibling = style.getParentNthChild(sibling_index - 1) || null;
+    return (prev_sibling && f1.test(prev_sibling))? prev_sibling : null;
+  };
+
+  // search style context that matches f1 selector from all preceding siblings of 'style'.
+  var __find_prev_sibling = function(style, f1){
+    var sibling_index = style.getChildIndex();
+    for(var i = 0; i < sibling_index; i++){
+      var prev_sibling = style.getParentNthChild(i);
+      if(prev_sibling && f1.test(prev_sibling)){
+	return prev_sibling;
+      }
+    }
+    return null;
+  };
+
+  return {
+    /**
+       return true if all the selector-tokens({@link Nehan.TypeSelector} or combinator) matches the style-context.
+
+       @memberof Nehan.SelectorStateMachine
+       @param style {Nehan.StyleContext}
+       @param tokens {Array.<Nehan.TypeSelector> | combinator_string}
+       @return {boolean}
+    */
+    accept : function(style, tokens){
+      if(tokens.length === 0){
+	throw "selector syntax error:" + src;
+      }
+      var pos = tokens.length - 1;
+      var pop = function(){
+	return (pos < 0)? null : tokens[pos--];
+      };
+      var push_back = function(){
+	pos++;
+      };
+      var f2, tmp, f1, combinator;
+      while(pos >= 0){
+	f2 = pop();
+	if(f2 instanceof Nehan.TypeSelector === false){
+	  throw "selector syntax error:" + src;
+	}
+	if(!f2.test(style)){
+	  return false;
+	}
+	tmp = pop();
+	if(tmp === null){
+	  return true;
+	}
+	if(tmp instanceof Nehan.TypeSelector){
+	  f1 = tmp;
+	  combinator = " "; // descendant combinator
+	} else if(typeof tmp === "string"){
+	  combinator = tmp;
+	  f1 = pop();
+	  if(f1 === null || f1 instanceof Nehan.TypeSelector === false){
+	    throw "selector syntax error:" + src;
+	  }
+	}
+	// test [f1 combinator f2]
+	// notice that f2 is already accepted at this point, so next we check [f1 combinator] parts.
+	// if style-context that matches [f1 combinator] is found, update 'style' to it, and next loop.
+	switch(combinator){
+	case " ": style = __find_parent(style, f1); break; // search parent context that matches f1.
+	case ">": style = __find_direct_parent(style, f1); break; // search direct parent context that matches f1.
+	case "+": style = __find_adj_sibling(style, f1); break; // find adjacent sibling context that matches f1.
+	case "~": style = __find_prev_sibling(style, f1); break; // find previous sibling context that matches f1.
+	default: throw "selector syntax error:invalid combinator(" + combinator + ")";
+	}
+	// can't find style-context that matches [f1 combinator f2]
+	if(style === null){
+	  return false;
+	}
+	// to start next loop from f1, push bach f1 token.
+	push_back();
+      }
+      return true; // all accepted
+    }
+  };
+})();
+
+
+// Selector = [TypeSelector | TypeSelector + combinator + Selector]
+Nehan.Selector = (function(){
+  /**
+     @memberof Nehan
+     @class Selector
+     @classdesc abstraction of css selector.
+     @constructor
+     @param key {String}
+     @param value {css_value}
+  */
+  function Selector(key, value){
+    this.key = this._normalizeKey(key); // selector source like 'h1 > p'
+    this.value = this._formatValue(value); // associated css value object like {font-size:16px}
+    this.elements = this._getSelectorElements(this.key); // [type-selector | combinator]
+    this.spec = this._countSpec(this.elements); // count specificity
+  }
+
+  Selector.prototype = {
+    /**
+       @memberof Nehan.Selector
+       @param style {Nehan.StyleContext}
+       @return {boolean}
+    */
+    test : function(style){
+      return Nehan.SelectorStateMachine.accept(style, this.elements);
+    },
+    /**
+       @memberof Nehan.Selector
+       @param style {Nehan.StyleContext}
+       @param element_name {String} - "before", "after", "first-line", "first-letter"
+       @return {boolean}
+    */
+    testPseudoElement : function(style, element_name){
+      return this.hasPseudoElementName(element_name) && this.test(style);
+    },
+    /**
+       @memberof Nehan.Selector
+       @param value {css_value}
+    */
+    updateValue : function(value){
+      for(var prop in value){
+	var fmt_value = Nehan.CssParser.formatValue(prop, value[prop]);
+	var fmt_prop = Nehan.CssParser.formatProp(prop);
+	var old_value = this.value[fmt_prop] || null;
+	if(old_value !== null && typeof old_value === "object" && typeof fmt_value === "object"){
+	  Nehan.Args.copy(old_value, fmt_value);
+	} else {
+	  this.value[fmt_prop] = fmt_value; // direct value or function
+	}
+      }
+    },
+    /**
+       @memberof Nehan.Selector
+       @return {String}
+    */
+    getKey : function(){
+      return this.key;
+    },
+    /**
+       @memberof Nehan.Selector
+       @return {css_value}
+    */
+    getValue : function(){
+      return this.value;
+    },
+    /**
+       @memberof Nehan.Selector
+       @return {int} selector specificity
+    */
+    getSpec : function(){
+      return this.spec;
+    },
+    /**
+       @memberof Nehan.Selector
+       @return {boolean}
+    */
+    hasPseudoElement : function(){
+      return this.key.indexOf("::") >= 0;
+    },
+    /**
+       @memberof Nehan.Selector
+       @param element_name {String} - "first-letter", "first-line"
+       @return {boolean}
+    */
+    hasPseudoElementName : function(element_name){
+      return this.key.indexOf("::" + element_name) >= 0;
+    },
+    // count selector 'specificity'
+    // see http://www.w3.org/TR/css3-selectors/#specificity
+    _countSpec : function(elements){
+      var a = 0, b = 0, c = 0;
+      Nehan.List.iter(elements, function(token){
+	if(token instanceof Nehan.TypeSelector){
+	  a += token.getIdSpec();
+	  b += token.getClassSpec() + token.getPseudoClassSpec() + token.getAttrSpec();
+	  c += token.getNameSpec();
+	}
+      });
+      return parseInt([a,b,c].join(""), 10); // maybe ok in most case.
+    },
+    _getSelectorElements : function(key){
+      var lexer = new Nehan.SelectorLexer(key);
+      return lexer.getTokens();
+    },
+    _normalizeKey : function(key){
+      key = (key instanceof RegExp)? "/" + key.source + "/" : key;
+      return Nehan.Utils.trim(key).toLowerCase().replace(/\s+/g, " ");
+    },
+    _formatValue : function(value){
+      var ret = {};
+      for(var prop in value){
+	var fmt_prop = Nehan.CssParser.formatProp(prop);
+	var fmt_value = Nehan.CssParser.formatValue(prop, value[prop]);
+	ret[fmt_prop] = fmt_value;
+      }
+      return ret;
+    }
+  };
+
+  return Selector;
+})();
+
+
+Nehan.Rgb = (function(){
+  /**
+     @memberof Nehan
+     @class Rgb
+     @classdesc abstraction of RGB color value.
+     @constructor
+     @param value {String}
+  */
+  function Rgb(value){
+    this.value = String(value);
+    this.red = parseInt(this.value.substring(0,2), 16);
+    this.green = parseInt(this.value.substring(2,4), 16);
+    this.blue = parseInt(this.value.substring(4,6), 16);
+  }
+  
+  Rgb.prototype = {
+    /**
+       @memberof Nehan.Rgb
+       @return {String}
+    */
+    getRed : function(){
+      return this.red;
+    },
+    /**
+       @memberof Nehan.Rgb
+       @return {String}
+    */
+    getGreen : function(){
+      return this.green;
+    },
+    /**
+       @memberof Nehan.Rgb
+       @return {String}
+    */
+    getBlue : function(){
+      return this.blue;
+    },
+    /**
+       @memberof Nehan.Rgb
+       @return {String}
+    */
+    getColorValue : function(){
+      return this.value;
+    }
+  };
+
+  return Rgb;
+})();
+
+/**
+   color collection manager
+   @namespace Nehan.Colors
+*/
+Nehan.Colors = (function(){
+  var __color_names = {
+    "aliceblue":"f0f8ff",
+    "antiquewhite":"faebd7",
+    "aqua":"00ffff",
+    "aquamarine":"7fffd4",
+    "azure":"f0ffff",
+    "beige":"f5f5dc",
+    "bisque":"ffe4c4",
+    "black":"000000",
+    "blanchedalmond":"ffebcd",
+    "blue":"0000ff",
+    "blueviolet":"8a2be2",
+    "brown":"a52a2a",
+    "burlywood":"deb887",
+    "cadetblue":"5f9ea0",
+    "chartreuse":"7fff00",
+    "chocolate":"d2691e",
+    "coral":"ff7f50",
+    "cornflowerblue":"6495ed",
+    "cornsilk":"fff8dc",
+    "crimson":"dc143c",
+    "cyan":"00ffff",
+    "darkblue":"00008b",
+    "darkcyan":"008b8b",
+    "darkgoldenrod":"b8860b",
+    "darkgray":"a9a9a9",
+    "darkgreen":"006400",
+    "darkkhaki":"bdb76b",
+    "darkmagenta":"8b008b",
+    "darkolivegreen":"556b2f",
+    "darkorange":"ff8c00",
+    "darkorchid":"9932cc",
+    "darkred":"8b0000",
+    "darksalmon":"e9967a",
+    "darkseagreen":"8fbc8f",
+    "darkslateblue":"483d8b",
+    "darkslategray":"2f4f4f",
+    "darkturquoise":"00ced1",
+    "darkviolet":"9400d3",
+    "deeppink":"ff1493",
+    "deepskyblue":"00bfff",
+    "dimgray":"696969",
+    "dodgerblue":"1e90ff",
+    "firebrick":"b22222",
+    "floralwhite":"fffaf0",
+    "forestgreen":"228b22",
+    "fuchsia":"ff00ff",
+    "gainsboro":"dcdcdc",
+    "ghostwhite":"f8f8ff",
+    "gold":"ffd700",
+    "goldenrod":"daa520",
+    "gray":"808080",
+    "green":"008000",
+    "greenyellow":"adff2f",
+    "honeydew":"f0fff0",
+    "hotpink":"ff69b4",
+    "indianred ":"cd5c5c",
+    "indigo ":"4b0082",
+    "ivory":"fffff0","khaki":"f0e68c",
+    "lavender":"e6e6fa",
+    "lavenderblush":"fff0f5",
+    "lawngreen":"7cfc00",
+    "lemonchiffon":"fffacd",
+    "lightblue":"add8e6",
+    "lightcoral":"f08080",
+    "lightcyan":"e0ffff",
+    "lightgoldenrodyellow":"fafad2",
+    "lightgrey":"d3d3d3",
+    "lightgreen":"90ee90",
+    "lightpink":"ffb6c1",
+    "lightsalmon":"ffa07a",
+    "lightseagreen":"20b2aa",
+    "lightskyblue":"87cefa",
+    "lightslategray":"778899",
+    "lightsteelblue":"b0c4de",
+    "lightyellow":"ffffe0",
+    "lime":"00ff00",
+    "limegreen":"32cd32",
+    "linen":"faf0e6",
+    "magenta":"ff00ff",
+    "maroon":"800000",
+    "mediumaquamarine":"66cdaa",
+    "mediumblue":"0000cd",
+    "mediumorchid":"ba55d3",
+    "mediumpurple":"9370d8",
+    "mediumseagreen":"3cb371",
+    "mediumslateblue":"7b68ee",
+    "mediumspringgreen":"00fa9a",
+    "mediumturquoise":"48d1cc",
+    "mediumvioletred":"c71585",
+    "midnightblue":"191970",
+    "mintcream":"f5fffa",
+    "mistyrose":"ffe4e1",
+    "moccasin":"ffe4b5",
+    "navajowhite":"ffdead",
+    "navy":"000080",
+    "oldlace":"fdf5e6",
+    "olive":"808000",
+    "olivedrab":"6b8e23",
+    "orange":"ffa500",
+    "orangered":"ff4500",
+    "orchid":"da70d6",
+    "palegoldenrod":"eee8aa",
+    "palegreen":"98fb98",
+    "paleturquoise":"afeeee",
+    "palevioletred":"d87093",
+    "papayawhip":"ffefd5",
+    "peachpuff":"ffdab9",
+    "peru":"cd853f",
+    "pink":"ffc0cb",
+    "plum":"dda0dd",
+    "powderblue":"b0e0e6",
+    "purple":"800080",
+    "red":"ff0000",
+    "rosybrown":"bc8f8f",
+    "royalblue":"4169e1",
+    "saddlebrown":"8b4513",
+    "salmon":"fa8072",
+    "sandybrown":"f4a460",
+    "seagreen":"2e8b57",
+    "seashell":"fff5ee",
+    "sienna":"a0522d",
+    "silver":"c0c0c0",
+    "skyblue":"87ceeb",
+    "slateblue":"6a5acd",
+    "slategray":"708090",
+    "snow":"fffafa",
+    "springgreen":"00ff7f",
+    "steelblue":"4682b4",
+    "tan":"d2b48c",
+    "teal":"008080",
+    "thistle":"d8bfd8",
+    "tomato":"ff6347",
+    "turquoise":"40e0d0",
+    "violet":"ee82ee",
+    "wheat":"f5deb3",
+    "white":"ffffff",
+    "whitesmoke":"f5f5f5",
+    "yellow":"ffff00",
+    "yellowgreen":"9acd32",
+    "transparent":"transparent"
+  };
+
+  var rex_hex_color = /^(?:[0-9a-f]{3}){1,2}$/;
+
+  return {
+    /**
+       @memberof Nehan.Colors
+       @param value {String}
+       @return {String}
+       @example
+       * Colors.get("white"); // "ffffff" (pre defined color)
+       * Colors.get("f00"); // "ff0000" (always length 6)
+       * Colors.get("0000FF"); // "0000ff" (always lowercased)
+    */
+    get : function(value){
+      value = value.replace(/#/g, "").toLowerCase();
+      if(!rex_hex_color.test(value)){
+	return __color_names[value] || value;
+      }
+      if(value.length === 3){
+	return value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
+      }
+      return value;
+    }
+  };
+})();
+
+
+Nehan.Color = (function(){
+  /**
+     @memberof Nehan
+     @class Color
+     @classdesc abstraction for css 'color'.
+     @param value {String}
+  */
+  function Color(value){
+    this.setValue(value);
+  }
+
+  Color.prototype = {
+    /**
+       @memberof Nehan.Color
+       @param value {String}
+    */
+    setValue : function(value){
+      this.value = Nehan.Colors.get(value);
+    },
+    /**
+       @memberof Nehan.Color
+       @return {String}
+    */
+    getValue : function(){
+      return this.value;
+    },
+    /**
+       @memberof Nehan.Color
+       @return {String}
+       @example
+       * new Color("transparent").getCssValue(); // "transparent"
+       * new Color("ff0022").getCssValue(); // "#ff0022"
+       * new Color("red").getCssValue(); // "#ff0000"
+    */
+    getCssValue : function(){
+      return (this.value === "transparent")? this.value : "#" + this.value;
+    },
+    /**
+       @memberof Nehan.Color
+       @return {Nehan.Rgb}
+    */
+    getRgb : function(){
+      return new Nehan.Rgb(this.value);
+    },
+    /**
+       @memberof Nehan.Color
+       @return {Object}
+    */
+    getCss : function(){
+      var css = {};
+      css.color = this.getCssValue();
+      return css;
+    }
+  };
+
+  return Color;
+})();
+
+/**
+   palette color utility module
+
+   @namespace Nehan.Palette
+*/
+Nehan.Palette = (function(){
+  // 256(8 * 8 * 4) color palette scales.
+  var __rg_palette = [0, 36, 73, 109, 146, 182, 219, 255];
+  var __b_palette = [0, 85, 170, 255];
+
+  var __make_hex_str = function(ival){
+    var str = ival.toString(16);
+    if(str.length <= 1){
+      return "0" + str;
+    }
+    return str;
+  };
+
+  var __find_palette = function(ival, palette){
+    if(Nehan.List.exists(palette, Nehan.Closure.eq(ival))){
+      return ival;
+    }
+    return Nehan.List.minobj(palette, function(pval){
+      return Math.abs(pval - ival);
+    });
+  };
+
+  return {
+    /**
+     * search nearest color value defined in nehan palette.<br>
+     * we use this value for img characters.
+
+       @memberof Nehan.Palette
+       @param rgb {Nehan.Rbg}
+       @return {String}
+    */
+    getColor : function(rgb){
+      var palette_red = __find_palette(rgb.getRed(), __rg_palette);
+      var palette_green = __find_palette(rgb.getGreen(), __rg_palette);
+      var palette_blue = __find_palette(rgb.getBlue(), __b_palette);
+
+      return [
+	__make_hex_str(palette_red),
+	__make_hex_str(palette_green),
+	__make_hex_str(palette_blue)
+      ].join("");
+    }
+  };
+})();
+
+
+/**
+   @namespace Nehan.Cardinal
+*/
+Nehan.Cardinal = (function(){
+  var __table = {
+    "lower-alpha":[
+      "a","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"
+    ],
+    "upper-alpha":[
+      "A","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
+    ],
+    "lower-roman":[
+      "i","i","ii","iii","iv","v","vi","vii","viii","ix","x","xi","xii","xiii","xiv","xv","xvi","xvii","xviii","xix","xx"
+    ],
+    "upper-roman":[
+      "I","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"
+    ],
+    "lower-greek":[
+      "\u03b1","\u03b1","\u03b2","\u03b3","\u03b4","\u03b5","\u03b6","\u03b7","\u03b8","\u03b9","\u03ba","\u03bb","\u03bc","\u03bd","\u03be","\u03bf","\u03c0","\u03c1","\u03c3","\u03c4","\u03c5","\u03c6","\u03c7","\u03c8","\u03c9"
+    ],
+    "upper-greek":[
+      "\u0391","\u0391","\u0392","\u0393","\u0394","\u0395","\u0396","\u0397","\u0398","\u0399","\u039a","\u039b","\u039c","\u039d","\u039e","\u039f","\u03a0","\u03a1","\u03a3","\u03a4","\u03a5","\u03a6","\u03a7","\u03a8","\u03a9"
+    ],
+    "cjk-ideographic":[
+      "\u3007","\u4E00","\u4E8C","\u4E09","\u56DB","\u4E94","\u516D","\u4E03","\u516B","\u4E5D","\u5341"
+    ],
+    "hiragana":[
+      "\u3042","\u3042","\u3044","\u3046","\u3048","\u304A","\u304B","\u304D","\u304F","\u3051","\u3053","\u3055","\u3057","\u3059","\u305B","\u305D","\u305F","\u3061","\u3064","\u3066","\u3068","\u306A","\u306B","\u306C","\u306D","\u306E","\u306F","\u3072","\u3075","\u3078","\u307B","\u307E","\u307F","\u3080","\u3081","\u3082","\u3084","\u3086","\u3088","\u3089","\u308A","\u308B","\u308C","\u308D","\u308F","\u3090","\u3091","\u3092","\u3093"
+    ],
+    "hiragana-iroha":[
+      "\u3044","\u3044","\u308D","\u306F","\u306B","\u307B","\u3078","\u3068","\u3061","\u308A","\u306C","\u308B","\u3092","\u308F","\u304B","\u3088","\u305F","\u308C","\u305D","\u3064","\u306D","\u306A","\u3089","\u3080","\u3046","\u3090","\u306E","\u304A","\u304F","\u3084","\u307E","\u3051","\u3075","\u3053","\u3048","\u3066","\u3042","\u3055","\u304D","\u3086","\u3081","\u307F","\u3057","\u3091","\u3072","\u3082","\u305B","\u3059"
+    ],
+    "katakana":[
+      "\u30A2","\u30A2","\u30A4","\u30A6","\u30A8","\u30AA","\u30AB","\u30AD","\u30AF","\u30B1","\u30B3","\u30B5","\u30B7","\u30B9","\u30BB","\u30BD","\u30BF","\u30C1","\u30C4","\u30C6","\u30C8","\u30CA","\u30CB","\u30CC","\u30CD","\u30CE","\u30CF","\u30D2","\u30D5","\u30D8","\u30DB","\u30DE","\u30DF","\u30E0","\u30E1","\u30E2","\u30E4","\u30E6","\u30E8","\u30E9","\u30EA","\u30EB","\u30EC","\u30ED","\u30EF","\u30F0","\u30F1","\u30F2","\u30F3"
+    ],
+    "katakana-iroha":[
+      "\u30A4","\u30A4","\u30ED","\u30CF","\u30CB","\u30DB","\u30D8","\u30C8","\u30C1","\u30EA","\u30CC","\u30EB","\u30F2","\u30EF","\u30AB","\u30E8","\u30BF","\u30EC","\u30BD","\u30C4","\u30CD","\u30CA","\u30E9","\u30E0","\u30A6","\u30F0","\u30CE","\u30AA","\u30AF","\u30E4","\u30DE","\u30B1","\u30D5","\u30B3","\u30A8","\u30C6","\u30A2","\u30B5","\u30AD","\u30E6","\u30E1","\u30DF","\u30B7","\u30F1","\u30D2","\u30E2","\u30BB","\u30B9"
+    ]
+  };
+
+  var __aliases = {
+    "upper-latin":"upper-alpha",
+    "lower-latin":"lower-alpha"
+  };
+
+  return {
+    /**
+       get cardinal string array
+
+       @memberof Nehan.Cardinal
+       @param name {string}
+       @return {Array.<string>}
+    */
+    getTableByName : function(name){
+      return __table[__aliases[name] || name];
+    },
+    /**
+       get cardical basis
+
+       @memberof Nehan.Cardinal
+       @param name {string}
+       @return {int}
+    */
+    getBaseByName : function(name){
+      var table = this.getTableByName(name);
+      return table.length;
+    },
+    /**
+       @memberof Nehan.Cardinal
+       @param name {string}
+       @param decimal {int}
+       @return {string}
+       @example
+       * Cardinal.getStringByName("lower-alpha", 2); // "c"
+       * Cardinal.getStringByName("hiragana", 0); // "あ"
+       * Cardinal.getStringByName("hiragana-iroha", 0); // "い"
+    */
+    getStringByName : function(name, decimal){
+      var table = this.getTableByName(name);
+      var base = table.length;
+      var digits = Nehan.Utils.convBase(decimal, base);
+      var ret = "";
+      for(var i = 0; i < digits.length; i++){
+	var digit = digits[i];
+	var index = (i === 0)? digits[i] : Math.min(digit + 1, base - 1);
+	ret += table[index] || "";
+      }
+      return ret;
+    }
+  };
+})();
+
+
+/**
+   utility module for box physical direction(top, right, bottom, left).
+
+   @namespace Nehan.BoxRect
+*/
+Nehan.BoxRect = {
+  /**
+     iterate all direction of [obj] by [fn]
+     @memberof Nehan.BoxRect
+     @param obj {Object}
+     @param fn {Function}
+   */
+  iter : function(obj, fn){
+    Nehan.List.iter(Nehan.Const.cssBoxDirs, function(dir){
+      if(obj[dir]){
+	fn(dir, obj[dir]);
+      }
+    });
+  },
+  /**
+     @memberof Nehan.BoxRect
+     @param dst {Object}
+     @param flow {Nehan.BoxFlow}
+     @param value {Object}
+   */
+  setValue : function(dst, flow, value){
+    if(typeof value.start != "undefined"){
+      this.setStart(dst, flow, value.start);
+    }
+    if(typeof value.end != "undefined"){
+      this.setEnd(dst, flow, value.end);
+    }
+    if(typeof value.before != "undefined"){
+      this.setBefore(dst, flow, value.before);
+    }
+    if(typeof value.after != "undefined"){
+      this.setAfter(dst, flow, value.after);
+    }
+    return dst;
+  },
+  /**
+     @memberof Nehan.BoxRect
+     @param dst {Object}
+     @param flow {Nehan.BoxFlow}
+     @param value
+   */
+  setBefore : function(dst, flow, value){
+    dst[flow.getPropBefore()] = value;
+  },
+  /**
+     @memberof Nehan.BoxRect
+     @param dst {Object}
+     @param flow {Nehan.BoxFlow}
+     @param value
+   */
+  setAfter : function(dst, flow, value){
+    dst[flow.getPropAfter()] = value;
+  },
+  /**
+     @memberof Nehan.BoxRect
+     @param dst {Object}
+     @param flow {Nehan.BoxFlow}
+     @param value
+   */
+  setStart : function(dst, flow, value){
+    dst[flow.getPropStart()] = value;
+  },
+  /**
+     @memberof Nehan.BoxRect
+     @param dst {Object}
+     @param flow {Nehan.BoxFlow}
+     @param value
+   */
+  setEnd : function(dst, flow, value){
+    dst[flow.getPropEnd()] = value;
+  }
+};
+
+
+/**
+   @namespace Nehan.BoxCorner
+*/
+Nehan.BoxCorner = (function(){
+  var __sort = function(dir1, dir2){
+    var order = {top:0, bottom:1, left:2, right:3};
+    return [dir1, dir2].sort(function (c1, c2){
+      return order[c1] - order[c2];
+    });
+  };
+  return {
+    /**
+       get normalized(and camel-cased) corner property name
+       @memberof Nehan.BoxCorner
+       @param dir1 {string}
+       @param dir2 {string}
+       @return {string}
+       @example
+       * BoxCorner.getCornerName("right", "top"); // => "topRight"
+    */
+    getCornerName : function(dir1, dir2){
+      var dirs = __sort(dir1, dir2);
+      return [dirs[0], Nehan.Utils.capitalize(dirs[1])].join("");
+    }
+  };
+})();
+
+Nehan.Font = (function(){
+  /**
+     @memberof Nehan
+     @class Font
+     @classdesc css 'font' abstraction
+     @constructor
+     @param size {int} - font size in px
+  */
+  function Font(size){
+    this.size = size;
+  }
+
+  Font.prototype = {
+    /**
+       @memberof Nehan.Font
+       @return {boolean}
+    */
+    isBold : function(){
+      return this.weight && this.weight !== "normal" && this.weight !== "lighter";
+    },
+    /**
+       @memberof Nehan.Font
+       @return {string}
+    */
+    toString : function(){
+      return [
+	this.weight || "normal",
+	this.style || "normal",
+	this.size + "px",
+	this.family || "monospace"
+      ].join(" ");
+    },
+    /**
+       @memberof Nehan.Font
+       @return {Object}
+    */
+    getCss : function(){
+      var css = {};
+      if(this.size){
+	css["font-size"] = this.size + "px";
+      }
+      if(this.weight){
+	css["font-weight"] = this.weight;
+      }
+      if(this.style){
+	css["font-style"] = this.style;
+      }
+      if(this.family){
+	css["font-family"] = this.family;
+      }
+      return css;
+    }
+  };
+
+  return Font;
+})();
+
+
+Nehan.Edge = (function(){
+  /**
+     @memberof Nehan
+     @class Edge
+     @classdesc abstraction of physical edge size for each css directions(top, right, bottom, left).
+     @constructor
+     @param type {String} - "margin" or "padding" or "border"
+  */
+  function Edge(type){
+    this._type = type;
+    this.top = 0;
+    this.right = 0;
+    this.bottom = 0;
+    this.left = 0;
+  }
+
+  Edge.prototype = {
+    /**
+       @memberof Nehan.Edge
+    */
+    clear : function(){
+      this.top = 0;
+      this.right = 0;
+      this.bottom = 0;
+      this.left = 0;
+    },
+    /**
+       @memberof Nehan.Edge
+    */
+    clearBefore : function(flow){
+      this[flow.getPropBefore()] = 0;
+    },
+    /**
+       @memberof Nehan.Edge
+    */
+    clearAfter : function(flow){
+      this[flow.getPropAfter()] = 0;
+    },
+    /**
+       @memberof Nehan.Edge
+       @param dst {Nehan.Edge}
+       @return {Nehan.Edge}
+    */
+    copyTo : function(dst){
+      var self = this;
+      Nehan.List.iter(Nehan.Const.cssBoxDirs, function(dir){
+	dst[dir] = self[dir];
+      });
+      return dst;
+    },
+    /**
+       @memberof Nehan.Edge
+       @param dir {String} - "top", "right", "bottom", "left"
+       @return {String}
+    */
+    getDirProp : function(dir){
+      return [this._type, dir].join("-");
+    },
+    /**
+       @memberof Nehan.Edge
+       @return {Object}
+    */
+    getCss : function(){
+      var css = {};
+      var self = this;
+      Nehan.List.iter(["top", "right", "bottom", "left"], function(dir){
+	var value = self[dir];
+	if(value > 0){
+	  css[self.getDirProp(dir)] = self[dir] + "px";
+	}
+      });
+      return css;
+    },
+    /**
+       @memberof Nehan.Edge
+       @return {int}
+    */
+    getWidth : function(){
+      return this.left + this.right;
+    },
+    /**
+       @memberof Nehan.Edge
+       @return {int}
+    */
+    getHeight : function(){
+      return this.top + this.bottom;
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+    */
+    getMeasure : function(flow){
+      return flow.isTextVertical()? this.getHeight() : this.getWidth();
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+    */
+    getExtent : function(flow){
+      return flow.isBlockflowVertical()? this.getHeight() : this.getWidth();
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @param size {Object}
+       @param size.top {int}
+       @param size.right {int}
+       @param size.bottom {int}
+       @param size.left {int}
+    */
+    setSize : function(flow, size){
+      Nehan.BoxRect.setValue(this, flow, size);
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @param value {int}
+    */
+    setStart : function(flow, value){
+      this[flow.getPropStart()] = value;
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @param value {int}
+    */
+    setEnd : function(flow, value){
+      this[flow.getPropEnd()] = value;
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @param value {int}
+    */
+    setBefore : function(flow, value){
+      this[flow.getPropBefore()] = value;
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @param value {int}
+    */
+    setAfter : function(flow, value){
+      this[flow.getPropAfter()] = value;
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+    */
+    getStart : function(flow){
+      return this[flow.getPropStart()];
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+    */
+    getEnd : function(flow){
+      return this[flow.getPropEnd()];
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+    */
+    getBefore : function(flow){
+      return this[flow.getPropBefore()];
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+    */
+    getAfter : function(flow){
+      return this[flow.getPropAfter()];
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @param name {String} - before, end, after, start
+    */
+    setByName : function(flow, name, value){
+      switch(name){
+      case "before":
+	this.setBefore(flow, value);
+	break;
+      case "end":
+	this.setEnd(flow, value);
+	break;
+      case "after":
+	this.setAfter(flow, value);
+	break;
+      case "start":
+	this.setStart(flow, value);
+	break;
+      default:
+	console.error("Edge::setByName, undefined direction:", name);
+      }
+    },
+    /**
+       @memberof Nehan.Edge
+       @param flow {Nehan.BoxFlow}
+       @param name {String} - before, end, after, start
+       @return {int}
+    */
+    getByName : function(flow, name){
+      switch(name){
+      case "before":
+	return this.getBefore(flow);
+      case "end":
+	return this.getEnd(flow);
+      case "after":
+	return this.getAfter(flow);
+      case "start":
+	return this.getStart(flow);
+      default:
+	consolo.error("Edge::getByName, undefined direction:", name);
+	return 0;
+      }
+    }
+  };
+
+  return Edge;
+})();
+
+Nehan.Radius2d = (function(){
+  /**
+     @memberof Nehan
+     @class Radius2d
+     @classdesc abstraction of radius with 2 direction vert and hori.
+     @constructor
+  */
+  function Radius2d(){
+    this.hori = 0;
+    this.vert = 0;
+  }
+
+  Radius2d.prototype = {
+    clone : function(){
+      var radius2d = new Nehan.Radius2d();
+      radius2d.hori = this.hori;
+      radius2d.vert = this.vert;
+      return radius2d;
+    },
+    /**
+       @memberof Nehan.Radius2d
+       @param value {Array<int>} - 2 length array, value[0] as horizontal radius, value[1] as vertical radius.
+       @param value.0 {int} - horizontal radius
+       @param value.1 {int} - vertical radius
+    */
+    setSize : function(value){
+      this.hori = value[0];
+      this.vert = value[1];
+    },
+    /**
+       @memberof Nehan.Radius2d
+       @return {String}
+    */
+    getCssValueHori : function(){
+      return this.hori + "px";
+    },
+    /**
+       @memberof Nehan.Radius2d
+       @return {String}
+    */
+    getCssValueVert : function(){
+      return this.vert + "px";
+    }
+  };
+  
+  return Radius2d;
+})();
+
+Nehan.BorderRadius = (function(){
+  /**
+     @memberof Nehan
+     @class BorderRadius
+     @classdesc logical border radius object
+     @constructor
+  */
+  function BorderRadius(){
+    this.topLeft = new Nehan.Radius2d();
+    this.topRight = new Nehan.Radius2d();
+    this.bottomRight = new Nehan.Radius2d();
+    this.bottomLeft = new Nehan.Radius2d();
+  }
+
+  BorderRadius.prototype = {
+    /**
+       @memberof Nehan.BorderRadius
+       @method clone
+       @return {Nehan.BorderRadius}
+    */
+    clone : function(){
+      var radius = new BorderRadius();
+      radius.topLeft = this.topLeft.clone();
+      radius.topRight = this.topRight.clone();
+      radius.bottomRight = this.bottomRight.clone();
+      radius.bottomLeft = this.bottomLeft.clone();
+      return radius;
+    },
+    /**
+       @memberof Nehan.BorderRadius
+       @method getArray
+       @return {Array.<Nehan.Radius2d>}
+    */
+    getArray : function(){
+      return [
+	this.topLeft,
+	this.topRight,
+	this.bottomRight,
+	this.bottomLeft
+      ];
+    },
+    /**
+       get css value of border-radius for horizontal direction
+       @memberof Nehan.BorderRadius
+       @method getCssValueHroi
+       @return {Object}
+    */
+    getCssValueHori : function(){
+      return Nehan.List.map(this.getArray(), function(radius){
+	return radius.getCssValueHori();
+      }).join(" ");
+    },
+    /**
+       get css value of border-radius for vertical direction
+       @memberof Nehan.BorderRadius
+       @method getCssValueVert
+       @return {Object}
+    */
+    getCssValueVert : function(){
+      return Nehan.List.map(this.getArray(), function(radius){
+	return radius.getCssValueVert();
+      }).join(" ");
+    },
+    /**
+       get css value of border-radius for both vert and horizontal direction
+       @memberof Nehan.BorderRadius
+       @method getCssValue
+       @return {Object}
+    */
+    getCssValue : function(){
+      return [this.getCssValueHori(), this.getCssValueVert()].join("/");
+    },
+    /**
+       get css object of border-radius
+       @memberof Nehan.BorderRadius
+       @method getCss
+       @return {Object}
+    */
+    getCss : function(){
+      var css = {};
+      var css_value = this.getCssValue();
+      css["border-radius"] = css_value; // without vender prefix
+      Nehan.List.iter(Nehan.Const.cssVenderPrefixes, function(prefix){
+	var prop = [prefix, "border-radius"].join("-"); // with vender prefix
+	css[prop] = css_value;
+      });
+      return css;
+    },
+    /**
+       get corner value
+       @memberof Nehan.BorderRadius
+       @method getCorner
+       @param dir1 {string} - physical direction of logical start or end
+       @param dir2 {string} - physical direction of logical before or after
+       @return {Nehan.Radius2d}
+    */
+    getCorner : function(dir1, dir2){
+      var name = Nehan.BoxCorner.getCornerName(dir1, dir2);
+      return this[name];
+    },
+    /**
+       set corner size
+       @memberof Nehan.BorderRadius
+       @method setSize
+       @param flow {Nehan.BoxFlow} - base layout flow
+       @param size {Object} - size values for each logical corner
+       @param size.start-before {int}
+       @param size.start-after {int}
+       @param size.end-before {int}
+       @param size.end-after {int}
+    */
+    setSize : function(flow, size){
+      if(typeof size["start-before"] != "undefined"){
+	this.setStartBefore(flow, size["start-before"]);
+      }
+      if(typeof size["start-after"] != "undefined"){
+	this.setStartAfter(flow, size["start-after"]);
+      }
+      if(typeof size["end-before"] != "undefined"){
+	this.setEndBefore(flow, size["end-before"]);
+      }
+      if(typeof size["end-after"] != "undefined"){
+	this.setEndAfter(flow, size["end-after"]);
+      }
+    },
+    /**
+       set corner of logical "start-before"
+       @memberof Nehan.BorderRadius
+       @method setStartBefore
+       @param flow {Nehan.BoxFlow} - base layout flow
+       @param value {Array<int>} - 2d radius value
+       @example
+       * new BorderRadius().setStartBefore(BoxFlows.getByName("lr-tb"), [5, 10]); // horizontal 5px, vertical 10px
+    */
+    setStartBefore : function(flow, value){
+      var radius = this.getCorner(flow.getPropStart(), flow.getPropBefore());
+      radius.setSize(value);
+    },
+    /**
+       set corner of logical "start-after"
+       @memberof Nehan.BorderRadius
+       @method setStartAfter
+       @param flow {Nehan.BoxFlow} - base layout flow
+       @param value {Array<int>} - 2d radius value
+    */
+    setStartAfter : function(flow, value){
+      var radius = this.getCorner(flow.getPropStart(), flow.getPropAfter());
+      radius.setSize(value);
+    },
+    /**
+       set corner of logical "end-before"
+       @memberof Nehan.BorderRadius
+       @method setEndBefore
+       @param flow {Nehan.BoxFlow} - base layout flow
+       @param value {Array<int>} - 2d radius value
+    */
+    setEndBefore : function(flow, value){
+      var radius = this.getCorner(flow.getPropEnd(), flow.getPropBefore());
+      radius.setSize(value);
+    },
+    /**
+       set corner of logical "end-after"
+       @memberof Nehan.BorderRadius
+       @method setEndAfter
+       @param flow {Nehan.BoxFlow} - base layout flow
+       @param value {Array<int>} - 2d radius value
+    */
+    setEndAfter :  function(flow, value){
+      var radius = this.getCorner(flow.getPropEnd(), flow.getPropAfter());
+      radius.setSize(value);
+    },
+    /**
+       clear corner values of logical before direction("start-before" and "end-before")
+       @memberof Nehan.BorderRadius
+       @method clearBefore
+       @param flow {Nehan.BoxFlow} - base layout flow
+    */
+    clearBefore : function(flow){
+      this.setStartBefore(flow, [0, 0]);
+      this.setEndBefore(flow, [0, 0]);
+    },
+    /**
+       clear corner values of logical before direction("start-after" and "end-after")
+       @memberof Nehan.BorderRadius
+       @method clearAfter
+       @param flow {Nehan.BoxFlow} - base layout flow
+    */
+    clearAfter : function(flow){
+      this.setStartAfter(flow, [0, 0]);
+      this.setEndAfter(flow, [0, 0]);
+    }
+  };
+
+  return BorderRadius;
+})();
+
+Nehan.BorderColor = (function(){
+  /**
+     @memberof Nehan
+     @class BorderColor
+     @classdesc logical border color object
+     @constructor
+  */
+  function BorderColor(){
+  }
+
+  BorderColor.prototype = {
+    /**
+       @memberof Nehan.BorderColor
+       @method clone
+       @return {Nehan.BorderColor}
+    */
+    clone : function(){
+      var border_color = new BorderColor();
+      Nehan.List.iter(Nehan.Const.cssBoxDirs, function(dir){
+	if(this[dir]){
+	  border_color[dir] = this[dir];
+	}
+      }.bind(this));
+      return border_color;
+    },
+    /**
+       @memberof Nehan.BorderColor
+       @method setColor
+       @param flow {Nehan.BoxFlow}
+       @param value {Object} - color values, object or array or string available.
+       @param value.before {Nehan.Color}
+       @param value.end {Nehan.Color}
+       @param value.after {Nehan.Color}
+       @param value.start {Nehan.Color}
+    */
+    setColor : function(flow, value){
+      var self = this;
+
+      // first, set as it is(obj, array, string).
+      Nehan.BoxRect.setValue(this, flow, value);
+
+      // second, map as color class.
+      Nehan.BoxRect.iter(this, function(dir, val){
+	self[dir] = new Nehan.Color(val);
+      });
+    },
+    /**
+       get css object of border color
+
+       @memberof Nehan.BorderColor
+       @method getCss
+    */
+    getCss : function(){
+      var css = {};
+      Nehan.BoxRect.iter(this, function(dir, color){
+	var prop = ["border", dir, "color"].join("-");
+	css[prop] = color.getCssValue();
+      });
+      return css;
+    }
+  };
+
+  return BorderColor;
+})();
+
+Nehan.BorderStyle = (function(){
+  /**
+     @memberof Nehan
+     @class BorderStyle
+     @classdesc logical border style object
+     @constructor
+  */
+  function BorderStyle(){
+  }
+
+  BorderStyle.prototype = {
+    /**
+       @memberof Nehan.BorderStyle
+       @method clone
+       @return {Nehan.BorderStyle}
+    */
+    clone : function(){
+      var style = new BorderStyle();
+      Nehan.List.iter(Nehan.Const.cssBoxDirs, function(dir){
+	if(this[dir]){
+	  style[dir] = this[dir];
+	}
+      }.bind(this));
+      return style;
+    },
+    /**
+       @memberof Nehan.BorderStyle
+       @method setStyle
+       @param flow {Nehan.BoxFlow}
+       @param value {Object} - logical style values for each logical direction
+       @param value.before {string}
+       @param value.end {string}
+       @param value.after {string}
+       @param value.start {string}
+    */
+    setStyle : function(flow, value){
+      Nehan.BoxRect.setValue(this, flow, value);
+    },
+    /**
+       get css object of logical border style
+       @memberof Nehan.BorderStyle
+       @return {Object}
+    */
+    getCss : function(){
+      var css = {};
+      Nehan.BoxRect.iter(this, function(dir, style){
+	var prop = ["border", dir, "style"].join("-");
+	css[prop] = style;
+      });
+      return css;
+    }
+  };
+
+  return BorderStyle;
+})();
+
+Nehan.Padding = (function(){
+  /**
+     @memberof Nehan
+     @class Padding
+     @classdesc abstraction of padding.
+     @extends {Nehan.Edge}
+  */
+  function Padding(){
+    Nehan.Edge.call(this, "padding");
+  }
+  Nehan.Class.extend(Padding, Nehan.Edge);
+
+  /**
+     @memberof Nehan.Padding
+     @override
+     @return {Nehan.Padding}
+  */
+  Padding.prototype.clone = function(){
+    return this.copyTo(new Padding());
+  };
+
+  return Padding;
+})();
+
+
+Nehan.Margin = (function(){
+  /**
+     @memberof Nehan
+     @class Margin
+     @classdesc abstraction of physical margin
+     @constructor
+     @extends {Nehan.Edge}
+  */
+  function Margin(){
+    Nehan.Edge.call(this, "margin");
+  }
+  Nehan.Class.extend(Margin, Nehan.Edge);
+
+  /**
+     @memberof Nehan.Margin
+     @method clone
+     @override
+     @return {Nehan.Margin}
+  */
+  Margin.prototype.clone = function(){
+    return this.copyTo(new Margin());
+  };
+
+  return Margin;
+})();
+
+
+Nehan.Border = (function(){
+  /**
+     @memberof Nehan
+     @class Border
+     @classdesc logical border object that contains border-width, border-radius, border-style, border-color for each logical directions.
+     @constructor
+     @extends {Nehan.Edge}
+  */
+  function Border(){
+    Nehan.Edge.call(this, "border");
+  }
+  Nehan.Class.extend(Border, Nehan.Edge);
+
+  /**
+     return cloned border object
+     @memberof Nehan.Border
+     @method clone
+     @return {Nehan.Border}
+  */
+  Border.prototype.clone = function(){
+    var border = this.copyTo(new Border());
+    if(this.radius){
+      border.radius = this.radius.clone();
+    }
+    if(this.style){
+      border.style = this.style.clone();
+    }
+    if(this.color){
+      border.color = this.color.clone();
+    }
+    return border;
+  };
+
+  /**
+     clear border values of logical before
+     @memberof Nehan.Border
+     @method clearBefore
+     @param flow {Nehan.BoxFlow}
+  */
+  Border.prototype.clearBefore = function(flow){
+    this.setBefore(flow, 0);
+    if(this.radius){
+      this.radius.clearBefore(flow);
+    }
+  };
+
+  /**
+     clear border values of logical after
+     @memberof Nehan.Border
+     @method clearAfter
+     @param flow {Nehan.BoxFlow}
+  */
+  Border.prototype.clearAfter = function(flow){
+    this.setAfter(flow, 0);
+    if(this.radius){
+      this.radius.clearAfter(flow);
+    }
+  };
+
+  /**
+     @memberof Nehan.Border
+     @method getDirProp
+     @param dir {string} - "top", "right", "bottom", "left"
+     @example
+     * new Border().getDirProp("top"); // => "border-top-width"
+  */
+  Border.prototype.getDirProp = function(dir){
+    return ["border", dir, "width"].join("-");
+  };
+
+  /**
+     set border radius
+     @memberof Nehan.Border
+     @method setRadius
+     @param flow {Nehan.BoxFlow}
+     @param radius {Nehan.BorderRadius}
+  */
+  Border.prototype.setRadius = function(flow, radius){
+    this.radius = new Nehan.BorderRadius();
+    this.radius.setSize(flow, radius);
+  };
+
+  /**
+     set border color
+     @memberof Nehan.Border
+     @method setColor
+     @param flow {Nehan.BoxFlow}
+     @param color {Nehan.Color}
+  */
+  Border.prototype.setColor = function(flow, color){
+    this.color = new Nehan.BorderColor();
+    this.color.setColor(flow, color);
+  };
+
+  /**
+     set border style
+     @memberof Nehan.Border
+     @method setStyle
+     @param flow {Nehan.BoxFlow}
+     @param style {Nehan.BorderStyle}
+  */
+  Border.prototype.setStyle = function(flow, style){
+    this.style = new Nehan.BorderStyle();
+    this.style.setStyle(flow, style);
+  };
+
+  /**
+     get css object
+     @memberof Nehan.Border
+     @method getCss
+     @return {Object}
+  */
+  Border.prototype.getCss = function(){
+    var css = Nehan.Edge.prototype.getCss.call(this);
+    if(this.radius){
+      Nehan.Args.copy(css, this.radius.getCss());
+    }
+    if(this.color){
+      Nehan.Args.copy(css, this.color.getCss());
+    }
+    if(this.style){
+      Nehan.Args.copy(css, this.style.getCss());
+    }
+    return css;
+  };
+
+  return Border;
+})();
+
+Nehan.BoxEdge = (function (){
+  /**
+     @memberof Nehan
+     @class BoxEdge
+     @classdesc edges object set(padding, border, margin)
+     @constructor
+     @param opt {Object} - optional argument
+     @param opt.padding {Nehan.Padding} - initial padding
+     @param opt.border {Nehan.Border} - initial border
+     @param opt.margin {Nehan.Margin} - initial margin
+  */
+  function BoxEdge(opt){
+    opt = opt || {};
+    this.padding = opt.padding || new Nehan.Padding();
+    this.border = opt.border || new Nehan.Border();
+    this.margin = opt.margin || new Nehan.Margin();
+  }
+
+  BoxEdge.prototype = {
+    /**
+       @memberof Nehan.BoxEdge
+       @return {Nehan.BoxEdge}
+    */
+    clone : function(){
+      var edge = new BoxEdge();
+      edge.padding = this.padding.clone();
+      edge.border = this.border.clone();
+      edge.margin = this.margin.clone();
+      return edge;
+    },
+    /**
+       clear all edge values
+       @memberof Nehan.BoxEdge
+    */
+    clear : function(){
+      this.padding.clear();
+      this.border.clear();
+      this.margin.clear();
+    },
+    /**
+       get css object
+       @memberof Nehan.BoxEdge
+    */
+    getCss : function(){
+      var css = {};
+      Nehan.Args.copy(css, this.padding.getCss());
+      Nehan.Args.copy(css, this.border.getCss());
+      Nehan.Args.copy(css, this.margin.getCss());
+      return css;
+    },
+    /**
+       get size of physical width amount size in px.
+       @memberof Nehan.BoxEdge
+     */
+    getWidth : function(){
+      var ret = 0;
+      ret += this.padding.getWidth();
+      ret += this.border.getWidth();
+      ret += this.margin.getWidth();
+      return ret;
+    },
+    /**
+       get size of physical height amount size in px.
+       @memberof Nehan.BoxEdge
+     */
+    getHeight : function(){
+      var ret = 0;
+      ret += this.padding.getHeight();
+      ret += this.border.getHeight();
+      ret += this.margin.getHeight();
+      return ret;
+    },
+    /**
+       get size of measure in px.
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    getMeasure : function(flow){
+      var ret = 0;
+      ret += this.padding.getMeasure(flow);
+      ret += this.border.getMeasure(flow);
+      ret += this.margin.getMeasure(flow);
+      return ret;
+    },
+    /**
+       get size of extent in px.
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    getExtent : function(flow){
+      var ret = 0;
+      ret += this.padding.getExtent(flow);
+      ret += this.margin.getExtent(flow);
+      ret += this.border.getExtent(flow);
+      return ret;
+    },
+    /**
+       get size of measure size in px without margin.
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    getInnerMeasureSize : function(flow){
+      var ret = 0;
+      ret += this.padding.getMeasure(flow);
+      ret += this.border.getMeasure(flow);
+      return ret;
+    },
+    /**
+       get size of extent size in px without margin.
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    getInnerExtentSize : function(flow){
+      var ret = 0;
+      ret += this.padding.getExtent(flow);
+      ret += this.border.getExtent(flow);
+      return ret;
+    },
+    /**
+       get before size amount in px.
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    getBefore : function(flow){
+      var ret = 0;
+      ret += this.padding.getBefore(flow);
+      ret += this.border.getBefore(flow);
+      ret += this.margin.getBefore(flow);
+      return ret;
+    },
+    /**
+       get after size amount in px.
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    getAfter : function(flow){
+      var ret = 0;
+      ret += this.padding.getAfter(flow);
+      ret += this.border.getAfter(flow);
+      ret += this.margin.getAfter(flow);
+      return ret;
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    setBorderRadius : function(flow, value){
+      this.border.setRadius(flow, value);
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    setBorderColor : function(flow, value){
+      this.border.setColor(flow, value);
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    setBorderStyle : function(flow, value){
+      this.border.setStyle(flow, value);
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    clearBefore : function(flow){
+      this.padding.clearBefore(flow);
+      this.border.clearBefore(flow);
+      this.margin.clearBefore(flow);
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    clearAfter : function(flow){
+      this.padding.clearAfter(flow);
+      this.border.clearAfter(flow);
+      this.margin.clearAfter(flow);
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    clearBorderStart : function(flow){
+      this.border.clearStart(flow);
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    clearBorderBefore : function(flow){
+      this.border.clearBefore(flow);
+    },
+    /**
+       @memberof Nehan.BoxEdge
+       @param flow {Nehan.BoxFlow}
+     */
+    clearBorderAfter : function(flow){
+      this.border.clearAfter(flow);
+    }
+  };
+
+  return BoxEdge;
+})();
+
+Nehan.BoxSize = (function(){
+  /**
+     @memberof Nehan
+     @class BoxSize
+     @classdesc physical box size 'width' and 'height'.
+     @constructor
+     @param width {int} - content width
+     @param height {int} - content height
+  */
+  function BoxSize(width, height){
+    this.width = width; // content width
+    this.height = height; // content height
+  }
+
+  BoxSize.prototype = {
+    /**
+       clone box size object with same values.
+
+       @memberof Nehan.BoxSize
+       @return {Nehan.BoxSize}
+    */
+    clone : function(){
+      return new BoxSize(this.width, this.height);
+    },
+    /**
+       @memberof Nehan.BoxSize
+       @param flow {Nehan.BoxFlow}
+       @param extent {int}
+     */
+    setExtent : function(flow, extent){
+      this[flow.getPropExtent()] = extent;
+    },
+    /**
+       @memberof Nehan.BoxSize
+       @param flow {Nehan.BoxFlow}
+       @param measure {int}
+     */
+    setMeasure : function(flow, measure){
+      this[flow.getPropMeasure()] = measure;
+    },
+    /**
+       @memberof Nehan.BoxSize
+       @param flow {Nehan.BoxFlow}
+       @return {Object}
+     */
+    getCss : function(flow){
+      var css = {};
+      css.width = this.width + "px";
+      css.height = this.height + "px";
+      return css;
+    },
+    /**
+       get content size of measure
+
+       @memberof Nehan.BoxSize
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+     */
+    getMeasure : function(flow){
+      return this[flow.getPropMeasure()];
+    },
+    /**
+       get content size of extent
+
+       @memberof Nehan.BoxSize
+       @param flow {Nehan.BoxFlow}
+       @return {int}
+    */
+    getExtent : function(flow){
+      return this[flow.getPropExtent()];
+    }
+  };
+
+  return BoxSize;
+})();
+
+Nehan.BoxPosition = (function(){
+  /**
+     @memberof Nehan
+     @class BoxPosition
+     @classdesc logical css 'position' property
+     @constructor
+     @param position {string}
+  */
+  function BoxPosition(position){
+    this.position = position;
+  }
+
+  BoxPosition.prototype = {
+    /**
+       @memberof Nehan.BoxPosition
+       @return {boolean}
+    */
+    isAbsolute : function(){
+      return this.position === "absolute";
+    },
+    /**
+       @memberof Nehan.BoxPosition
+       @return {Object}
+    */
+    getCss : function(flow){
+      var css = {};
+      css.position = this.position;
+      if(this.start){
+	css[flow.getPropStart()] = this.start + "px";
+      }
+      if(this.end){
+	css[flow.getPropEnd()] = this.end + "px";
+      }
+      if(this.before){
+	css[flow.getPropBefore()] = this.before + "px";
+      }
+      if(this.after){
+	css[flow.getPropAfter()] = this.after + "px";
+      }
+      return css;
+    }
+  };
+
+  return BoxPosition;
+})();
+
+
+Nehan.SectionHeader = (function(){
+  /**
+     @memberof Nehan
+     @class SectionHeader
+     @classdesc abstraction of section header with header rank, header title, and system unique id(optional).
+     @constructor
+  */
+  function SectionHeader(rank, title, id){
+    this.rank = rank;
+    this.title = title;
+    this._id = id || 0;
+  }
+
+  SectionHeader.prototype = {
+    /**
+       @memberof Nehan.SectionHeader
+       @return {int}
+    */
+    getId : function(){
+      return this._id;
+    }
+  };
+
+  return SectionHeader;
+})();
+
+Nehan.Section = (function(){
+  /**
+     @memberof Nehan
+     @class Section
+     @classdesc section tree node with parent, next, child pointer.
+     @constructor
+  */
+  function Section(type, parent, page_no){
+    this._type = type;
+    this._header = null;
+    this._auto = false;
+    this._next = null;
+    this._child = null;
+    this._parent = parent || null;
+    this._pageNo = page_no || 0;
+  }
+
+  Section.prototype = {
+    /**
+       @memberof Nehan.Section
+       @return {boolean}
+    */
+    isRoot : function(){
+      return this._parent === null;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {boolean}
+    */
+    isAuto : function(){
+      return this._auto;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {boolean}
+    */
+    hasHeader : function(){
+      return this._header !== null;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {boolean}
+    */
+    hasHeaderId : function(){
+      return this.getHeaderId() > 0;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {boolean}
+    */
+    hasChild : function(){
+      return this._child !== null;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {boolean}
+    */
+    hasNext : function(){
+      return this._next !== null;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {Nehan.Section}
+    */
+    getNext : function(){
+      return this._next;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {Nehan.Section}
+    */
+    getChild : function(){
+      return this._child;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {Nehan.Section}
+    */
+    getParent : function(){
+      return this._parent;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {Nehan.SectionHeader}
+    */
+    getHeader : function(){
+      return this._header;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {int}
+    */
+    getHeaderId : function(){
+      if(this._header){
+	return this._header.getId();
+      }
+      return null;
+    },
+    /**
+       @memberof Nehan.Section
+       @param header {Nehan.SectionHeader}
+    */
+    setHeader : function(header){
+      this._header = header;
+    },
+    /**
+       @memberof Nehan.Section
+    */
+    setAuto : function(){
+      this._auto = true;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {int}
+    */
+    getRank : function(){
+      return this._header? this._header.rank : 0;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {String}
+    */
+    getTitle : function(){
+      return this._header? this._header.title : ["untitled", this._type].join(" ");
+    },
+    /**
+       @memberof Nehan.Section
+       @return {String}
+    */
+    getType : function(){
+      return this._type;
+    },
+    /**
+       @memberof Nehan.Section
+       @return {int}
+    */
+    getPageNo : function(){
+      return this._pageNo;
+    },
+    /**
+       @memberof Nehan.Section
+       @param page_no {int}
+    */
+    updatePageNo : function(page_no){
+      this._pageNo = page_no;
+    },
+    /**
+       @memberof Nehan.Section
+       @param section {Nehan.Section}
+    */
+    addChild : function(section){
+      if(this._child === null){
+	this._child = section;
+      } else {
+	this._child.addNext(section);
+      }
+    },
+    /**
+       @memberof Nehan.Section
+       @param section {Nehan.Section}
+    */
+    addNext : function(section){
+      if(this._next === null){
+	this._next = section;
+      } else {
+	this._next.addNext(section);
+      }
+    }
+  };
+
+  return Section;
+})();
+
+
+Nehan.TocContext = (function(){
+  /**
+     @memberof Nehan
+     @class TocContext
+     @classdesc context data of toc parsing.
+     @constructor
+  */
+  function TocContext(){
+    this.stack = [1];
+  }
+
+  TocContext.prototype = {
+    /**
+       @memberof Nehan.TocContext
+       @return {String}
+       @example
+       * // assume that current toc stack is [1,2,1].
+       * ctx.toString(); // "1.2.1"
+    */
+    toString : function(){
+      return this.stack.join(".");
+    },
+    /**
+       countup toc count of current depth.
+
+       @memberof Nehan.TocContext
+       @return {Nehan.TocContext}
+       @example
+       * // assume that current toc stack is [1,2], and
+       * // current toc depth is at 1(0 is first).
+       * ctx.toString(); // "1.2"
+       * ctx.stepNext();
+       * ctx.toString(); // "1.3"
+    */
+    stepNext : function(){
+      if(this.stack.length > 0){
+	this.stack[this.stack.length - 1]++;
+      }
+      return this;
+    },
+    /**
+       append toc root
+
+       @memberof Nehan.TocContext
+       @return {Nehan.TocContext}
+       @example
+       * // assume that current toc stack is [1,2].
+       * ctx.toString(); // "1.2"
+       * ctx.startRoot();
+       * ctx.toString(); // "1.2.1"
+    */
+    startRoot : function(){
+      this.stack.push(1);
+      return this;
+    },
+    /**
+       finish toc root
+
+       @memberof Nehan.TocContext
+       @return {Nehan.TocContext}
+       @example
+       * // assume that current toc stack is [1,2].
+       * ctx.toString(); // "1.2"
+       * ctx.startRoot();
+       * ctx.toString(); // "1.2.1"
+       * ctx.endRoot();
+       * ctx.toString(); // "1.2"
+    */
+    endRoot : function(){
+      this.stack.pop();
+      return this;
+    }
+  };
+
+  return TocContext;
+})();
+
+Nehan.OutlineContext = (function(){
+  /**
+     @memberof Nehan
+     @class OutlineContext
+     @classdesc outline context object. outline is generated by section root element, sectionning element, heading element etc.
+     @constructor
+     @param markup_name {String} - section root name like "body", "fieldset", "blockquote" etc.
+  */
+  function OutlineContext(markup_name){
+    this.logs = [];
+    this.markupName = markup_name;
+  }
+
+  OutlineContext.prototype = {
+    /**
+       @memberof Nehan.OutlineContext
+       @return {boolean}
+    */
+    isEmpty : function(){
+      return this.logs.length === 0;
+    },
+    /**
+       @memberof Nehan.OutlineContext
+       @return {Object} log object
+    */
+    get : function(index){
+      return this.logs[index] || null;
+    },
+    /**
+       @memberof Nehan.OutlineContext
+       @return {String}
+    */
+    getMarkupName : function(){
+      return this.markupName;
+    },
+    /**
+       @memberof Nehan.OutlineContext
+       @param opt {Object}
+       @param opt.type {String} - markup name
+       @param opt.pageNo {int} - page no of section
+       @return {Nehan.OutlineContext}
+    */
+    startSection : function(opt){
+      this.logs.push({
+	name:"start-section",
+	type:opt.type,
+	pageNo:opt.pageNo
+      });
+      return this;
+    },
+    /**
+       @memberof Nehan.OutlineContext
+       @param type {String} - markup name
+       @return {Nehan.OutlineContext}
+    */
+    endSection : function(type){
+      this.logs.push({
+	name:"end-section",
+	type:type
+      });
+      return this;
+    },
+    /**
+       @memberof Nehan.OutlineContext
+       @param opt {Object}
+       @param opt.type {String} - markup name
+       @param opt.headerId {String} - unique header id(associate header box object with outline)
+       @pramm opt.pageNo {int} - page no of this header
+       @param opt.rank {int} - header rank(1 - 6)
+       @param opt.title {String} - header title
+       @return {String} header id
+    */
+    addHeader : function(opt){
+      this.logs.push({
+	name:"set-header",
+	headerId:opt.headerId,
+	pageNo:opt.pageNo,
+	type:opt.type,
+	rank:opt.rank,
+	title:opt.title
+      });
+      return opt.headerId;
+    }
+  };
+
+  return OutlineContext;
+})();
+
+/**
+   parser module to convert from context to section tree object.
+
+   @namespace Nehan.OutlineContextParser
+*/
+Nehan.OutlineContextParser = (function(){
+  var _parse = function(context, parent, ptr){
+    var log = context.get(ptr++);
+    if(log === null){
+      return;
+    }
+    switch(log.name){
+    case "start-section":
+      var section = new Nehan.Section(log.type, parent, log.pageNo);
+      if(parent){
+	parent.addChild(section);
+      }
+      _parse(context, section, ptr);
+      break;
+
+    case "end-section":
+      _parse(context, parent.getParent(), ptr);
+      break;
+
+    case "set-header":
+      var header = new Nehan.SectionHeader(log.rank, log.title, log.headerId);
+      if(parent === null){
+	var auto_section = new Nehan.Section("section", null, log.pageNo);
+	auto_section.setHeader(header);
+	_parse(context, auto_section, ptr);
+      } else if(!parent.hasHeader()){
+	parent.setHeader(header);
+	_parse(context, parent, ptr);
+      } else {
+	var rank = log.rank;
+	var parent_rank = parent.getRank();
+	if(rank < parent_rank){ // higher rank
+	  ptr = Math.max(0, ptr - 1);
+	  _parse(context, parent.getParent(), ptr);
+	} else if(log.rank == parent_rank){ // same rank
+	  var next_section = new Nehan.Section("section", parent, log.pageNo);
+	  next_section.setHeader(header);
+	  parent.addNext(next_section);
+	  _parse(context, next_section, ptr);
+	} else { // lower rank
+	  var child_section = new Nehan.Section("section", parent, log.pageNo);
+	  child_section.setHeader(header);
+	  parent.addChild(child_section);
+	  _parse(context, child_section, ptr);
+	}
+      }
+      break;
+    }
+    return parent;
+  };
+
+  return {
+    /**
+       @memberof Nehan.OutlineContextParser
+       @param context {Nehan.OutlineContext}
+       @return {Nehan.Section} section tree root
+    */
+    parse : function(context){
+      var ptr = 0;
+      var root = new Nehan.Section("section", null, 0);
+      return _parse(context, root, ptr);
+    }
+  };
+})();
+
+/*
+  outline mapping
+  ===============
+
+  <ol>
+    <li> root.title
+      <ol>
+        <li> root.child.title  </li>
+	<li> root.child.next.title </li>
+      </ol>
+    </li>
+
+    <li> root.next.title
+      <ol>
+        <li> root.next.child.title </li>
+	<li> root.next.child.next.title </li>
+      </ol>
+   </li>
+  </ol>
+*/
+/**
+   convert section tree({@link Nehan.Section}) to DOMElement.
+
+   @namespace Nehan.SectionTreeConverter
+*/
+Nehan.SectionTreeConverter = (function(){
+  var default_callbacks = {
+    onClickLink : function(toc){
+      return false;
+    },
+    createToc : function(toc_ctx, tree){
+      return {
+	tocPos:toc_ctx.toString(),
+	title:tree.getTitle(),
+	pageNo:tree.getPageNo(),
+	headerId:tree.getHeaderId()
+      };
+    },
+    createRoot : function(toc){
+      var root = document.createElement("ul");
+      root.className = "nehan-toc-root";
+      return root;
+    },
+    createChild : function(toc){
+      var li = document.createElement("li");
+      li.className = "nehan-toc-item";
+      return li;
+    },
+    createLink : function(toc){
+      var link = document.createElement("a");
+      var title = toc.title.replace(/<a[^>]+>/gi, "").replace(/<\/a>/gi, "");
+      link.href = "#" + toc.pageNo;
+      link.innerHTML = title;
+      link.className = "nehan-toc-link";
+      link.id = Nehan.Css.addNehanTocLinkPrefix(toc.tocId);
+      return link;
+    },
+    createPageNoItem : function(toc){
+      return null;
+    }
+  };
+
+  var parse = function(toc_ctx, parent, tree, callbacks){
+    if(tree === null){
+      return parent;
+    }
+    var toc = callbacks.createToc(toc_ctx, tree);
+    var li = callbacks.createChild(toc);
+    var link = callbacks.createLink(toc);
+    if(link){
+      link.onclick = function(){
+	return callbacks.onClickLink(toc);
+      };
+      li.appendChild(link);
+    }
+    var page_no_item = callbacks.createPageNoItem(toc);
+    if(page_no_item){
+      li.appendChild(page_no_item);
+    }
+    parent.appendChild(li);
+
+    var child = tree.getChild();
+    if(child){
+      toc_ctx = toc_ctx.startRoot();
+      var child_toc = callbacks.createToc(toc_ctx, child);
+      var ol = callbacks.createRoot(child_toc);
+      parse(toc_ctx, ol, child, callbacks);
+      li.appendChild(ol);
+      toc_ctx = toc_ctx.endRoot();
+    }
+    var next = tree.getNext();
+    if(next){
+      parse(toc_ctx.stepNext(), parent, next, callbacks);
+    }
+    return parent;
+  };
+
+  return {
+    /**
+       create DOMElement from section tree object.
+
+       @memberof Nehan.SectionTreeConverter
+       @param section_tree {Nehan.Section} - outlie tree object generated by {@link Nehan.OutlineContextParser}({@link Nehan.OutlineContext} -> {@link Nehan.Section})
+       @param callbacks {Object} - callbacks object
+       @param callbacks.onClickLink {Function} - called when link object is clicked. do nothing by default.
+       @param callbacks.createRoot {Function} - called when create dom root node, create <ul> by default.
+       @param callbacks.createChild {Function} - called when create dom child, create &lt;li&gt; by default.
+       @param callbacks.createLink {Function} - called when create link node in dom child, create &lt;a&gt; by default.
+       @param callbacks.createToc {Function} - called when create toc object from toc and tree context.<br>
+       * it is used in other callbacks as a callback argument.<br>
+       * create {tocPos:xxx, title:xxx, pageNo:xxx, headerId:xxx} by default.
+       @param callbacks.createPageNoItem {Function} - called when create page no item node in link object, create nothing by default.
+    */
+    convert : function(outline_tree, callbacks){
+      callbacks = Nehan.Args.merge({}, default_callbacks, callbacks || {});
+      var toc_context = new Nehan.TocContext();
+      var root_node = callbacks.createRoot();
+      return parse(toc_context, root_node, outline_tree, callbacks); // section tree -> dom node
+    }
+  };
+})();
+
+Nehan.DocumentHeader = (function(){
+  /**
+     @memberof Nehan
+     @class DocumentHeader
+     @classdesc html &lt;head&gt; data wrapper.
+     @constructor
+  */
+  function DocumentHeader(){
+    this.title = "";
+    this.metas = [];
+    this.links = [];
+    this.scripts = [];
+    this.styles = [];
+  }
+
+  DocumentHeader.prototype = {
+    /**
+       @memberof Nehan.DocumentHeader
+       @param title {String}
+    */
+    setTitle :function(title){
+      this.title = title;
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @return {String}
+    */
+    getTitle : function(){
+      return this.title;
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @param markup {Nehan.Tag}
+    */
+    addLink : function(markup){
+      this.links.push(markup);
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @return {Array.<Nehan.Tag>}
+    */
+    getLinks : function(){
+      return this.links;
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @param markup {Nehan.Tag}
+    */
+    addMeta : function(markup){
+      this.metas.push(markup);
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @return {Array.<Nehan.Tag>}
+    */
+    getMetas : function(){
+      return this.metas;
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @param name {String}
+       @return {Nehan.Tag}
+    */
+    getMetaByName : function(name){
+      return Nehan.List.find(this.metas, function(meta){
+	return meta.getTagAttr("name") === name;
+      });
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @param name {String}
+       @return {String}
+    */
+    getMetaContentByName : function(name){
+      var meta = this.getMetaByName(name);
+      return meta? meta.getTagAttr("content") : null;
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @param markup {Nehan.Tag}
+    */
+    addScript : function(markup){
+      this.scripts.push(markup);
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @return {Array.<Nehan.Tag>}
+    */
+    getScripts : function(){
+      return this.scripts;
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @param markup {Nehan.Tag}
+    */
+    addStyle : function(markup){
+      this.styles.push(markup);
+    },
+    /**
+       @memberof Nehan.DocumentHeader
+       @return {Array.<Nehan.Tag>}
+    */
+    getStyles : function(){
+      return this.styles;
+    }
+  };
+
+  return DocumentHeader;
+})();
+
+
+Nehan.FloatDirection = (function(){
+  /**
+     @memberof Nehan
+     @class FloatDirection
+     @classdesc abstraction of logical float direction.
+     @constructor
+     @param value {String} - "start" or "end" or "none"
+   */
+  function FloatDirection(value){
+    this.value = value || "none";
+  }
+
+  FloatDirection.prototype = {
+    /**
+       @memberof Nehan.FloatDirection
+       @param is_vert {bool}
+       @return {Object}
+    */
+    getCss : function(is_vert){
+      var css = {};
+      if(!is_vert){
+	if(this.isStart()){
+	  css["css-float"] = "left";
+	} else if(this.isEnd()){
+	  css["css-float"] = "right";
+	}
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.FloatDirection
+       @return {boolean}
+    */
+    isStart : function(){
+      return this.value === "start";
+    },
+    /**
+       @memberof Nehan.FloatDirection
+       @return {boolean}
+    */
+    isEnd : function(){
+      return this.value === "end";
+    },
+    /**
+       @memberof Nehan.FloatDirection
+       @return {boolean}
+    */
+    isNone : function(){
+      return this.value === "none";
+    }
+  };
+
+  return FloatDirection;
+})();
+
+
+/**
+   pre defined logical float direction collection.
+   @namespace Nehan.FloatDirections
+ */
+Nehan.FloatDirections = {
+  /**
+     @memberof Nehan.FloatDirections
+     @type {Nehan.FloatDirection}
+  */
+  start:(new Nehan.FloatDirection("start")),
+  /**
+     @memberof Nehan.FloatDirections
+     @type {Nehan.FloatDirection}
+  */
+  end:(new Nehan.FloatDirection("end")),
+  /**
+     @memberof Nehan.FloatDirections
+     @type {Nehan.FloatDirection}
+  */
+  none:(new Nehan.FloatDirection("none")),
+  /**
+     get {@link Nehan.FloatDirection} by float name.
+     
+     @memberof Nehan.FloatDirections
+     @param name {String} - "start" or "end" or "none"
+     @return {Nehan.FloatDirection}
+  */
+  get : function(name){
+    return this[name] || null;
+  }
+};
+
+Nehan.TextAlign = (function(){
+  /**
+     @memberof Nehan
+     @class TextAlign
+     @classdesc abstraction of logical text align(start, end, center)
+     @constructor
+     @param value {String} - logical align direction, "start" or "end" or "center"
+  */
+  function TextAlign(value){
+    this.value = value || "start";
+  }
+
+  TextAlign.prototype = {
+    /**
+       @memberof Nehan.TextAlign
+       @return {boolean}
+    */
+    isStart : function(){
+      return this.value === "start";
+    },
+    /**
+       @memberof Nehan.TextAlign
+       @return {boolean}
+    */
+    isEnd : function(){
+      return this.value === "end";
+    },
+    /**
+       @memberof Nehan.TextAlign
+       @return {boolean}
+    */
+    isCenter : function(){
+      return this.value === "center";
+    }
+  };
+
+  return TextAlign;
+})();
+
+
+/**
+   pre defined text align set
+
+   @namespace Nehan.TextAligns
+*/
+Nehan.TextAligns = {
+  start:(new Nehan.TextAlign("start")),
+  end:(new Nehan.TextAlign("end")),
+  center:(new Nehan.TextAlign("center")),
+  /**
+     @memberof Nehan.TextAligns
+     @param value - logical text align direction, "start" or "end" or "center".
+     @return {Nehan.TextAlign}
+  */
+  get : function(value){
+    return this[value] || null;
+  }
+};
+
+Nehan.Break = (function(){
+  /**
+     @memberof Nehan
+     @class Break
+     @classdesc logical abstraction for css 'page-break-before' or 'page-break-after'
+     @constructor
+     @param value {string} - "always" or "avoid" or "left" or "right"
+   */
+  function Break(value){
+    this.value = value;
+  }
+
+  Break.prototype = {
+    /**
+       @memberof Nehan.Break
+       @return {boolean}
+     */
+    isAlways : function(){
+      return this.value === "always";
+    },
+    /**
+       @memberof Nehan.Break
+       @return {boolean}
+     */
+    isAvoid : function(){
+      return this.value === "avoid";
+    },
+    /**
+       @memberof Nehan.Break
+       @return {boolean}
+     */
+    isFirst : function(){
+      return (Display.getPagingDirection() === "lr")? (this.value === "left") : (this.value === "right");
+    },
+    /**
+       @memberof Nehan.Break
+       @return {boolean}
+     */
+    isSecond : function(){
+      return (Display.getPagingDirection() === "lr")? (this.value === "right") : (this.value === "left");
+    },
+    /**
+       (TODO)
+       @memberof Nehan.Break
+       @param order {int}
+       @return {boolean}
+     */
+    isNth : function(order){
+    }
+  };
+
+  return Break;
+})();
+
+
+/**
+   pre defined break collection.
+   @namespace Nehan.Breaks
+*/
+Nehan.Breaks = {
+  before:{
+    always:(new Nehan.Break("always")),
+    avoid:(new Nehan.Break("avoid")),
+    left:(new Nehan.Break("left")),
+    right:(new Nehan.Break("right")),
+    first:(new Nehan.Break("first")), // correspond to break-before:"left"
+    second:(new Nehan.Break("second")) // correspond to break-before:"right"
+  },
+  after:{
+    always:(new Nehan.Break("always")),
+    avoid:(new Nehan.Break("avoid")),
+    left:(new Nehan.Break("left")),
+    right:(new Nehan.Break("right")),
+    first:(new Nehan.Break("first")), // correspond to break-before:"left"
+    second:(new Nehan.Break("second")) // correspond to break-before:"right"
+  },
+  /**
+     @memberof Nehan.Breaks
+     @param value {String} - "always", "avoid", "left", "right", "first", "second"
+  */
+  getBefore : function(value){
+    return this.before[value] || null;
+  },
+  /**
+     @memberof Nehan.Breaks
+     @param value {String} - "always", "avoid", "left", "right", "first", "second"
+  */
+  getAfter : function(value){
+    return this.after[value] || null;
+  }
+};
+
+
+Nehan.Page = (function(){
+  /**
+     @memberof Nehan
+     @class Page
+     @classdesc abstract evaluated page object.
+     @constructor
+     @param opt {Object}
+     @param opt.element {DOMElement} - generated DOMElement.
+     @param opt.seekPos {int} - page seek position in literal string pos.
+     @param opt.pageNo {int} - page index starts from 0.
+     @param opt.charPos {int} - character position of this page from first page.
+     @param opt.charCount {int} - character count included in this page object.
+     @param opt.percent {int}
+  */
+  function Page(opt){
+    Nehan.Args.merge(this, {
+      element:null,
+      seekPos:0,
+      pageNo:0,
+      charPos:0,
+      charCount:0,
+      percent:0
+    }, opt);
+  }
+
+  return Page;
+})();
+
+
+Nehan.Flow = (function(){
+  /**
+     @memberof Nehan
+     @class Flow
+     @classdesc abstraction of flow, left to right as "lr", right to left as "rl", top to bottom as "tb".
+     @constructor
+     @param dir {String}
+     @example
+     * new Flow("lr").isHorizontal(); // true
+     * new Flow("rl").isHorizontal(); // true
+     * new Flow("lr").isLeftToRight(); // true
+     * new Flow("rl").isLeftToRight(); // false
+     * new Flow("rl").isRightToLeft(); // true
+     * new Flow("tb").isHorizontal(); // false
+     * new Flow("tb").isVertical(); // true
+  */
+  function Flow(dir){
+    this.dir = dir;
+  }
+
+  Flow.prototype = {
+    /**
+       @memberof Nehan.Flow
+       @param dir {String}
+    */
+    init : function(dir){
+      this.dir = dir;
+    },
+    /**
+       @memberof Nehan.Flow
+       @return {boolean}
+    */
+    isHorizontal : function(){
+      return (this.dir === "lr" || this.dir === "rl");
+    },
+    /**
+       @memberof Nehan.Flow
+       @return {boolean}
+    */
+    isVertical : function(){
+      return (this.dir === "tb");
+    },
+    /**
+       @memberof Nehan.Flow
+       @return {boolean}
+    */
+    isLeftToRight : function(){
+      return this.dir === "lr";
+    },
+    /**
+       @memberof Nehan.Flow
+       @return {boolean}
+    */
+    isRightToLeft : function(){
+      return this.dir === "rl";
+    }
+  };
+
+  return Flow;
+})();
+
+
 // current engine id
 Nehan.engineId = Nehan.engineId || 0;
 
@@ -630,10 +6016,17 @@ var Display = {
   },
   /**
      @memberof Nehan.Display
+     @return {string}
+  */
+  getVertBlockDir: function(){
+    return this.boxFlow.vert.splice("-")[1];
+  },
+  /**
+     @memberof Nehan.Display
      @return {Nehan.BoxFlow}
   */
   getStdFont : function(){
-    var font = new Font(Display.fontSize);
+    var font = new Nehan.Font(Display.fontSize);
     font.family = Display.fontFamily;
     font.weight = "normal";
     font.style = "normal";
@@ -708,7 +6101,7 @@ var LexingRule = (function(){
   ];
 
   var __is_single_tag = function(tag_name){
-    return List.exists(__single_tag_names__, Closure.eq(tag_name));
+    return Nehan.List.exists(__single_tag_names__, Nehan.Closure.eq(tag_name));
   };
 
   return {
@@ -771,18 +6164,12 @@ var LexingRule = (function(){
     ex2. {float:"start"} // => {float:"left"}.
     ex3. {measure:"100px", extent:"50px"} // => {width:"100px", height:"50px"}
 
-  3. all class names must start with "nehan-" prefix
-  --------------------------------------------------
-
-     to avoid css collision that is not layouted by nehan.js,
-     our css names must be prefixed by "nehan-".
-
-  4. about functional css value
+  3. about functional css value
   ------------------------------
 
   you can use functional css value in each css property.
 
-  (4.1) callback argument 'context' in functional css value is 'SelectorPropContext'
+  (3.1) callback argument 'context' in functional css value is 'SelectorPropContext'
 
   // [example]
   // change backgroiund-color by child index.
@@ -792,14 +6179,14 @@ var LexingRule = (function(){
     }
   }
 
-  (4.2) callback argument 'context' in 'onload' is 'SelectorContext'
+  (3.2) callback argument 'context' in 'onload' is 'SelectorContext'
 
   this context is 'extended class' of 'SelectorPropContext', with some extra interfaces
   that can touch css object, because 'onload' is called after all css of matched elements are loaded.
 
   // [example]
   // force image metrics to square sizing if width and height is not same.
-  ".nehan-must-be-squares img":{
+  ".must-be-squares img":{
     "onload":function(context){
       var width = context.getCssAttr("width", 100);
       var height = context.getCssAttr("height", 100);
@@ -810,10 +6197,10 @@ var LexingRule = (function(){
     }
   }
 
- 5. special properties in nehan.js
+ 4. special properties in nehan.js
   ----------------------------------
 
-  (5.1) box-sizing:[content-box | border-box | margin-box(default)]
+  (4.1) box-sizing:[content-box | border-box | margin-box(default)]
 
   In box-sizing, 'margin-box' is special value in nehan.js, and is box-sizing default value.
   In margin-box, even if margin is included in box-size.
@@ -823,7 +6210,7 @@ var LexingRule = (function(){
   So if you represent margin/border/padding(called in edge in nehan.js),
   the only way is 'eliminating content space'.
 
-  (5.2) flow:[lr-tb | rl-tb | tb-rl | tb-lr | flip]
+  (4.2) flow:[lr-tb | rl-tb | tb-rl | tb-lr | flip]
 
   This property represent document-mode in nehan.js.
 
@@ -1090,7 +6477,7 @@ var Style = {
       "after":"1px"
     }
   },
-  "hr.nehan-space":{
+  "hr.space":{
     "border-width":"0px"
   },
   "html":{
@@ -1424,7 +6811,7 @@ var Style = {
   //-------------------------------------------------------
   // rounded corner
   //-------------------------------------------------------
-  ".nehan-rounded":{
+  ".rounded":{
     "padding":{
       before:"1.6em",
       end:"1.0em",
@@ -1436,235 +6823,235 @@ var Style = {
   //-------------------------------------------------------
   // font-size classes
   //-------------------------------------------------------
-  ".nehan-xx-large":{
+  ".xx-large":{
     "font-size": Display.fontSizeNames["xx-large"]
   },
-  ".nehan-x-large":{
+  ".x-large":{
     "font-size": Display.fontSizeNames["x-large"]
   },
-  ".nehan-large":{
+  ".large":{
     "font-size": Display.fontSizeNames.large
   },
-  ".nehan-medium":{
+  ".medium":{
     "font-size": Display.fontSizeNames.medium
   },
-  ".nehan-small":{
+  ".small":{
     "font-size": Display.fontSizeNames.small
   },
-  ".nehan-x-small":{
+  ".x-small":{
     "font-size": Display.fontSizeNames["x-small"]
   },
-  ".nehan-xx-small":{
+  ".xx-small":{
     "font-size": Display.fontSizeNames["xx-small"]
   },
-  ".nehan-larger":{
+  ".larger":{
     "font-size": Display.fontSizeNames.larger
   },
-  ".nehan-smaller":{
+  ".smaller":{
     "font-size": Display.fontSizeNames.smaller
   },
   //-------------------------------------------------------
   // box-sizing classes
   //-------------------------------------------------------
-  ".nehan-content-box":{
+  ".content-box":{
     "box-sizing":"content-box"
   },
-  ".nehan-border-box":{
+  ".border-box":{
     "box-sizing":"border-box"
   },
-  ".nehan-margin-box":{
+  ".margin-box":{
     "box-sizing":"margin-box"
   },
   //-------------------------------------------------------
   // display classes
   //-------------------------------------------------------
-  ".nehan-disp-none":{
+  ".disp-none":{
     "display":"none"
   },
-  ".nehan-disp-block":{
+  ".disp-block":{
     "display":"block"
   },
-  ".nehan-disp-inline":{
+  ".disp-inline":{
     "display":"inline"
   },
-  ".nehan-disp-iblock":{
+  ".disp-iblock":{
     "display":"inline-block"
   },
   //-------------------------------------------------------
   // text-align classes
   //-------------------------------------------------------
-  ".nehan-ta-start":{
+  ".ta-start":{
     "text-align":"start"
   },
-  ".nehan-ta-center":{
+  ".ta-center":{
     "text-align":"center"
   },
-  ".nehan-ta-end":{
+  ".ta-end":{
     "text-align":"end"
   },
   //-------------------------------------------------------
   // float classes
   //-------------------------------------------------------
-  ".nehan-float-start":{
+  ".float-start":{
     "float":"start"
   },
-  ".nehan-float-end":{
+  ".float-end":{
     "float":"end"
   },
   //-------------------------------------------------------
   // flow classes
   //-------------------------------------------------------
-  ".nehan-flow-lr-tb":{
+  ".flow-lr-tb":{
     "flow":"lr-tb"
   },
-  ".nehan-flow-tb-rl":{
+  ".flow-tb-rl":{
     "flow":"tb-rl"
   },
-  ".nehan-flow-tb-lr":{
+  ".flow-tb-lr":{
     "flow":"tb-lr"
   },
-  ".nehan-flow-rl-tb":{
+  ".flow-rl-tb":{
     "flow":"rl-tb"
   },
-  ".nehan-flow-flip":{
+  ".flow-flip":{
     "flow":"flip"
   },
   //-------------------------------------------------------
   // list-style-position classes
   //-------------------------------------------------------
-  ".nehan-lsp-inside":{
+  ".lsp-inside":{
     "list-style-position":"inside"
   },
-  ".nehan-lsp-outside":{
+  ".lsp-outside":{
     "list-style-position":"outside"
   },
   //-------------------------------------------------------
   // list-style-type classes
   //-------------------------------------------------------
-  ".nehan-lst-none":{
+  ".lst-none":{
     "list-style-type":"none"
   },
-  ".nehan-lst-decimal":{
+  ".lst-decimal":{
     "list-style-type":"decimal"
   },
-  ".nehan-lst-disc":{
+  ".lst-disc":{
     "list-style-type":"disc"
   },
-  ".nehan-lst-circle":{
+  ".lst-circle":{
     "list-style-type":"circle"
   },
-  ".nehan-lst-square":{
+  ".lst-square":{
     "list-style-type":"square"
   },
-  ".nehan-lst-decimal-leading-zero":{
+  ".lst-decimal-leading-zero":{
     "list-style-type":"decimal-leading-zero"
   },
-  ".nehan-lst-lower-alpha":{
+  ".lst-lower-alpha":{
     "list-style-type":"lower-alpha"
   },
-  ".nehan-lst-upper-alpha":{
+  ".lst-upper-alpha":{
     "list-style-type":"upper-alpha"
   },
-  ".nehan-lst-lower-latin":{
+  ".lst-lower-latin":{
     "list-style-type":"lower-latin"
   },
-  ".nehan-lst-upper-latin":{
+  ".lst-upper-latin":{
     "list-style-type":"upper-latin"
   },
-  ".nehan-lst-lower-roman":{
+  ".lst-lower-roman":{
     "list-style-type":"lower-roman"
   },
-  ".nehan-lst-upper-roman":{
+  ".lst-upper-roman":{
     "list-style-type":"upper-roman"
   },
-  ".nehan-lst-lower-greek":{
+  ".lst-lower-greek":{
     "list-style-type":"lower-greek"
   },
-  ".nehan-lst-upper-greek":{
+  ".lst-upper-greek":{
     "list-style-type":"upper-greek"
   },
-  ".nehan-lst-cjk-ideographic":{
+  ".lst-cjk-ideographic":{
     "list-style-type":"cjk-ideographic"
   },
-  ".nehan-lst-hiragana":{
+  ".lst-hiragana":{
     "list-style-type":"hiragana"
   },
-  ".nehan-lst-hiragana-iroha":{
+  ".lst-hiragana-iroha":{
     "list-style-type":"hiragana-iroha"
   },
-  ".nehan-lst-katakana":{
+  ".lst-katakana":{
     "list-style-type":"katakana"
   },
-  ".nehan-lst-katakana-iroha":{
+  ".lst-katakana-iroha":{
     "list-style-type":"katakana-iroha"
   },
   //-------------------------------------------------------
   // text-combine
   //-------------------------------------------------------
-  ".nehan-tcy":{
+  ".tcy":{
     "text-combine":"horizontal"
   },
-  ".nehan-text-combine":{
+  ".text-combine":{
     "text-combine":"horizontal"
   },
   //-------------------------------------------------------
   // text emphasis
   //-------------------------------------------------------
-  ".nehan-empha-dot-filled":{
+  ".empha-dot-filled":{
     "text-emphasis-style":"filled dot"
   },
-  ".nehan-empha-dot-open":{
+  ".empha-dot-open":{
     "text-emphasis-style":"open dot"
   },
-  ".nehan-empha-circle-filled":{
+  ".empha-circle-filled":{
     "text-emphasis-style":"filled circle"
   },
-  ".nehan-empha-circle-open":{
+  ".empha-circle-open":{
     "text-emphasis-style":"open circle"
   },
-  ".nehan-empha-double-circle-filled":{
+  ".empha-double-circle-filled":{
     "text-emphasis-style":"filled double-circle"
   },
-  ".nehan-empha-double-circle-open":{
+  ".empha-double-circle-open":{
     "text-emphasis-style":"open double-circle"
   },
-  ".nehan-empha-triangle-filled":{
+  ".empha-triangle-filled":{
     "text-emphasis-style":"filled triangle"
   },
-  ".nehan-empha-triangle-open":{
+  ".empha-triangle-open":{
     "text-emphasis-style":"open triangle"
   },
-  ".nehan-empha-sesame-filled":{
+  ".empha-sesame-filled":{
     "text-emphasis-style":"filled sesame"
   },
-  ".nehan-empha-sesame-open":{
+  ".empha-sesame-open":{
     "text-emphasis-style":"open sesame"
   },
   //-------------------------------------------------------
   // break
   //-------------------------------------------------------
-  ".nehan-break-before":{
+  ".break-before":{
     "break-before":"always"
   },
-  ".nehan-break-after":{
+  ".break-after":{
     "break-after":"always"
   },
   //-------------------------------------------------------
   // word-break
   //-------------------------------------------------------
-  ".nehan-wb-all":{
+  ".wb-all":{
     "word-break":"break-all"
   },
-  ".nehan-wb-normal":{
+  ".wb-normal":{
     "word-break":"normal"
   },
-  ".nehan-wb-keep":{
+  ".wb-keep":{
     "word-break":"keep-all"
   },
   //-------------------------------------------------------
   // other utility classes
   //-------------------------------------------------------
-  ".nehan-drop-caps::first-letter":{
+  ".drop-caps::first-letter":{
     "display":"inline-block",
     "box-sizing":"content-box",
     "measure":"1em",
@@ -1673,551 +7060,27 @@ var Style = {
     "line-height":"1.0em",
     "font-size":"4em"
   },
-  ".nehan-gap-start":{
+  ".gap-start":{
     "margin":{
       "start":"1em"
     }
   },
-  ".nehan-gap-end":{
+  ".gap-end":{
     "margin":{
       "end":"1em"
     }
   },
-  ".nehan-gap-after":{
+  ".gap-after":{
     "margin":{
       "after":"1em"
     }
   },
-  ".nehan-gap-before":{
+  ".gap-before":{
     "margin":{
       "before":"1em"
     }
   }
 };
-
-/**
-   @namespace Nehan.Class
-*/
-var Class = {};
-
-/**
-   @memberof Nehan.Class
-   @param childCtor {Object}
-   @param parentCtor {Object}
-   @return {Object}
-*/
-Class.extend = function(childCtor, parentCtor) {
-  function TempCtor() {}
-  TempCtor.prototype = parentCtor.prototype;
-  childCtor.superClass_ = parentCtor.prototype;
-  childCtor.prototype = new TempCtor();
-  childCtor.prototype.constructor = childCtor;
-};
-
-
-/**
-   list utility module
-
-   @namespace Nehan.List
-*/
-var List = {
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> ()
-  */
-  iter : function(lst, fn){
-    for(var i = 0, len = lst.length; i < len; i++){
-      fn(lst[i]);
-    }
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun index -> obj -> ()
-  */
-  iteri : function(lst, fn){
-    for(var i = 0, len = lst.length; i < len; i++){
-      fn(i, lst[i]);
-    }
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> ()
-  */
-  reviter : function(lst, fn){
-    for(var i = lst.length - 1; i >= 0; i--){
-      fn(lst[i]);
-    }
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun index -> obj -> ()
-  */
-  reviteri : function(lst, fn){
-    for(var i = lst.length - 1; i >= 0; i--){
-      fn(i, lst[i]);
-    }
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {boolean}
-  */
-  forall : function(lst, fn){
-    for(var i = 0, len = lst.length; i < len; i++){
-      if(!fn(lst[i])){
-	return false;
-      }
-    }
-    return true;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> obj
-     @return {Array}
-  */
-  map : function(lst, fn){
-    var ret = [];
-    for(var i = 0, len = lst.length; i < len; i++){
-      ret.push(fn(lst[i]));
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun index -> obj -> obj
-     @return {Array}
-  */
-  mapi : function(lst, fn){
-    var ret = [];
-    for(var i = 0, len = lst.length; i < len; i++){
-      ret.push(fn(i, lst[i]));
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param acm {foldable_value} - accumulator
-     @param fn {Function} - fun acm -> obj -> acm
-     @return {folded_value}
-  */
-  fold : function(lst, acm, fn){
-    var ret = acm;
-    for(var i = 0, len = lst.length; i < len; i++){
-      ret = fn(ret, lst[i]);
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {Array}
-  */
-  filter : function(lst, fn){
-    var ret = [];
-    for(var i = 0, len = lst.length; i < len; i++){
-      if(fn(lst[i])){
-	ret.push(lst[i]);
-      }
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {first_founded_object}
-  */
-  find : function(lst, fn){
-    for(var i = 0, len = lst.length; i < len; i++){
-      var obj = lst[i];
-      if(fn(obj)){
-	return obj;
-      }
-    }
-    return null;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {first_founded_object}
-  */
-  revfind : function(lst, fn){
-    for(var i = lst.length - 1; i >= 0; i--){
-      var obj = lst[i];
-      if(fn(obj)){
-	return obj;
-      }
-    }
-    return null;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {int}
-  */
-  indexOf : function(lst, fn){
-    for(var i = 0, len = lst.length; i < len; i++){
-      var obj = lst[i];
-      if(fn(obj)){
-	return i;
-      }
-    }
-    return -1;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {boolean}
-  */
-  exists : function(lst, fn){
-    for(var i = 0, len = lst.length; i < len; i++){
-      if(fn(lst[i])){
-	return true;
-      }
-    }
-    return false;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {boolean}
-  */
-  mem : function(lst, val){
-    for(var i = 0, len = lst.length; i < len; i++){
-      if(lst[i] == val){
-	return true;
-      }
-    }
-    return false;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param start {Number}
-     @param fn {Function}
-     @return {Number}
-  */
-  sum : function(lst, start, fn){
-    return this.fold(lst, start, function(ret, obj){
-      return ret + fn(obj);
-    });
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {Number}
-     @return {min_obj}
-  */
-  minobj : function(lst, fn){
-    var min_obj = null, min_val = null;
-    this.iter(lst, function(obj){
-      var val = fn(obj);
-      if(min_val === null || val < min_val){
-	min_obj = obj;
-	min_val = val;
-      }
-    });
-    return min_obj;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {Number}
-     @return {max_obj}
-  */
-  maxobj : function(lst, fn){
-    var max_obj = null, max_val = null;
-    this.iter(lst, function(obj){
-      var val = fn(obj);
-      if(max_val === null || val > max_val){
-	max_obj = obj;
-	max_val = val;
-      }
-    });
-    return max_obj;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @return {Array}
-  */
-  refcopy : function(lst){
-    var ret = [];
-    for(var i = 0, len = lst.length; i < len; i++){
-      ret[i] = lst[i];
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @param fn {Function} - fun obj -> {boolean}
-     @return {int}
-  */
-  count : function(lst, fn){
-    var ret = 0;
-    for(var i = 0, len = lst.length; i < len; i++){
-      if(fn(lst[i])){
-	ret++;
-      }
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param count {int} - array length
-     @param init_val - initialized value filled in new array
-     @return {Array}
-  */
-  create : function(count, init_val){
-    var ret = [];
-    for(var i = 0; i < count; i++){
-      ret.push((typeof init_val !== "undefined")? init_val : i);
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @return {first_object | null}
-  */
-  first : function(lst){
-    return lst[0] || null;
-  },
-  /**
-     @memberof Nehan.List
-     @param lst {Array}
-     @return {last_object | null}
-  */
-  last : function(lst){
-    var len = lst.length;
-    if(len === 0){
-      return null;
-    }
-    return lst[len - 1];
-  },
-  /**
-     @memberof Nehan.List
-     @param lst1 {Array}
-     @param lst2 {Array}
-     @return {Array.<Array>}
-  */
-  zip : function(lst1, lst2){
-    var ret = [];
-    for(var i = 0, len = Math.min(lst1.length, lst2.length); i < len; i++){
-      ret[i] = [lst1[i], lst2[i]];
-    }
-    return ret;
-  },
-  /**
-     @memberof Nehan.List
-     @param props {Array}
-     @param values {Array}
-     @return {Object}
-     @example
-     * List.zipObj(["a", "b", "c"], [1, 2, 3]); // {a:1, b:2, c:3}
-  */
-  zipObj : function(props, values){
-    var ret = {};
-    if(props.length !== values.length){
-      throw "invalid args:List.zipObj";
-    }
-    for(var i = 0, len = props.length; i < len; i++){
-      ret[props[i]] = values[i];
-    }
-    return ret;
-  },
-  /**
-     non destructive reverse
-
-     @memberof Nehan.List
-     @param lst {Array}
-     @return {Array}
-  */
-  reverse : function(lst){
-    var ret = [];
-    this.reviter(lst, function(obj){
-      ret.push(obj);
-    });
-    return ret;
-  }
-};
-
-
-/**
-   object utility module
-
-   @namespace Nehan.Obj
-*/
-var Obj = {
-  /**
-     @memberof Nehan.Obj
-     @param obj {Object}
-     @return {boolean}
-  */
-  isEmpty: function(obj){
-    for(var name in obj){
-      return false;
-    }
-    return true;
-  },
-  /**
-     @memberof Nehan.Obj
-     @param obj {Object}
-     @param fn {Function} - fun prop -> value -> obj
-  */
-  map : function(obj, fn){
-    var ret = {};
-    this.iter(obj, function(prop, value){
-      ret[prop] = fn(prop, value);
-    });
-    return ret;
-  },
-  /**
-     @memberof Nehan.Obj
-     @param obj {Object}
-     @param fn {Function} - fun prop -> value -> {boolean}
-  */
-  filter : function(obj, fn){
-    var ret = {};
-    this.iter(obj, function(prop, value){
-      if(fn(prop, value)){
-	ret[prop] = value;
-      }
-    });
-    return ret;
-  },
-  /**
-     @memberof Nehan.Obj
-     @param obj {Object}
-     @param fn {Function} - fun prop -> value -> ()
-  */
-  iter : function(obj, fn){
-    for(var prop in obj){
-      fn(prop, obj[prop]);
-    }
-  }
-};
-
-/**
-   misc utility module.
-
-   @namespace Nehan.Utils
-*/
-var Utils = {
-  /**
-     @memberof Nehan.Utils
-     @param str {String}
-  */
-  trimHeadCRLF : function(str){
-    return str.replace(/^\n+/, "");
-  },
-  /**
-     @memberof Nehan.Utils
-     @param str {String}
-  */
-  trimFootCRLF : function(str){
-    return str.replace(/\n+$/, "");
-  },
-  /**
-     @memberof Nehan.Utils
-     @param str {String}
-  */
-  trimCRLF : function(str){
-    return this.trimFootCRLF(this.trimHeadCRLF(str));
-  },
-  /**
-     @memberof Nehan.Utils
-     @param str {String}
-  */
-  trim : function(str){
-    return str.replace(/^\s+/, "").replace(/\s+$/, "");
-  },
-  /**
-     @memberof Nehan.Utils
-     @param str {String}
-  */
-  cutQuote : function(str){
-    return str.replace(/['\"]/g, "");
-  },
-  /**
-     @memberof Nehan.Utils
-     @param str {String}
-     @example
-     * Nehan.Utils.capitalize("japan"); // "Japan"
-  */
-  capitalize : function(str){
-    if(str === ""){
-      return "";
-    }
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  },
-  /**
-     @memberof Nehan.Utils
-     @param p1 {String}
-     @param p2 {String}
-     @example
-     * Nehan.Utils.filenameConcat("/path/to", "foo"); // "/path/to/foo"
-     * Nehan.Utils.filenameConcat("/path/to/", "foo"); // "/path/to/foo"
-  */
-  filenameConcat : function(p1, p2){
-    p1 = (p1==="")? "" : (p1.slice(-1) === "/")? p1 : p1 + "/";
-    p2 = (p2==="")? "" : (p2[0] === "/")? p2.substring(1, p2.length) : p2;
-    return p1 + p2;
-  },
-  /**
-     @memberof Nehan.Utils
-     @param name {String}
-     @example
-     * Nehan.Utils.camelize("font-size"); // "fontSize"
-  */
-  camelize : function(name){
-    var self = this;
-    return (name.indexOf("-") < 0)? name : List.mapi(name.split("-"), function(i, part){
-      return (i === 0)? part : self.capitalize(part);
-    }).join("");
-  }
-};
-
-/**
-   @namespace Nehan.MathUtils
-*/
-var MathUtils = {
-  /**
-     convert [decial] number by [base]
-
-     @memberof Nehan.MathUtils
-     @param deciaml {int}
-     @param base {int}
-     @return {int}
-  */
-  convBase : function(decimal, base){
-   if(decimal === 0){
-      return [0];
-    }
-    var ret = [];
-    var work = decimal;
-    while(work > 0){
-      ret.unshift(work % base);
-      work = Math.floor(work / base);
-    }
-    return ret;
-  }
-};
-
 
 /**
    requestAnimationFrame wrapper function
@@ -2238,1581 +7101,89 @@ var reqAnimationFrame = (function(){
 
 
 /**
-   some set of usefull constant variables.
-   @namespace Nehan.Const
-*/
-var Const = {
-  /**
-     @memberof Nehan.Const
-     @type {Array.<string>}
-  */
-  cssVenderPrefixes:[
-    "-moz",
-    "-webkit",
-    "-o",
-    "-ms"
-  ],
-  /**
-     @memberof Nehan.Const
-     @type {Array.<string>}
-  */
-  cssCorders:[
-    "top-left",
-    "top-right",
-    "bottom-left",
-    "bottom-right"
-  ],
-  /**
-     @memberof Nehan.Const
-     @type {Array.<string>}
-  */
-  cssBorderRadius:[
-    "border-top-left-radius",
-    "border-top-right-radius",
-    "border-bottom-left-radius",
-    "border-bottom-right-radius"
-  ],
-  /**
-     @memberof Nehan.Const
-     @type {Array.<string>}
-  */
-  cssBoxDirs:[
-    "top",
-    "right",
-    "bottom",
-    "left"
-  ],
-  /**
-     @memberof Nehan.Const
-     @type {Array.<string>}
-  */
-  cssBoxDirsLogical:[
-    "before",
-    "end",
-    "after",
-    "start"
-  ],
-  /**
-     @memberof Nehan.Const
-     @type {Array.<string>}
-  */
-  cssBoxCornersLogical:[
-    "start-before",
-    "end-before",
-    "end-after",
-    "start-after"
-  ],
-  /**
-     @memberof Nehan.Const
-     @type {Array.<int>}
-  */
-  css2dIndex:{
-    1:[0, 0],
-    2:[0, 1]
-  },
-  /**
-     @memberof Nehan.Const
-     @type {Array.<int>}
-  */
-  css4dIndex:{
-    1:[0, 0, 0, 0],
-    2:[0, 1, 0, 1],
-    3:[0, 1, 2, 1],
-    4:[0, 1, 2, 3]
-  },
-  /**
-     @memberof Nehan.Const
-     @type {string}
-  */
-  space:"&nbsp;",
-  /**
-     @memberof Nehan.Const
-     @type {string}
-  */
-  clearFix:"<div style='clear:both'></div>"
-};
-
-/**
-   css utility module
-   @namespace Nehan.Css
-*/
-var Css = {
-  /**
-     @memberof Nehan.Css
-     @param args {Object}
-     @return {String}
-     @example
-     * Css.toString({"color":"red", "font-size":16}); // "color:'red'; 'font-size':16"
-  */
-  toString : function(args){
-    var tmp = [];
-    for(var prop in args){
-      tmp.push(prop + ":" + args[prop]);
-    }
-    return tmp.join(";");
-  },
-  /**
-     @memberof Nehan.Css
-     @param name {String}
-     @return {String}
-     @example
-     * Css.addNehanPrefix("foo"); // "nehan-foo"
-  */
-  addNehanPrefix : function(name){
-    return "nehan-" + name;
-  },
-  /**
-     @memberof Nehan.Css
-     @param name {String}
-     @return {String}
-     @example
-     * Css.addNehanHeaderPrefix("foo"); // "nehan-header-foo"
-  */
-  addNehanHeaderPrefix : function(name){
-    return "nehan-header-" + name;
-  },
-  /**
-     @memberof Nehan.Css
-     @param name {String}
-     @return {String}
-     @example
-     * Css.addNehanTocLinkPrefix("foo"); // "nehan-toc-link-foo"
-  */
-  addNehanTocLinkPrefix : function(name){
-    return "nehan-toc-link-" + name;
-  },
-  /**
-     set vender-prefixed css value like(-webkit-opacity, -moz-opacity etc).
-
-     @memberof Nehan.Css
-     @param 
-     @param dst {Object}
-     @param name {String}
-     @param value {String}
-     @return {Object}
-     @example
-     * Css.setCssValueWithVender({}, "writing-mode", "vertical-rl");
-  */
-  setCssValueWithVender: function(dst, name, value){
-    dst[name] = value; // no prefixed version
-    List.iter(Const.cssVenderPrefixes, function(prefix){
-      dst[prefix + "-" + name] = value;
-    });
-    return dst;
-  }
-};
-
-/**
-   html utility module
-
-   @namespace Nehan.Html
-*/
-var Html = {
-  /**
-     escape special text like &lt;, &gt;, etc.
-
-     @memberof Nehan.Html
-     @method escape
-     @param str {String}
-     @return {String}
-  */
-  escape : function(str){
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/'/g, "&#039;")
-      .replace(/"/g, "&quot;");
-  },
-  /**
-     unescape special text.
-
-     @memberof Nehan.Html
-     @method unescape
-     @param str {String}
-     @return {String}
-  */
-  unescape : function(str) {
-    var div = document.createElement("div");
-    div.innerHTML = str.replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/ /g, "&nbsp;")
-      .replace(/\r/g, "&#13;")
-      .replace(/\n/g, "&#10;");
-    return div.textContent || div.innerText;
-  },
-  /*
-    generate html attribute string
-
-    @memberof Nehan.Html
-    @method attr
-    @param args {Object}
-    @return {String}
-    @example
-    * Html.attr({width:"100", height:"200"}); // width='100' height = '200'
-  */
-  attr : function(args){
-    var tmp = [];
-    for(var prop in args){
-      if(typeof args[prop] !== "undefined" && args[prop] !== ""){
-	tmp.push(prop + "='" + this.escape(args[prop] + "") + "'");
-      }
-    }
-    return (tmp == [])? "" : tmp.join(" ");
-  },
-  /**
-     generate html tag string
-
-     @memberof Nehan.Html
-     @method tagWrap
-     @param name {String} - tag name
-     @param content {String} - tag content text
-     @param args {Object} - tag attributes
-     @return {String}
-     @example
-     * Html.tagWrap("a", "homepage", {href:"#"}); // "<a href='#'>homepage</a>"
-  */
-  tagWrap : function(name, content, args){
-    return [this.tagStart(name, args || {}), content, this.tagEnd(name)].join("");
-  },
-  /**
-     generate unwrapped single html tag string
-
-     @memberof Nehan.Html
-     @method tagSingle
-     @param name {String} - tag name
-     @param args {Object} - tag attributes
-     @return {String}
-     @example
-     * Html.tagSingle("img", {src:"/path/to/img"}); // "<img src='/path/to/img' />"
-  */
-  tagSingle : function(name, args){
-    return "<" + name + " " + this.attr(args) + "/>";
-  },
-  /**
-     generate open tag string
-
-     @memberof Nehan.Html
-     @method tagStart
-     @return {String}
-     @param name {String} - tag name
-     @param args {Object} - tag attributes
-     @example
-     * Html.tagStart("div"); // "<div>"
-  */
-  tagStart : function(name, args){
-    return "<" + name + " " + this.attr(args) + ">";
-  },
-  /**
-     generate enclose tag string
-
-     @memberof Nehan.Html
-     @method tagEnd
-     @return {String}
-     @param name {String} - tag name
-     @example
-     * Html.tagEnd("div"); // "</div>"
-  */
-  tagEnd : function(name){
-    return "</" + name + ">";
-  }
-};
-
-/**
-   closure factory
-   @namespace Nehan.Closure
-*/
-var Closure = {
-  /**
-     @memberof Nehan.Closure
-     @return {Function}
-     @example
-     * var echo = Closure.id();
-     * echo(1); // 1
-     * echo("yo"); // "yo"
-  */
-  id : function(){
-    return function(x){
-      return x;
-    };
-  },
-  /**
-     @memberof Nehan.Closure
-     @return {Function}
-     @example
-     * var is_one = Closure.eq(1);
-     * is_one(1); // true
-     * is_one(2); // false
-  */
-  eq : function(x){
-    return function(y){
-      return x == y;
-    };
-  },
-  /**
-     @memberof Nehan.Closure
-     @return {Function}
-     @example
-     * var is_not_one = Closure.neq(1);
-     * is_not_one(1); // false
-     * is_not_one(2); // true
-  */
-  neq : function(x){
-    return function(y){
-      return x != y;
-    };
-  },
-  isTagName : function(names){
-    return function(token){
-      if(token instanceof Tag === false){
-	return false;
-      }
-      var tag_name = token.getName();
-      return List.exists(names, function(name){
-	return name === tag_name;
-      });
-    };
-  }
-};
-
-/**
-   @namespace Nehan.Args
-*/
-var Args = {
-  /**
-     copy all value in [args] to [dst]
-     @memberof Nehan.Args
-     @param {Object} dst
-     @param {Object} args
-     @return {Object} copied dst
-  */
-  copy : function(dst, args){
-    dst = dst || {};
-    for(var prop in args){
-      dst[prop] = args[prop];
-    }
-    return dst;
-  },
-  /**
-     copy all value in [args] to [dst] recursively
-     @memberof Nehan.Args
-     @param {Object} dst
-     @param {Object} args
-     @return {Object} copied dst
-  */
-  copy2 : function(dst, args){
-    dst = dst || {};
-    for(var prop in args){
-      if(typeof dst[prop] === "object"){
-	this.copy2(dst[prop], args[prop]);
-      } else {
-	dst[prop] = args[prop];
-      }
-    }
-    return dst;
-  },
-  /**
-     merge all value in [args] to [dst] with default value by [defaults]
-     @memberof Nehan.Args
-     @param {Object} dst
-     @param {Object} defaults
-     @param {Object} args
-     @return {Object} merged dst
-  */
-  merge : function(dst, defaults, args){
-    dst = dst || {};
-    for(var prop in defaults){
-      dst[prop] = (typeof args[prop] === "undefined")? defaults[prop] : args[prop];
-    }
-    return dst;
-  }
-};
-
-var HashSet = (function(){
-  /**
-     @memberof Nehan
-     @class HashSet
-     @classdesc abstraction of (key, value) set.
-     @constructor
-   */
-  function HashSet(values){
-    this._values = values || {};
-  }
-
-  HashSet.prototype = {
-    /**
-       @memberof Nehan.HashSet
-       @param fn {Function}
-    */
-    iter : function(fn){
-      Obj.iter(this._values, fn);
-    },
-    /**
-       merge new value to old value with same key. simply overwrite by default.
-
-       @memberof Nehan.HashSet
-       @param old_value
-       @param new_value
-    */
-    merge : function(old_value, new_value){
-      return new_value;
-    },
-    /**
-       return union set between this and [set].
-
-       @memberof Nehan.HashSet
-       @param set {Nehan.HashSet}
-     */
-    union : function(set){
-      var self = this;
-      set.iter(function(key, value){
-	self.add(key, value);
-      });
-      return this;
-    },
-    /**
-       get value by name(key).
-
-       @memberof Nehan.HashSet
-       @name {String}
-       @return {value}
-    */
-    get : function(name){
-      return this._values[name] || null;
-    },
-    getValues : function(){
-      return this._values;
-    },
-    /**
-       add [value] by [name]. HashSet::merge is called if [name] is already registered.
-
-       @memberof Nehan.HashSet
-       @param name {String}
-       @param value
-    */
-    add : function(name, value){
-      var old_value = this._values[name] || null;
-      this._values[name] = old_value? this.merge(old_value, value) : value;
-    },
-    /**
-     * this function is used when performance matters,<br>
-     * instead of using this.union(new HashSet(values))
-
-       @memberof Nehan.HashSet
-       @param values {Array}
-    */
-    addValues : function(values){
-      for(var prop in values){
-	this.add(prop, values[prop]);
-      }
-    },
-    /**
-       remove value associated with [name].
-
-       @memberof Nehan.HashSet
-       @param name {String}
-    */
-    remove : function(name){
-      delete this._values[name];
-    }
-  };
-
-  return HashSet;
-})();
-
-
-
-
-var CssHashSet = (function(){
-  /**
-     @memberof Nehan
-     @class CssHashSet
-     @classdesc hash set for css
-     @extends {Nehan.HashSet}
-  */
-  function CssHashSet(values){
-    HashSet.call(this, values);
-  }
-  Class.extend(CssHashSet, HashSet);
-
-  /**
-   * merge css value<br>
-   * 1. if old_value is object, merge each properties.<br>
-   * 2. other case, simplly overwrite new_value to old_value(even if new_value is function).<br>
-
-   @memberof Nehan.CssHashSet
-   @method merge
-   @param old_value
-   @param new_value
-  */
-  CssHashSet.prototype.merge = function(old_value, new_value){
-    if(typeof old_value === "object"){
-      Args.copy(old_value, new_value);
-      return old_value;
-    }
-    return new_value;
-  };
-
-  /**
-     @memberof Nehan.CssHashSet
-     @method copyValuesTo
-     @param dst {Object}
-  */
-  CssHashSet.prototype.copyValuesTo = function(dst){
-    return Args.copy(dst, this._values);
-  };
-
-  return CssHashSet;
-})();
-
-/**
-<pre>
-  there are css properties that are required to calculate accurate paged-layout,
-  and we call them 'managed css properties'.
-
-  managed css properties
-  ======================
-  after(nehan.js local property, same as 'bottom' if lr-tb)
-  before(nehan.js local property, same as 'top' if lr-tb)
-  border
-  border-width
-  border-radius(rounded corner after/before is cleared if page is divided into multiple pages)
-  box-sizing
-  break-after
-  break-before
-  color(required to switch charactor image src for some client)
-  display
-  end(nehan.js local property, same as 'right' if lr-tb)
-  extent(nehan.js local property)
-  float
-  flow(nehan.js local property)
-  font
-  font-size
-  font-family(required to get accurate text-metrics especially latin words)
-  height
-  letter-spacing
-  line-rate(nehan.js local property)
-  list-style
-  list-style-image
-  list-style-position
-  list-style-type
-  margin
-  measure(nehan.js local property)
-  padding
-  position
-  start(nehan.js local property, same as 'left' if lr-tb)
-  text-align
-  text-combine
-  text-emphasis-style
-  white-space
-  width</pre>
-
-  @namespace Nehan.CssParser
-*/
-var CssParser = (function(){
-  var __normalize = function(value){
-    return Utils.trim(String(value))
-      .replace(/;/g, "")
-      .replace(/\n/g, "");
-  };
-
-  var __split_space = function(value){
-    return (value.indexOf(" ") < 0)? [value] : value.split(/\s+/);
-  };
-
-  var __split_slash = function(value){
-    return (value.indexOf("/") < 0)? [value] : value.split("/");
-  };
-
-  // props: [a,b,c]
-  // values:[1,2,3]
-  // => {a:1, b:2, c:3}
-  var __zip_obj = function(props, values){
-    var ret = {};
-    if(props.length !== values.length){
-      throw "invalid args:__zip_obj";
-    }
-    List.iteri(props, function(i, prop){ ret[prop] = values[i]; });
-    return ret;
-  };
-
-  var __get_map_2d = function(len){
-    return Const.css2dIndex[Math.min(len, 2)] || [];
-  };
-
-  var __get_map_4d = function(len){
-    return Const.css4dIndex[Math.min(len, 4)] || [];
-  };
-
-  // values:[a,b]
-  // map: [0,1,0,1]
-  // => [values[0], values[1], values[0], values[1]]
-  // => [a, b, a, b]
-  var __make_values_by_map = function(values, map){
-    return List.map(map, function(index){ return values[index]; });
-  };
-
-  // values:[0] => [0,0]
-  // values:[0,1] => [0,1]
-  var __make_values_2d = function(values){
-    var map = __get_map_2d(values.length);
-    return __make_values_by_map(values, map);
-  };
-
-  // values:[0] => [0,0,0,0],
-  // values:[0,1] => [0, 1, 0, 1]
-  // values:[0,2,3] => [0,1,2,1]
-  // values:[0,1,2,3] => [0,1,2,3]
-  var __make_values_4d = function(values){
-    var map = __get_map_4d(values.length);
-    return __make_values_by_map(values, map);
-  };
-
-  var __make_edge_4d = function(values){
-    var props = Const.cssBoxDirsLogical; // len = 4
-    var values_4d = __make_values_4d(values); // len = 4
-    return List.zipObj(props, values_4d);
-  };
-
-  var __make_corner_4d = function(values){
-    var props = Const.cssBoxCornersLogical; // len = 4
-    var values_4d = __make_values_4d(values); // len = 4
-    return __zip_obj(props, values_4d);
-  };
-
-  var __parse_4d = function(value){
-    return __make_edge_4d(__split_space(value));
-  };
-
-  var __parse_corner_4d = function(value){
-    var values_2d = __make_values_2d(__split_slash(value));
-    var values_4d_2d = List.map(values_2d, function(val){
-      return __make_values_4d(__split_space(val));
-    });
-    var values = List.zip(values_4d_2d[0], values_4d_2d[1]);
-    return __make_corner_4d(values);
-  };
-
-  var __parse_border_abbr = function(value){
-    var ret = [];
-    var values = __split_space(value);
-    var arg_len = values.length;
-    if(arg_len >= 1){
-      ret.push({"border-width":__parse_4d(values[0])});
-    }
-    return ret;
-  };
-
-  var __parse_list_style_abbr = function(value){
-    var ret = [];
-    var values = __split_space(value);
-    var arg_len = values.length;
-    if(arg_len >= 1){
-      ret.push({"list-style-type":__parse_4d(values[0])});
-    }
-    if(arg_len >= 2){
-      ret.push({"list-style-image":__parse_4d(values[1])});
-    }
-    if(arg_len >= 3){
-      ret.push({"list-style-position":__parse_4d(values[2])});
-    }
-    return ret;
-  };
-
-  var __parse_font_abbr = function(value){
-    return {}; // TODO
-  };
-
-  var __parse_background_abbr = function(value){
-    return {}; // TODO
-  };
-
-  // all subdivided properties are evaluated as unified value.
-  // for example, 'margin-before:1em' => 'margin:1em 0 0 0'.
-  // so subdivided properties must be renamed to unified property('margin-before' => 'margin').
-  var __format_prop = function(prop){
-    if(prop.indexOf("margin-") >= 0 || prop.indexOf("padding-") >= 0 || prop.indexOf("border-width-") >= 0){
-      return prop.split("-")[0];
-    }
-    return prop;
-  };
-
-  var __format_value = function(prop, value){
-    switch(typeof value){
-    case "function": case "object": case "boolean":
-      return value;
-    }
-    value = __normalize(value); // number, string
-    switch(prop){
-      /* TODO: border abbr
-    case "border":
-      return __parse_border_abbr(value);
-      */
-    case "border-width":
-      return __parse_4d(value);
-    case "border-radius":
-      return __parse_corner_4d(value);
-    case "border-color":
-      return __parse_4d(value);
-    case "border-style":
-      return __parse_4d(value);
-
-      /* TODO: font abbr
-    case "font":
-      return __parse_font_abbr(value);
-      */
-
-      /* TODO: list-style abbr
-    case "list-style":
-      return __parse_list_style_abbr(value);
-      */
-    case "margin":
-      return __parse_4d(value);
-    case "padding":
-      return __parse_4d(value);
-
-    // subdivided properties
-    case "margin-before": case "padding-before": case "border-width-before":
-      return {before:value};
-    case "margin-end": case "padding-end": case "border-width-end":
-      return {end:value};
-    case "margin-after": case "padding-after": case "border-width-after":
-      return {after:value};
-    case "margin-start": case "padding-start": case "border-width-start":
-      return {start:value};      
-
-    // unmanaged properties is treated as it is.
-    default: return value;
-    }
-  };
-
-  return {
-    /**
-       @memberof Nehan.CssParser
-       @param prop {String} - css property name
-       @return {String} normalized property name
-       @example
-       * CssParser.formatProp("margin-start"); // => "margin"
-    */
-    formatProp : function(prop){
-      return __format_prop(prop);
-    },
-    /**
-       @memberof Nehan.CssParser
-       @param prop {String} - css property name
-       @param value - css value
-       @return {Object|int|string|boolean|function}
-       @example
-       * CssParser.formatValue("margin-start", "1em"); // => {start:"1em"}
-       * CssParser.formatValue("margin", "1em 1em 0 0"); // => {before:"1em", end:"1em", after:0, start:0}
-    */
-    formatValue : function(prop, value){
-      return __format_value(prop, value);
-    }
-  };
-})();
-
-
-var AttrSelector = (function(){
-  /**
-     @memberof Nehan
-     @class AttrSelector
-     @classdesc css attribute selector
-     @constructor
-     @param {string} expr - attribute selector string
-     @example
-     * var as = new AttrSelector("[name='taro']");
-  */
-  function AttrSelector(expr){
-    this.expr = this._normalize(expr);
-    this.left = this.op = this.right = null;
-    this._parseExpr(this.expr);
-  }
-
-  var __rex_symbol = /[^=^~|$*\s]+/;
-  var __op_symbols = ["|=", "~=", "^=", "$=", "*=", "="];
-
-  AttrSelector.prototype = {
-    _normalize : function(expr){
-      return expr.replace(/\[/g, "").replace(/\]/g, "");
-    },
-    _parseSymbol : function(expr){
-      var match = expr.match(__rex_symbol);
-      if(match){
-	return match[0];
-      }
-      return "";
-    },
-    _parseOp : function(expr){
-      return List.find(__op_symbols, function(symbol){
-	return expr.indexOf(symbol) >= 0;
-      });
-    },
-    _parseExpr : function(expr){
-      this.left = this._parseSymbol(expr);
-      if(this.left){
-	expr = Utils.trim(expr.slice(this.left.length));
-      }
-      this.op = this._parseOp(expr);
-      if(this.op){
-	expr = Utils.trim(expr.slice(this.op.length));
-	this.right = Utils.cutQuote(Utils.trim(expr));
-      }
-    },
-    _testHasAttr : function(style){
-      return style.getMarkupAttr(this.left) !== null;
-    },
-    _testEqual : function(style){
-      var value = style.getMarkupAttr(this.left);
-      return value === this.right;
-    },
-    _testCaretEqual : function(style){
-      var value = style.getMarkupAttr(this.left);
-      var rex = new RegExp("^" + this.right);
-      return rex.test(value);
-    },
-    _testDollarEqual : function(style){
-      var value = style.getMarkupAttr(this.left);
-      var rex = new RegExp(this.right + "$");
-      return rex.test(value);
-    },
-    _testTildeEqual : function(style){
-      var value = style.getMarkupAttr(this.left);
-      var values = value? value.split(/\s+/) : [];
-      return List.exists(values, Closure.eq(this.right));
-    },
-    _testPipeEqual : function(style){
-      var value = style.getMarkupAttr(this.left);
-      return value? (value == this.right || value.indexOf(this.right + "-") >= 0) : false;
-    },
-    _testStarEqual : function(style){
-      var value = style.getMarkupAttr(this.left);
-      return value.indexOf(this.right) >= 0;
-    },
-    _testOp : function(style){
-      switch(this.op){
-      case "=":  return this._testEqual(style);
-      case "^=": return this._testCaretEqual(style);
-      case "$=": return this._testDollarEqual(style);
-      case "|=": return this._testPipeEqual(style);
-      case "~=": return this._testTildeEqual(style);
-      case "*=": return this._testStarEqual(style);
-      }
-      throw "undefined operation:" + this.op;
-    },
-    /**
-       @memberof Nehan.AttrSelector
-       @method test
-       @param style {Nehan.StyleContext}
-       @return {boolean} true if style is matched to this attribute selector.
-    */
-    test : function(style){
-      if(this.op && this.left && this.right){
-	return this._testOp(style);
-      }
-      if(this.left){
-	return this._testHasAttr(style);
-      }
-      return false;
-    }
-  };
-
-  return AttrSelector;
-})();
-
-
-var PseudoSelector = (function(){
-  /**
-     @memberof Nehan
-     @class PseudoSelector
-     @classdesc abstraction of css pseudo element or pseudo class selector
-     @constructor
-     @param expr {String}
-     @example
-     * var ps = new PseudoSelector("::first-letter").hasPseudoElement(); // true
-  */
-  function PseudoSelector(expr){
-    this.name = this._normalize(expr);
-  }
-
-  PseudoSelector.prototype = {
-    /**
-       @memberof Nehan.PseudoSelector
-       @return {boolean}
-    */
-    hasPseudoElement : function(){
-      return (this.name === "before" ||
-	      this.name === "after" ||
-	      this.name === "first-letter" ||
-	      this.name === "first-line");
-    },
-    /**
-       @memberof Nehan.PseudoSelector
-       @param style {Nehan.StyleContext}
-       @return {boolean}
-    */
-    test : function(style){
-      switch(this.name){
-      // pseudo-element
-      case "before": return true;
-      case "after": return true;
-      case "first-letter": return !style.isMarkupEmpty();
-      case "first-line": return !style.isMarkupEmpty();
-
-      // pseudo-class
-      case "first-child": return style.isFirstChild();
-      case "last-child": return style.isLastChild();
-      case "first-of-type": return style.isFirstOfType();
-      case "last-of-type": return style.isLastOfType();
-      case "only-child": return style.isOnlyChild();
-      case "only-of-type": return style.isOnlyOfType();
-      case "empty": return style.isMarkupEmpty();
-      case "root": return style.isRoot();
-      }
-      return false;
-    },
-    _normalize : function(expr){
-      return expr.replace(/:+/g, "");
-    }
-  };
-
-  return PseudoSelector;
-})();
-
-
-/* 
-   single element type selector
-
-   example:
-
-   1. name selector
-     div {font-size:xxx}
-     /h[1-6]/ {font-weight:xxx}
-
-   2. class selector
-     div.class{font-size:xxx}
-     div.class1.class2{color:yyy}
-
-   3. id selector
-     div#id{font-size:xxx}
-
-   4. attribute selector
-     div[name=value]{font-size:xxx}
-     div[name1=value1][name1^=xxx]{color:yyy}
-
-   5. pseudo-class selector
-     li:first-child{font-weight:bold}
-
-   6. pseudo-element selector
-     div::first-line{font-size:xxx}
-*/
-var TypeSelector = (function(){
-  /**
-     @memberof Nehan
-     @class TypeSelector
-     @classdesc selector abstraction(name, class, id, attribute, pseudo).
-     @constructor
-     @param opt {Object}
-     @param opt.name {String}
-     @param opt.nameRex {RegExp}
-     @param opt.id {String}
-     @param opt.classes {Array<String>}
-     @param opt.attrs {Array<Nehan.AttrSelector>}
-     @param opt.pseudo {Nehan.PseudoSelector}
-     @description <pre>
-
-     1. name selector
-       div {font-size:xxx}
-       /h[1-6]/ {font-weight:xxx}
-
-     2. class selector
-       div.class{font-size:xxx}
-       div.class1.class2{color:yyy}
-
-     3. id selector
-       div#id{font-size:xxx}
-
-     4. attribute selector
-       div[name=value]{font-size:xxx}
-       div[name1=value1][name1^=xxx]{color:yyy}
-
-     5. pseudo-class selector
-       li:first-child{font-weight:bold}
-
-     6. pseudo-element selector
-       div::first-line{font-size:xxx}
-     </pre>
-  */
-  function TypeSelector(opt){
-    this.name = opt.name || null;
-    this.nameRex = opt.nameRex || null;
-    this.id = opt.id || null;
-    this.classes = opt.classes || [];
-    this.attrs = opt.attrs || [];
-    this.pseudo = opt.pseudo || null;
-  }
-  
-  TypeSelector.prototype = {
-    test : function(style){
-      if(style === null){
-	return false;
-      }
-      // name selector
-      if(this.name && !this.testName(style.getMarkupName())){
-	return false;
-      }
-      // name selector(by rex)
-      if(this.nameRex && !this.testNameRex(style.getMarkupName())){
-	return false;
-      }
-      // class selector
-      if(this.classes.length > 0 && !this.testClassNames(style.getMarkupClasses())){
-	return false;
-      }
-      // id selector
-      if(this.id && style.getMarkupId() != this.id){
-	return false;
-      }
-      // attribute selectgor
-      if(this.attrs.length > 0 && !this._testAttrs(style)){
-	return false;
-      }
-      // pseudo-element, pseudo-class selector
-      if(this.pseudo && !this.pseudo.test(style)){
-	return false;
-      }
-      return true;
-    },
-    testName : function(markup_name){
-      if(this.name === null){
-	return false;
-      }
-      if(this.name === "*"){
-	return true;
-      }
-      return markup_name === this.name;
-    },
-    testNameRex : function(markup_name){
-      if(this.nameRex === null){
-	return false;
-      }
-      return this.nameRex.test(markup_name);
-    },
-    testClassNames : function(markup_classes){
-      return List.forall(this.classes, function(klass){
-	return List.exists(markup_classes, Closure.eq(klass));
-      });
-    },
-    getNameSpec : function(){
-      if(this.nameRex){
-	return 1;
-      }
-      if(this.name === null || this.name === "*"){
-	return 0;
-      }
-      return 1;
-    },
-    getIdSpec : function(){
-      return this.id? 1 : 0;
-    },
-    getClassSpec : function(){
-      return this.classes.length;
-    },
-    getAttrSpec : function(){
-      return this.attrs.length;
-    },
-    getPseudoClassSpec : function(){
-      if(this.pseudo){
-	return this.pseudo.hasPseudoElement()? 0 : 1;
-      }
-      return 0;
-    },
-    _testAttrs : function(style){
-      return List.forall(this.attrs, function(attr){
-	return attr.test(style);
-      });
-    }
-  };
-
-  return TypeSelector;
-})();
-
-
-var SelectorLexer = (function(){
-  /**
-     @memberof Nehan
-     @class SelectorLexer
-     @classdesc lexer of css selector
-     @constructor
-  */
-  function SelectorLexer(src){
-    this.buff = this._normalize(src);
-  }
-
-  var __rex_name = /^[\w-_\*!\?]+/;
-  var __rex_name_by_rex = /^\/[^\/]+\//;
-  var __rex_id = /^#[\w-_]+/;
-  var __rex_class = /^\.[\w-_]+/;
-  var __rex_attr = /^\[[^\]]+\]/;
-  var __rex_pseudo = /^:{1,2}[\w-_]+/;
-
-  SelectorLexer.prototype = {
-    /**
-       @memberof Nehan.SelectorLexer
-       @return {Array.<Nehan.TypeSelector>}
-    */
-    getTokens : function(){
-      var tokens = [];
-      while(this.buff !== ""){
-	var token = this._getNextToken();
-	if(token === null){
-	  break;
-	}
-	tokens.push(token);
-      }
-      return tokens;
-    },
-    _getNextToken : function(){
-      this.buff = Utils.trim(this.buff);
-      if(this.buff === ""){
-	return null;
-      }
-      var c1 = this.buff.charAt(0);
-      switch(c1){
-      case "+": case "~": case ">": // combinator
-	this._stepBuff(1);
-	return c1;
-      default: // type-selecor
-	return this._getTypeSelector();
-      }
-      throw "invalid selector:[" + this.buff + "]";
-    },
-    _normalize : function(src){
-      return Utils.trim(src).replace(/\s+/g, " ");
-    },
-    _stepBuff : function(count){
-      this.buff = Utils.trim(this.buff.slice(count));
-    },
-    _getByRex : function(rex){
-      var ret = null;
-      var match = this.buff.match(rex);
-      if(match){
-	ret = match[0];
-	this._stepBuff(ret.length);
-      }
-      return ret;
-    },
-    _getTypeSelector : function(){
-      var buff_len_before = this.buff.length;
-      var name = this._getName();
-      var name_rex = (name === null)? this._getNameRex() : null;
-      var id = this._getId();
-      var classes = this._getClasses();
-      var attrs = this._getAttrs();
-      var pseudo = this._getPseudo();
-
-      // if size of this.buff is not changed, there is no selector element.
-      if(this.buff.length === buff_len_before){
-	throw "invalid selector:[" + this.buff + "]";
-      }
-      return new TypeSelector({
-	name:name,
-	nameRex:name_rex,
-	id:id,
-	classes:classes,
-	attrs:attrs,
-	pseudo:pseudo
-      });
-    },
-    _getName : function(){
-      return this._getByRex(__rex_name);
-    },
-    // type name defined by regexp
-    // "/h[1-6]/.nehan-some-class span"
-    // => /h[1-6]/
-    _getNameRex : function(){
-      var name_rex = this._getByRex(__rex_name_by_rex);
-      if(name_rex === null){
-	return null;
-      }
-      return new RegExp(name_rex.replace(/[\/]/g, ""));
-    },
-    _getId : function(){
-      var id = this._getByRex(__rex_id);
-      return id? id.substring(1) : null;
-    },
-    _getClasses : function(){
-      var classes = [];
-      while(true){
-	var klass = this._getClass();
-	if(klass === null){
-	  break;
-	}
-	classes.push(klass);
-      }
-      return classes;
-    },
-    _getClass : function(){
-      var klass = this._getByRex(__rex_class);
-      return klass? klass.substring(1) : null;
-    },
-    _getAttrs : function(){
-      var attrs = [];
-      while(true){
-	var attr = this._getByRex(__rex_attr);
-	if(attr === null){
-	  break;
-	}
-	attrs.push(new AttrSelector(attr));
-      }
-      return attrs;
-    },
-    _getPseudo : function(){
-      var pseudo = this._getByRex(__rex_pseudo);
-      return pseudo? new PseudoSelector(pseudo) : null;
-    }
-  };
-
-  return SelectorLexer;
-})();
-
-
-/**
-   state machine module to check if some selector is matched to destination style context.
-
-   @namespace Nehan.SelectorStateMachine
-*/
-var SelectorStateMachine = (function(){
-  var __find_parent = function(style, parent_type){
-    var ptr = style.parent;
-    while(ptr !== null){
-      if(parent_type.test(ptr)){
-	return ptr;
-      }
-      ptr = ptr.parent;
-    }
-    return null;
-  };
-
-  var __find_direct_parent = function(style, parent_type){
-    var ptr = style.parent;
-    if(ptr === null){
-      return null;
-    }
-    return parent_type.test(ptr)? ptr : null;
-  };
-
-  // search adjacent sibling forom 'style' that matches f1 selector.
-  var __find_adj_sibling = function(style, f1){
-    var sibling_index = style.getChildIndex();
-    var prev_sibling = style.getParentNthChild(sibling_index - 1) || null;
-    return (prev_sibling && f1.test(prev_sibling))? prev_sibling : null;
-  };
-
-  // search style context that matches f1 selector from all preceding siblings of 'style'.
-  var __find_prev_sibling = function(style, f1){
-    var sibling_index = style.getChildIndex();
-    for(var i = 0; i < sibling_index; i++){
-      var prev_sibling = style.getParentNthChild(i);
-      if(prev_sibling && f1.test(prev_sibling)){
-	return prev_sibling;
-      }
-    }
-    return null;
-  };
-
-  return {
-    /**
-       return true if all the selector-tokens({@link Nehan.TypeSelector} or combinator) matches the style-context.
-
-       @memberof Nehan.SelectorStateMachine
-       @param style {Nehan.StyleContext}
-       @param tokens {Array.<Nehan.TypeSelector> | combinator_string}
-       @return {boolean}
-    */
-    accept : function(style, tokens){
-      if(tokens.length === 0){
-	throw "selector syntax error:" + src;
-      }
-      var pos = tokens.length - 1;
-      var pop = function(){
-	return (pos < 0)? null : tokens[pos--];
-      };
-      var push_back = function(){
-	pos++;
-      };
-      var f2, tmp, f1, combinator;
-      while(pos >= 0){
-	f2 = pop();
-	if(f2 instanceof TypeSelector === false){
-	  throw "selector syntax error:" + src;
-	}
-	if(!f2.test(style)){
-	  return false;
-	}
-	tmp = pop();
-	if(tmp === null){
-	  return true;
-	}
-	if(tmp instanceof TypeSelector){
-	  f1 = tmp;
-	  combinator = " "; // descendant combinator
-	} else if(typeof tmp === "string"){
-	  combinator = tmp;
-	  f1 = pop();
-	  if(f1 === null || f1 instanceof TypeSelector === false){
-	    throw "selector syntax error:" + src;
-	  }
-	}
-	// test [f1 combinator f2]
-	// notice that f2 is already accepted at this point, so next we check [f1 combinator] parts.
-	// if style-context that matches [f1 combinator] is found, update 'style' to it, and next loop.
-	switch(combinator){
-	case " ": style = __find_parent(style, f1); break; // search parent context that matches f1.
-	case ">": style = __find_direct_parent(style, f1); break; // search direct parent context that matches f1.
-	case "+": style = __find_adj_sibling(style, f1); break; // find adjacent sibling context that matches f1.
-	case "~": style = __find_prev_sibling(style, f1); break; // find previous sibling context that matches f1.
-	default: throw "selector syntax error:invalid combinator(" + combinator + ")";
-	}
-	// can't find style-context that matches [f1 combinator f2]
-	if(style === null){
-	  return false;
-	}
-	// to start next loop from f1, push bach f1 token.
-	push_back();
-      }
-      return true; // all accepted
-    }
-  };
-})();
-
-
-// Selector = [TypeSelector | TypeSelector + combinator + Selector]
-var Selector = (function(){
-  /**
-     @memberof Nehan
-     @class Selector
-     @classdesc abstraction of css selector.
-     @constructor
-     @param key {String}
-     @param value {css_value}
-  */
-  function Selector(key, value){
-    this.key = this._normalizeKey(key); // selector source like 'h1 > p'
-    this.value = this._formatValue(value); // associated css value object like {font-size:16px}
-    this.elements = this._getSelectorElements(this.key); // [type-selector | combinator]
-    this.spec = this._countSpec(this.elements); // count specificity
-  }
-
-  Selector.prototype = {
-    /**
-       @memberof Nehan.Selector
-       @param style {Nehan.StyleContext}
-       @return {boolean}
-    */
-    test : function(style){
-      return SelectorStateMachine.accept(style, this.elements);
-    },
-    /**
-       @memberof Nehan.Selector
-       @param style {Nehan.StyleContext}
-       @param element_name {String} - "before", "after", "first-line", "first-letter"
-       @return {boolean}
-    */
-    testPseudoElement : function(style, element_name){
-      return this.hasPseudoElementName(element_name) && this.test(style);
-    },
-    /**
-       @memberof Nehan.Selector
-       @param value {css_value}
-    */
-    updateValue : function(value){
-      for(var prop in value){
-	var fmt_value = CssParser.formatValue(prop, value[prop]);
-	var fmt_prop = CssParser.formatProp(prop);
-	var old_value = this.value[fmt_prop] || null;
-	if(old_value !== null && typeof old_value === "object" && typeof fmt_value === "object"){
-	  Args.copy(old_value, fmt_value);
-	} else {
-	  this.value[fmt_prop] = fmt_value; // direct value or function
-	}
-      }
-    },
-    /**
-       @memberof Nehan.Selector
-       @return {String}
-    */
-    getKey : function(){
-      return this.key;
-    },
-    /**
-       @memberof Nehan.Selector
-       @return {css_value}
-    */
-    getValue : function(){
-      return this.value;
-    },
-    /**
-       @memberof Nehan.Selector
-       @return {int} selector specificity
-    */
-    getSpec : function(){
-      return this.spec;
-    },
-    /**
-       @memberof Nehan.Selector
-       @return {boolean}
-    */
-    hasPseudoElement : function(){
-      return this.key.indexOf("::") >= 0;
-    },
-    /**
-       @memberof Nehan.Selector
-       @param element_name {String} - "first-letter", "first-line"
-       @return {boolean}
-    */
-    hasPseudoElementName : function(element_name){
-      return this.key.indexOf("::" + element_name) >= 0;
-    },
-    // count selector 'specificity'
-    // see http://www.w3.org/TR/css3-selectors/#specificity
-    _countSpec : function(elements){
-      var a = 0, b = 0, c = 0;
-      List.iter(elements, function(token){
-	if(token instanceof TypeSelector){
-	  a += token.getIdSpec();
-	  b += token.getClassSpec() + token.getPseudoClassSpec() + token.getAttrSpec();
-	  c += token.getNameSpec();
-	}
-      });
-      return parseInt([a,b,c].join(""), 10); // maybe ok in most case.
-    },
-    _getSelectorElements : function(key){
-      var lexer = new SelectorLexer(key);
-      return lexer.getTokens();
-    },
-    _normalizeKey : function(key){
-      key = (key instanceof RegExp)? "/" + key.source + "/" : key;
-      return Utils.trim(key).toLowerCase().replace(/\s+/g, " ");
-    },
-    _formatValue : function(value){
-      var ret = {};
-      for(var prop in value){
-	var fmt_prop = CssParser.formatProp(prop);
-	var fmt_value = CssParser.formatValue(prop, value[prop]);
-	ret[fmt_prop] = fmt_value;
-      }
-      return ret;
-    }
-  };
-
-  return Selector;
-})();
-
-
-/**
    all selector values managed by layout engine.
 
    @namespace Nehan.Selectors
  */
 var Selectors = (function(){
-  var __selectors = []; // selector list ordered by specificity desc.
-  var __selectors_pe = []; // selector (with pseudo-element) list, ordered by specificity desc.
+  var __selectors = []; // selector (without pseudo-element) list.
+  var __selectors_pe = []; // selector (with pseudo-element) list.
 
   // sort __selectors by specificity asc.
-  // so higher specificity overwrites lower one.
-  var __sort_selectors = function(){
-    __selectors.sort(function(s1,s2){ return s1.spec - s2.spec; });
-  };
-
-  var __sort_selectors_pe = function(){
-    __selectors_pe.sort(function(s1,s2){ return s1.spec - s2.spec; });
+  var __sort_selectors = function(selectors){
+    selectors.sort(function(s1,s2){ return s1.spec - s2.spec; });
+    return selectors;
   };
 
   var __is_pe_key = function(selector_key){
     return selector_key.indexOf("::") >= 0;
   };
 
-  var __find_selector = function(selector_key){
-    var dst_selectors = __is_pe_key(selector_key)? __selectors_pe : __selectors;
-    return List.find(dst_selectors, function(selector){
+  var __find_selector = function(selectors, selector_key){
+    return Nehan.List.find(selectors, function(selector){
       return selector.getKey() === selector_key;
     });
   };
 
   var __update_value = function(selector_key, value){
-    var style_value = new CssHashSet(Style[selector_key]); // old style value, must be found
-    style_value = style_value.union(new CssHashSet(value)); // merge new value to old
-    var selector = __find_selector(selector_key); // selector object for selector_key, must be found
+    var style_value = new Nehan.CssHashSet(Style[selector_key]); // old style value, must be found
+    style_value = style_value.union(new Nehan.CssHashSet(value)); // merge new value to old
+    var target_selectors = __is_pe_key(selector_key)? __selectors_pe : __selectors;
+    var selector = __find_selector(target_selectors, selector_key); // selector object for selector_key, must be found
     selector.updateValue(style_value.getValues());
   };
 
   var __insert_value = function(selector_key, value){
-    var selector = new Selector(selector_key, value);
-    if(selector.hasPseudoElement()){
-      __selectors_pe.push(selector);
-    } else {
-      __selectors.push(selector);
-    }
-    // to speed up 'init_selectors' function, we did not sort immediatelly after inserting value.
-    // we sort entries after all selector_key and value are registered.
+    var selector = new Nehan.Selector(selector_key, value);
+    var target_selectors = __is_pe_key(selector_key)? __selectors_pe : __selectors;
+    target_selectors.push(selector);
     return selector;
   };
 
-  // apply Selector::test to style.
-  // if matches, copy selector value to result object.
-  // offcource, higher specificity overwrite lower one.
-  var __get_value = function(style){
-    return List.fold(__selectors, new CssHashSet(), function(ret, selector){
-      if(!selector.test(style)){
-	return ret;
-      }
-      return ret.union(new CssHashSet(selector.getValue()));
+  var __get_value_pe = function(style, pseudo_element_name){
+    var matched_selectors = Nehan.List.filter(__selectors_pe, function(selector){
+      return selector.testPseudoElement(style, pseudo_element_name);
+    });
+    return (matched_selectors.length === 0)? {} : Nehan.List.fold(__sort_selectors(matched_selectors), new Nehan.CssHashSet(), function(ret, selector){
+      return ret.union(new Nehan.CssHashSet(selector.getValue()));
     }).getValues();
   };
 
-  // 'p::first-letter'
-  // => style = 'p', pseudo_element_name = 'first-letter'
-  var __get_value_pe = function(style, pseudo_element_name){
-    return List.fold(__selectors_pe, new CssHashSet(), function(ret, selector){
-      if(!selector.testPseudoElement(style, pseudo_element_name)){
-	return ret;
-      }
-      return ret.union(new CssHashSet(selector.getValue()));
+  var __get_value = function(style){
+    var matched_selectors = Nehan.List.filter(__selectors, function(selector){
+      return selector.test(style);
+    });
+    return (matched_selectors.length === 0)? {} : Nehan.List.fold(__sort_selectors(matched_selectors), new Nehan.CssHashSet(), function(ret, selector){
+      return ret.union(new Nehan.CssHashSet(selector.getValue()));
     }).getValues();
   };
 
   var __set_value = function(selector_key, value){
-    // if selector_key already defined, just overwrite it.
     if(Style[selector_key]){
       __update_value(selector_key, value);
       return;
     }
-    __insert_value(selector_key, value);
-
     var selector = __insert_value(selector_key, value);
-
-    // notice that '__sort_selectors'(or '__sort_selectors_pe') is not called in '__insert_value'.
     Style[selector_key] = selector.getValue();
-    if(selector.hasPseudoElement()){
-      __sort_selectors_pe();
-    } else {
-      __sort_selectors();
-    }
   };
 
   var __init_selectors = function(){
-    // initialize selector list
-    Obj.iter(Style, function(key, value){
+    Nehan.Obj.iter(Style, function(key, value){
       __insert_value(key, value);
     });
-    __sort_selectors();
-    __sort_selectors_pe();
   };
 
   __init_selectors();
 
   return {
+    /**
+       @memberof Nehan.Selectors
+       @param selector_key {String}
+       @return {Nehan.Selector}
+    */
+    get : function(selector_key){
+      return __find_selector(__selectors, selector_key);
+    },
     /**
        @memberof Nehan.Selectors
        @param selector_key {String}
@@ -3849,10 +7220,9 @@ var Selectors = (function(){
     },
     /**<pre>
      * get selector css that matches to the pseudo element of some style context.
-     * notice that if selector_key is "p::first-letter",
-     * pseudo-element is "first-letter" and style-context is "p".
+     * if selector_key is "p::first-letter",
+     * [pseudo_element_name] is "first-letter" and [style] is style-context of "p".
      *</pre>
-
        @memberof Nehan.Selectors
        @param style {Nehan.StyleContext} - 'parent' style context of pseudo-element
        @param pseudo_element_name {String} - "first-letter", "first-line", "before", "after"
@@ -3863,646 +7233,6 @@ var Selectors = (function(){
     }
   };
 })();
-
-var TagAttrLexer = (function(){
-  var __rex_symbol = /[^=\s]+/;
-
-  /**
-     @memberof Nehan
-     @class TagAttrLexer
-     @classdesc tag attribute string lexer
-     @constructor
-     @param src {String}
-     @description <pre>
-     * lexer src is attribute parts of original tag source.
-     * so if tag source is "<div class='nehan-float-start'>",
-     * then lexer src is "class='nehan-float-start'".
-     </pre>
-  */
-  function TagAttrLexer(src){
-    this.buff = src;
-    this._error = false;
-  }
-
-  TagAttrLexer.prototype = {
-    /**
-       @memberof Nehan.TagAttrLexer
-       @return {boolean}
-    */
-    isEnd : function(){
-      return this._error || (this.buff === "");
-    },
-    /**
-       @memberof Nehan.TagAttrLexer
-       @return {symbol}
-    */
-    get : function(){
-      var c1 = this._peek();
-      if(c1 === null){
-	return null;
-      }
-      switch(c1){
-      case "=":
-	this._step(1);
-	return c1;
-      case "'": case "\"":
-	return this._getLiteral(c1);
-      case " ":
-	this._step(1);
-	return this.get(); // skip space
-      default:
-	return this._getSymbol();
-      }
-    },
-    _peek : function(){
-      return this.buff? this.buff.charAt(0) : null;
-    },
-    _step : function(length){
-      this.buff = this.buff.substring(length);
-    },
-    _getSymbol : function(){
-      //var symbol = HtmlLexer.prototype._getByRex.call(this, __rex_symbol);
-      var match = this.buff.match(__rex_symbol);
-      var symbol = match? match[0] : null;
-      if(symbol){
-	this._step(symbol.length);
-      }
-      return symbol;
-    },
-    _getLiteral : function(quote_char){
-      var quote_end_pos = this.buff.indexOf(quote_char, 1);
-      if(quote_end_pos < 0){
-	console.error("TagAttrLexer::syntax error:literal not closed(%s)", this.buff);
-	this._error = true;
-	return null;
-      }
-      var literal = this.buff.substring(1, quote_end_pos);
-      this._step(quote_end_pos + 1);
-      return literal;
-    }
-  };
-
-  return TagAttrLexer;
-})();
-
-
-var TagAttrParser = (function(){
-  /**
-     @memberof Nehan
-     @class TagAttrParser
-     @classdesc tag attribute parser
-     @constructor
-     @param src {String}
-  */
-  function TagAttrParser(src){
-    this._lexer = new TagAttrLexer(src);
-    this._attrs = {};
-    this._left = null;
-  }
-
-  TagAttrParser.prototype = {
-    /**
-       @memberof Nehan.TagAttrParser
-       @return {Object}
-    */
-    parse : function(){
-      while(!this._isEnd()){
-	this._parseAttr();
-      }
-      return this._attrs;
-    },
-    _isEnd : function(){
-      return this._left === null && this._lexer.isEnd();
-    },
-    _parseAttr : function(){
-      var token = this._lexer.get();
-      if(token === null){
-	if(this._left){
-	  this._attrs[this._left] = "true";
-	  this._left = null;
-	}
-      } else if(token === "=" && this._left){
-	this._attrs[this._left] = this._lexer.get() || "true";
-	this._left = null;
-	return;
-      } else if(this._left){
-	this._attrs[this._left] = "true";
-	this._left = token;
-      } else if(token && token !== "="){ // block invalid left identifier
-	this._left = token;
-      }
-    }
-  };
-
-  return TagAttrParser;
-})();
-
-var TagAttrs = (function(){
-  /**
-     @memberof Nehan
-     @class TagAttrs
-     @classdesc tag attribute set wrapper
-     @constructor
-     @param src {String}
-  */
-  function TagAttrs(src){
-    var attrs_raw = src? (new TagAttrParser(src)).parse() : {};
-    this.classes = this._parseClasses(attrs_raw);
-    this.attrs = this._parseAttrs(attrs_raw, this.classes);
-    this.dataset = this._parseDataset(attrs_raw);
-  }
-
-  var __data_name_of = function(name){
-    return Utils.camelize(name.slice(5));
-  };
-
-  TagAttrs.prototype = {
-    /**
-       @memberof Nehan.TagAttrs
-       @param name {String} - attribute name
-       @return {boolean}
-    */
-    hasAttr : function(name){
-      return (typeof this.attrs.name !== "undefined");
-    },
-    /**
-       @memberof Nehan.TagAttrs
-       @param klass {String} - css class name
-       @return {boolean}
-    */
-    hasClass : function(klass){
-      return List.exists(this.classes, Closure.eq(klass));
-    },
-    /**
-     * add class name, but note that all css classes is force added prefix 'nehan-'.<br>
-     * that is, if you add class "foo", it's registered as "nehan-foo"<br>
-     * to avoid external css classes defined in client browser window.
-
-       @memberof Nehan.TagAttrs
-       @param klass {String} - css class name
-       @return {Array.<String>} current css classes
-    */
-    addClass : function(klass){
-      klass = (klass.indexOf("nehan-") < 0)? "nehan-" + klass : klass;
-      if(!this.hasClass(klass)){
-	this.classes.push(klass);
-	this.setAttr("class", [this.getAttr("class"), klass].join(" "));
-      }
-      return this.classes;
-    },
-    /**
-       @memberof Nehan.TagAttrs
-       @param klass {String} - css class name(prefiex by "nehan-")
-    */
-    removeClass : function(klass){
-      this.classes = List.filter(this.classes, function(cls){
-	return cls != klass;
-      });
-      this.setAttr("class", this.classes.join(" "));
-      return this.classes;
-    },
-    /**
-       @memberof Nehan.TagAttrs
-       @param name {String}
-       @param def_value {default_value}
-       @return {attribute_value}
-    */
-    getAttr : function(name, def_value){
-      def_value = (typeof def_value === "undefined")? null : def_value;
-      return (typeof this.attrs[name] === "undefined")? def_value : this.attrs[name];
-    },
-    /**
-       get dataset value
-
-       @memberof Nehan.TagAttrs
-       @param name {String}
-       @param def_value {default_value}
-       @return {dataset_value}
-    */
-    getData : function(name, def_value){
-      def_value = (typeof def_value === "undefined")? null : def_value;
-      return (typeof this.dataset[name] === "undefined")? def_value : this.dataset[name];
-    },
-    /**
-       get classes NOT prefixed by "nehan-".
-
-       @memberof Nehan.TagAttrs
-       @return {Array.<String>}
-    */
-    getClassesRaw : function(){
-      return List.map(this.classes, function(klass){
-	return klass.replace("nehan-", "");
-      });
-    },
-    /**
-       @memberof Nehan.TagAttrs
-       @param name {String}
-       @param value {attribute_value}
-    */
-    setAttr : function(name, value){
-      if(name.indexOf("data-") === 0){
-	this.setData(__data_name_of(name), value);
-      } else {
-	this.attrs[name] = value;
-      }
-    },
-    /**
-       set dataset value
-
-       @memberof Nehan.TagAttrs
-       @param name {String}
-       @param value {dataset_value}
-    */
-    setData : function(name, value){
-      this.dataset[name] = value;
-    },
-    // <p class='hi hey'>
-    // => ["nehan-hi", "nehan-hey"]
-    _parseClasses : function(attrs_raw){
-      var class_name = attrs_raw["class"] || "";
-      class_name = Utils.trim(class_name.replace(/\s+/g, " "));
-      var classes = (class_name === "")? [] : class_name.split(/\s+/);
-      return List.map(classes, function(klass){
-	return (klass.indexOf("nehan-") < 0)? "nehan-" + klass : klass;
-      });
-    },
-    _parseAttrs : function(attrs_raw, classes){
-      var attrs = {};
-      Obj.iter(attrs_raw, function(name, value){
-	if(name === "id"){ // force add prefix "nehan-".
-	  attrs[name] = (value.indexOf("nehan-") === 0)? value : "nehan-" + value;
-	} else if(name === "class"){
-	  attrs[name] = classes.join(" ");
-	} else if(name.indexOf("data-") < 0){
-	  attrs[name] = value;
-	}
-      });
-      return attrs;
-    },
-    _parseDatasetValue : function(value){
-      switch(value){
-      case "true": return true;
-      case "false": return false;
-      default: return isNaN(value)? value : Number(value);
-      }
-    },
-    _parseDataset : function(attrs_raw){
-      var dataset = {};
-      for(var name in attrs_raw){
-	if(name.indexOf("data-") === 0){
-	  dataset[__data_name_of(name)] = this._parseDatasetValue(attrs_raw[name]);
-	}
-      }
-      return dataset;
-    }
-  };
-
-  return TagAttrs;
-})();
-
-
-// Important Notice:
-// to avoid name-conflicts about existing name space of stylesheet,
-// all class names and id in nehan.js are forced to be prefixed by "nehan-".
-var Tag = (function (){
-  /**
-     @memberof Nehan
-     @class Tag
-     @classdesc abstraction of html tag markup.
-     @constructor
-     @param src {String} - string of markup part like "&lt;div class='foo'&gt;"
-     @param content {String} - content text of markup
-  */
-  function Tag(src, content){
-    this._type = "tag";
-    this.src = src;
-    this.content = content || "";
-    this.name = this._parseName(this.src);
-    this.attrs = this._parseTagAttrs(this.name, this.src);
-    this._firstChild = false;
-    this._firstOfType = false;
-    this._lastChild = false;
-    this._lastOfType = false;
-    this._onlyChild = false;
-    this._onlyOfType = false;
-  }
-
-  Tag.prototype = {
-    /**
-       @memberof Nehan.Tag
-       @return {Nehan.Tag}
-    */
-    clone : function(){
-      return new Tag(this.src, this.content);
-    },
-    /**
-       @memberof Nehan.Tag
-       @param content {String}
-    */
-    setContent : function(content){
-      if(this._fixed){
-	return;
-      }
-      this.content = content;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param status {boolean}
-    */
-    setContentImmutable : function(status){
-      this._fixed = status;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param name {String} - alias markup name
-    */
-    setAlias : function(name){
-      this.alias = name;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param name {String}
-       @param value {attribute_value}
-    */
-    setAttr : function(name, value){
-      this.attrs.setAttr(name, value);
-    },
-    /**
-       @memberof Nehan.Tag
-       @param attrs {Object}
-    */
-    setAttrs : function(attrs){
-      for(var name in attrs){
-	this.setAttr(name, attrs[name]);
-      }
-    },
-    /**
-       @memberof Nehan.Tag
-       @param name {String}
-       @param value {dataset_value}
-    */
-    setData : function(name, value){
-      this.attrs.setData(name, value);
-    },
-    /**
-       @memberof Nehan.Tag
-       @param status {Bool}
-    */
-    setFirstChild : function(status){
-      this._firstChild = status;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param status {Bool}
-    */
-    setOnlyChild : function(status){
-      this._onlyChild = status;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param status {Bool}
-    */
-    setOnlyOfType : function(status){
-      this._onlyOfType = status;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param status {Bool}
-    */
-    setFirstOfType : function(status){
-      this._firstOfType = status;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param status {Bool}
-    */
-    setLastChild : function(status){
-      this._lastChild = status;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param status {Bool}
-    */
-    setLastOfType : function(status){
-      this._lastOfType = status;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param klass {String}
-    */
-    addClass : function(klass){
-      this.attrs.addClass(klass);
-    },
-    /**
-       @memberof Nehan.Tag
-       @param klass {String}
-    */
-    removeClass : function(klass){
-      this.attrs.removeClass(klass);
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {String}
-    */
-    getId : function(){
-      return this.attrs.getAttr("id");
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {Array.<String>}
-    */
-    getClasses : function(){
-      return this.attrs.classes;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {Array.<String>}
-    */
-    getClassesRaw : function(){
-      return this.attrs.getClassesRaw();
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {String}
-    */
-    getName : function(){
-      return this.alias || this.name;
-    },
-    /**
-       @memberof Nehan.Tag
-       @param name {String}
-       @param def_value {default_value}
-       @return {attribute_value}
-    */
-    getAttr : function(name, def_value){
-      return this.attrs.getAttr(name, def_value);
-    },
-    /**
-       @memberof Nehan.Tag
-       @param name {String}
-       @param def_value {default_value}
-       @return {dataset_value}
-    */
-    getData : function(name, def_value){
-      return this.attrs.getData(name, def_value);
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {String}
-    */
-    getContent : function(){
-      return this.content;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {String}
-    */
-    getSrc : function(){
-      return this.src;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {String}
-    */
-    getWrapSrc : function(){
-      if(this.content === ""){
-	return this.src;
-      }
-      return this.src + this.content + "</" + this.name + ">";
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    hasClass : function(klass){
-      return this.attrs.hasClass(klass);
-    },
-    /**
-       @memberof Nehan.Tag
-       @param name {String}
-       @return {boolean}
-    */
-    hasAttr : function(name){
-      return this.attrs.hasAttr(name);
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isHeaderTag : function(){
-      return List.exists(["h1", "h2", "h3", "h4", "h5", "h6"], Closure.eq(this.name));
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isAnchorTag : function(){
-      return this.name === "a" && this.getTagAttr("name") !== null;
-    },
-    /**
-       @memberof Nehan.Tag
-    */
-    isAnchorLinkTag : function(){
-      var href = this.getTagAttr("href");
-      return this.name === "a" && href && href.indexOf("#") >= 0;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isPageBreakTag : function(){
-      return this.name === "page-break" || this.name === "end-page" || this.name === "pbr";
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isCloseTag : function(){
-      return this.name.charAt(0) === "/";
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isSingleTag : function(){
-      return this._single || false;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isEmpty : function(){
-      return this.content === "";
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isFirstChild : function(){
-      return this._firstChild;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isOnlyChild : function(){
-      return this._onlyChild;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isOnlyOfType : function(){
-      return this._onlyOfType;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isFirstOfType : function(){
-      return this._firstOfType;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isLastChild : function(){
-      return this._lastChild;
-    },
-    /**
-       @memberof Nehan.Tag
-       @return {boolean}
-    */
-    isLastOfType : function(){
-      return this._lastOfType;
-    },
-    _getTagAttrSrc : function(src){
-      return src
-	.replace(/<[\S]+/, "") // cut tag start
-	.replace(/^\s+/, "") // cut head space
-	.replace("/>", "") // cut tag tail(single tag)
-	.replace(">", "") // cut tag tail(normal tag)
-	.replace(/\s+$/, "") // cut tail space
-	.replace(/\n/g, " ") // conv from multi line to single space
-	.replace(/[　|\s]+/g, " ") // conv from multi space to single space
-	.replace(/\s+=/g, "=") // cut multi space before '='
-	.replace(/=\s+/g, "="); // cut multi space after '='
-    },
-    _parseName : function(src){
-      return src.replace(/</g, "").replace(/\/?>/g, "").split(/\s/)[0].toLowerCase();
-    },
-    _parseTagAttrs : function(tag_name, tag_src){
-      var attr_src = this._getTagAttrSrc(tag_src);
-      if(tag_name.length === attr_src.length){
-	return new TagAttrs("");
-      }
-      return new TagAttrs(attr_src);
-    }
-  };
-
-  return Tag;
-})();
-
 
 /**
    utility module to check token type.
@@ -4516,7 +7246,7 @@ var Token = {
      @return {boolean}
   */
   isTag : function(token){
-    return token instanceof Tag;
+    return token instanceof Nehan.Tag;
   },
   /**
      @memberof Nehan.Token
@@ -4655,7 +7385,7 @@ var Char = (function(){
        @return {Object}
     */
     getCssPadding : function(line){
-      var padding = new Padding();
+      var padding = new Nehan.Padding();
       if(this.paddingStart){
 	padding.setStart(line.style.flow, this.paddingStart);
       }
@@ -4682,7 +7412,7 @@ var Char = (function(){
 	css["margin-bottom"] = "-0.5em";
       } else if(!is_kakko_start && !is_kakko_end && this.vscale < 1){
 	css.height = "0.5em";
-	Args.copy(css, this.getCssPadding(line));
+	Nehan.Args.copy(css, this.getCssPadding(line));
       }
       return css;
     },
@@ -4696,7 +7426,7 @@ var Char = (function(){
       css.width = font_size + "px";
       css.height = this.getVertHeight(font_size) + "px";
       if(this.isPaddingEnable()){
-	Args.copy(css, this.getCssPadding(line));
+	Nehan.Args.copy(css, this.getCssPadding(line));
       }
       return css;
     },
@@ -4755,9 +7485,11 @@ var Char = (function(){
     */
     getCssVertEmphaText : function(line){
       var css = {}, font_size = line.style.getFontSize();
+      css["font-size"] = "0.5em";
       css.display = "inline-block";
       css.width = font_size + "px";
       css.height = font_size + "px";
+      css["position"] = "absolute";
       return css;
     },
     /**
@@ -4775,7 +7507,12 @@ var Char = (function(){
     */
     getCssHoriEmphaText : function(line){
       var css = {};
+      css.display = "inline-block";
+      css.width = "1em";
+      css.height = "1em";
+      css["padding-left"] = "0.5em";
       css["line-height"] = "1em";
+      css["font-size"] = "0.5em";
       return css;
     },
     /**
@@ -5240,21 +7977,21 @@ var Char = (function(){
        @return {boolean}
      */
     isHeadNg : function(){
-      return List.mem(__head_ng, this.data);
+      return Nehan.List.mem(__head_ng, this.data);
     },
     /**
        @memberof Nehan.Char
        @return {boolean}
      */
     isTailNg : function(){
-      return List.mem(__tail_ng, this.data);
+      return Nehan.List.mem(__tail_ng, this.data);
     },
     /**
        @memberof Nehan.Char
        @return {boolean}
      */
     isSmallKana : function(){
-      return List.mem(__small_kana, this.data);
+      return Nehan.List.mem(__small_kana, this.data);
     },
     /**
        @memberof Nehan.Char
@@ -5268,14 +8005,14 @@ var Char = (function(){
        @return {boolean}
      */
     isKakkoStart : function(){
-      return List.mem(__kakko_start, this.data);
+      return Nehan.List.mem(__kakko_start, this.data);
     },
     /**
        @memberof Nehan.Char
        @return {boolean}
      */
     isKakkoEnd : function(){
-      return List.mem(__kakko_end, this.data);
+      return Nehan.List.mem(__kakko_end, this.data);
     },
     /**
        @memberof Nehan.Char
@@ -5289,14 +8026,14 @@ var Char = (function(){
        @return {boolean}
      */
     isKuten : function(){
-      return List.mem(__kuten, this.data);
+      return Nehan.List.mem(__kuten, this.data);
     },
     /**
        @memberof Nehan.Char
        @return {boolean}
      */
     isTouten : function(){
-      return List.mem(__touten, this.data);
+      return Nehan.List.mem(__touten, this.data);
     },
     /**
        @memberof Nehan.Char
@@ -5338,7 +8075,7 @@ var Char = (function(){
        @return {boolean}
      */
     isLigature : function(){
-      return List.mem(__voiced_mark, this.data);
+      return Nehan.List.mem(__voiced_mark, this.data);
     },
     /**
        @memberof Nehan.Char
@@ -5643,7 +8380,9 @@ var Tcy = (function(){
     getCssHori : function(line){
       var css = {};
       if(this.data.length === 1){
-	css["margin-left"] = "0.25em";
+	css.display = "inline-block";
+	css.width = "1em";
+	css["text-align"] = "center";
       }
       return css;
     },
@@ -5721,7 +8460,7 @@ var Ruby = (function(){
        @return {String}
     */
     getRbString : function(){
-      return List.map(this.rbs, function(rb){
+      return Nehan.List.map(this.rbs, function(rb){
 	return rb.data || "";
       }).join("");
     },
@@ -5770,7 +8509,7 @@ var Ruby = (function(){
       var css = {};
       css["css-float"] = "left";
       if(this.padding){
-	Args.copy(css, this.padding.getCss());
+	Nehan.Args.copy(css, this.padding.getCss());
       }
       return css;
     },
@@ -5782,7 +8521,7 @@ var Ruby = (function(){
     getCssHoriRb : function(line){
       var css = {};
       if(this.padding){
-	Args.copy(css, this.padding.getCss());
+	Nehan.Args.copy(css, this.padding.getCss());
       }
       css["text-align"] = "center";
       css["line-height"] = "1em";
@@ -5796,7 +8535,7 @@ var Ruby = (function(){
     */
     setMetrics : function(flow, font, letter_spacing){
       this.rtFontSize = Display.getRtFontSize(font.size);
-      var advance_rbs = List.fold(this.rbs, 0, function(ret, rb){
+      var advance_rbs = Nehan.List.fold(this.rbs, 0, function(ret, rb){
 	rb.setMetrics(flow, font);
 	return ret + rb.getAdvance(flow, letter_spacing);
       });
@@ -5805,7 +8544,7 @@ var Ruby = (function(){
       if(advance_rt > advance_rbs){
 	var ctx_space = Math.ceil((advance_rt - advance_rbs) / 2);
 	if(this.rbs.length > 0){
-	  this.padding = new Padding();
+	  this.padding = new Nehan.Padding();
 	  this.padding.setStart(flow, ctx_space);
 	  this.padding.setEnd(flow, ctx_space);
 	}
@@ -5815,431 +8554,6 @@ var Ruby = (function(){
   };
 
   return Ruby;
-})();
-
-
-var Rgb = (function(){
-  /**
-     @memberof Nehan
-     @class Rgb
-     @classdesc abstraction of RGB color value.
-     @constructor
-     @param value {String}
-  */
-  function Rgb(value){
-    this.value = String(value);
-    this.red = parseInt(this.value.substring(0,2), 16);
-    this.green = parseInt(this.value.substring(2,4), 16);
-    this.blue = parseInt(this.value.substring(4,6), 16);
-  }
-  
-  Rgb.prototype = {
-    /**
-       @memberof Nehan.Rgb
-       @return {String}
-    */
-    getRed : function(){
-      return this.red;
-    },
-    /**
-       @memberof Nehan.Rgb
-       @return {String}
-    */
-    getGreen : function(){
-      return this.green;
-    },
-    /**
-       @memberof Nehan.Rgb
-       @return {String}
-    */
-    getBlue : function(){
-      return this.blue;
-    },
-    /**
-       @memberof Nehan.Rgb
-       @return {String}
-    */
-    getColorValue : function(){
-      return this.value;
-    }
-  };
-
-  return Rgb;
-})();
-
-var Color = (function(){
-  /**
-     @memberof Nehan
-     @class Color
-     @classdesc abstraction for css 'color'.
-     @param value {String}
-  */
-  function Color(value){
-    this.setValue(value);
-  }
-
-  Color.prototype = {
-    /**
-       @memberof Nehan.Color
-       @param value {String}
-    */
-    setValue : function(value){
-      this.value = Colors.get(value);
-    },
-    /**
-       @memberof Nehan.Color
-       @return {String}
-    */
-    getValue : function(){
-      return this.value;
-    },
-    /**
-       @memberof Nehan.Color
-       @return {String}
-       @example
-       * new Color("transparent").getCssValue(); // "transparent"
-       * new Color("ff0022").getCssValue(); // "#ff0022"
-       * new Color("red").getCssValue(); // "#ff0000"
-    */
-    getCssValue : function(){
-      return (this.value === "transparent")? this.value : "#" + this.value;
-    },
-    /**
-       @memberof Nehan.Color
-       @return {Nehan.Rgb}
-    */
-    getRgb : function(){
-      return new Rgb(this.value);
-    },
-    /**
-       @memberof Nehan.Color
-       @return {Object}
-    */
-    getCss : function(){
-      var css = {};
-      css.color = this.getCssValue();
-      return css;
-    }
-  };
-
-  return Color;
-})();
-
-/**
-   color collection manager
-   @namespace Nehan.Colors
-*/
-var Colors = (function(){
-  var __color_names = {
-    "aliceblue":"f0f8ff",
-    "antiquewhite":"faebd7",
-    "aqua":"00ffff",
-    "aquamarine":"7fffd4",
-    "azure":"f0ffff",
-    "beige":"f5f5dc",
-    "bisque":"ffe4c4",
-    "black":"000000",
-    "blanchedalmond":"ffebcd",
-    "blue":"0000ff",
-    "blueviolet":"8a2be2",
-    "brown":"a52a2a",
-    "burlywood":"deb887",
-    "cadetblue":"5f9ea0",
-    "chartreuse":"7fff00",
-    "chocolate":"d2691e",
-    "coral":"ff7f50",
-    "cornflowerblue":"6495ed",
-    "cornsilk":"fff8dc",
-    "crimson":"dc143c",
-    "cyan":"00ffff",
-    "darkblue":"00008b",
-    "darkcyan":"008b8b",
-    "darkgoldenrod":"b8860b",
-    "darkgray":"a9a9a9",
-    "darkgreen":"006400",
-    "darkkhaki":"bdb76b",
-    "darkmagenta":"8b008b",
-    "darkolivegreen":"556b2f",
-    "darkorange":"ff8c00",
-    "darkorchid":"9932cc",
-    "darkred":"8b0000",
-    "darksalmon":"e9967a",
-    "darkseagreen":"8fbc8f",
-    "darkslateblue":"483d8b",
-    "darkslategray":"2f4f4f",
-    "darkturquoise":"00ced1",
-    "darkviolet":"9400d3",
-    "deeppink":"ff1493",
-    "deepskyblue":"00bfff",
-    "dimgray":"696969",
-    "dodgerblue":"1e90ff",
-    "firebrick":"b22222",
-    "floralwhite":"fffaf0",
-    "forestgreen":"228b22",
-    "fuchsia":"ff00ff",
-    "gainsboro":"dcdcdc",
-    "ghostwhite":"f8f8ff",
-    "gold":"ffd700",
-    "goldenrod":"daa520",
-    "gray":"808080",
-    "green":"008000",
-    "greenyellow":"adff2f",
-    "honeydew":"f0fff0",
-    "hotpink":"ff69b4",
-    "indianred ":"cd5c5c",
-    "indigo ":"4b0082",
-    "ivory":"fffff0","khaki":"f0e68c",
-    "lavender":"e6e6fa",
-    "lavenderblush":"fff0f5",
-    "lawngreen":"7cfc00",
-    "lemonchiffon":"fffacd",
-    "lightblue":"add8e6",
-    "lightcoral":"f08080",
-    "lightcyan":"e0ffff",
-    "lightgoldenrodyellow":"fafad2",
-    "lightgrey":"d3d3d3",
-    "lightgreen":"90ee90",
-    "lightpink":"ffb6c1",
-    "lightsalmon":"ffa07a",
-    "lightseagreen":"20b2aa",
-    "lightskyblue":"87cefa",
-    "lightslategray":"778899",
-    "lightsteelblue":"b0c4de",
-    "lightyellow":"ffffe0",
-    "lime":"00ff00",
-    "limegreen":"32cd32",
-    "linen":"faf0e6",
-    "magenta":"ff00ff",
-    "maroon":"800000",
-    "mediumaquamarine":"66cdaa",
-    "mediumblue":"0000cd",
-    "mediumorchid":"ba55d3",
-    "mediumpurple":"9370d8",
-    "mediumseagreen":"3cb371",
-    "mediumslateblue":"7b68ee",
-    "mediumspringgreen":"00fa9a",
-    "mediumturquoise":"48d1cc",
-    "mediumvioletred":"c71585",
-    "midnightblue":"191970",
-    "mintcream":"f5fffa",
-    "mistyrose":"ffe4e1",
-    "moccasin":"ffe4b5",
-    "navajowhite":"ffdead",
-    "navy":"000080",
-    "oldlace":"fdf5e6",
-    "olive":"808000",
-    "olivedrab":"6b8e23",
-    "orange":"ffa500",
-    "orangered":"ff4500",
-    "orchid":"da70d6",
-    "palegoldenrod":"eee8aa",
-    "palegreen":"98fb98",
-    "paleturquoise":"afeeee",
-    "palevioletred":"d87093",
-    "papayawhip":"ffefd5",
-    "peachpuff":"ffdab9",
-    "peru":"cd853f",
-    "pink":"ffc0cb",
-    "plum":"dda0dd",
-    "powderblue":"b0e0e6",
-    "purple":"800080",
-    "red":"ff0000",
-    "rosybrown":"bc8f8f",
-    "royalblue":"4169e1",
-    "saddlebrown":"8b4513",
-    "salmon":"fa8072",
-    "sandybrown":"f4a460",
-    "seagreen":"2e8b57",
-    "seashell":"fff5ee",
-    "sienna":"a0522d",
-    "silver":"c0c0c0",
-    "skyblue":"87ceeb",
-    "slateblue":"6a5acd",
-    "slategray":"708090",
-    "snow":"fffafa",
-    "springgreen":"00ff7f",
-    "steelblue":"4682b4",
-    "tan":"d2b48c",
-    "teal":"008080",
-    "thistle":"d8bfd8",
-    "tomato":"ff6347",
-    "turquoise":"40e0d0",
-    "violet":"ee82ee",
-    "wheat":"f5deb3",
-    "white":"ffffff",
-    "whitesmoke":"f5f5f5",
-    "yellow":"ffff00",
-    "yellowgreen":"9acd32",
-    "transparent":"transparent"
-  };
-
-  var rex_hex_color = /^(?:[0-9a-f]{3}){1,2}$/;
-
-  return {
-    /**
-       @memberof Nehan.Colors
-       @param value {String}
-       @return {String}
-       @example
-       * Colors.get("white"); // "ffffff" (pre defined color)
-       * Colors.get("f00"); // "ff0000" (always length 6)
-       * Colors.get("0000FF"); // "0000ff" (always lowercased)
-    */
-    get : function(value){
-      value = value.replace(/#/g, "").toLowerCase();
-      if(!rex_hex_color.test(value)){
-	return __color_names[value] || value;
-      }
-      if(value.length === 3){
-	return value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
-      }
-      return value;
-    }
-  };
-})();
-
-
-/**
-   palette color utility module
-
-   @namespace Nehan.Palette
-*/
-var Palette = (function(){
-  // 256(8 * 8 * 4) color palette scales.
-  var __rg_palette = [0, 36, 73, 109, 146, 182, 219, 255];
-  var __b_palette = [0, 85, 170, 255];
-
-  var __make_hex_str = function(ival){
-    var str = ival.toString(16);
-    if(str.length <= 1){
-      return "0" + str;
-    }
-    return str;
-  };
-
-  var __find_palette = function(ival, palette){
-    if(List.exists(palette, Closure.eq(ival))){
-      return ival;
-    }
-    return List.minobj(palette, function(pval){
-      return Math.abs(pval - ival);
-    });
-  };
-
-  return {
-    /**
-     * search nearest color value defined in nehan palette.<br>
-     * we use this value for img characters.
-
-       @memberof Nehan.Palette
-       @param rgb {Nehan.Rbg}
-       @return {String}
-    */
-    getColor : function(rgb){
-      var palette_red = __find_palette(rgb.getRed(), __rg_palette);
-      var palette_green = __find_palette(rgb.getGreen(), __rg_palette);
-      var palette_blue = __find_palette(rgb.getBlue(), __b_palette);
-
-      return [
-	__make_hex_str(palette_red),
-	__make_hex_str(palette_green),
-	__make_hex_str(palette_blue)
-      ].join("");
-    }
-  };
-})();
-
-
-/**
-   @namespace Nehan.Cardinal
-*/
-var Cardinal = (function(){
-  var __table = {
-    "lower-alpha":[
-      "a","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"
-    ],
-    "upper-alpha":[
-      "A","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
-    ],
-    "lower-roman":[
-      "i","i","ii","iii","iv","v","vi","vii","viii","ix","x","xi","xii","xiii","xiv","xv","xvi","xvii","xviii","xix","xx"
-    ],
-    "upper-roman":[
-      "I","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"
-    ],
-    "lower-greek":[
-      "\u03b1","\u03b1","\u03b2","\u03b3","\u03b4","\u03b5","\u03b6","\u03b7","\u03b8","\u03b9","\u03ba","\u03bb","\u03bc","\u03bd","\u03be","\u03bf","\u03c0","\u03c1","\u03c3","\u03c4","\u03c5","\u03c6","\u03c7","\u03c8","\u03c9"
-    ],
-    "upper-greek":[
-      "\u0391","\u0391","\u0392","\u0393","\u0394","\u0395","\u0396","\u0397","\u0398","\u0399","\u039a","\u039b","\u039c","\u039d","\u039e","\u039f","\u03a0","\u03a1","\u03a3","\u03a4","\u03a5","\u03a6","\u03a7","\u03a8","\u03a9"
-    ],
-    "cjk-ideographic":[
-      "\u3007","\u4E00","\u4E8C","\u4E09","\u56DB","\u4E94","\u516D","\u4E03","\u516B","\u4E5D","\u5341"
-    ],
-    "hiragana":[
-      "\u3042","\u3042","\u3044","\u3046","\u3048","\u304A","\u304B","\u304D","\u304F","\u3051","\u3053","\u3055","\u3057","\u3059","\u305B","\u305D","\u305F","\u3061","\u3064","\u3066","\u3068","\u306A","\u306B","\u306C","\u306D","\u306E","\u306F","\u3072","\u3075","\u3078","\u307B","\u307E","\u307F","\u3080","\u3081","\u3082","\u3084","\u3086","\u3088","\u3089","\u308A","\u308B","\u308C","\u308D","\u308F","\u3090","\u3091","\u3092","\u3093"
-    ],
-    "hiragana-iroha":[
-      "\u3044","\u3044","\u308D","\u306F","\u306B","\u307B","\u3078","\u3068","\u3061","\u308A","\u306C","\u308B","\u3092","\u308F","\u304B","\u3088","\u305F","\u308C","\u305D","\u3064","\u306D","\u306A","\u3089","\u3080","\u3046","\u3090","\u306E","\u304A","\u304F","\u3084","\u307E","\u3051","\u3075","\u3053","\u3048","\u3066","\u3042","\u3055","\u304D","\u3086","\u3081","\u307F","\u3057","\u3091","\u3072","\u3082","\u305B","\u3059"
-    ],
-    "katakana":[
-      "\u30A2","\u30A2","\u30A4","\u30A6","\u30A8","\u30AA","\u30AB","\u30AD","\u30AF","\u30B1","\u30B3","\u30B5","\u30B7","\u30B9","\u30BB","\u30BD","\u30BF","\u30C1","\u30C4","\u30C6","\u30C8","\u30CA","\u30CB","\u30CC","\u30CD","\u30CE","\u30CF","\u30D2","\u30D5","\u30D8","\u30DB","\u30DE","\u30DF","\u30E0","\u30E1","\u30E2","\u30E4","\u30E6","\u30E8","\u30E9","\u30EA","\u30EB","\u30EC","\u30ED","\u30EF","\u30F0","\u30F1","\u30F2","\u30F3"
-    ],
-    "katakana-iroha":[
-      "\u30A4","\u30A4","\u30ED","\u30CF","\u30CB","\u30DB","\u30D8","\u30C8","\u30C1","\u30EA","\u30CC","\u30EB","\u30F2","\u30EF","\u30AB","\u30E8","\u30BF","\u30EC","\u30BD","\u30C4","\u30CD","\u30CA","\u30E9","\u30E0","\u30A6","\u30F0","\u30CE","\u30AA","\u30AF","\u30E4","\u30DE","\u30B1","\u30D5","\u30B3","\u30A8","\u30C6","\u30A2","\u30B5","\u30AD","\u30E6","\u30E1","\u30DF","\u30B7","\u30F1","\u30D2","\u30E2","\u30BB","\u30B9"
-    ]
-  };
-
-  var __aliases = {
-    "upper-latin":"upper-alpha",
-    "lower-latin":"lower-alpha"
-  };
-
-  return {
-    /**
-       get cardinal string array
-
-       @memberof Nehan.Cardinal
-       @param name {string}
-       @return {Array.<string>}
-    */
-    getTableByName : function(name){
-      return __table[__aliases[name] || name];
-    },
-    /**
-       get cardical basis
-
-       @memberof Nehan.Cardinal
-       @param name {string}
-       @return {int}
-    */
-    getBaseByName : function(name){
-      var table = this.getTableByName(name);
-      return table.length;
-    },
-    /**
-       @memberof Nehan.Cardinal
-       @param name {string}
-       @param decimal {int}
-       @return {string}
-       @example
-       * Cardinal.getStringByName("lower-alpha", 2); // "c"
-       * Cardinal.getStringByName("hiragana", 0); // "あ"
-       * Cardinal.getStringByName("hiragana-iroha", 0); // "い"
-    */
-    getStringByName : function(name, decimal){
-      var table = this.getTableByName(name);
-      var base = table.length;
-      var digits = MathUtils.convBase(decimal, base);
-      var ret = "";
-      for(var i = 0; i < digits.length; i++){
-	var digit = digits[i];
-	var index = (i === 0)? digits[i] : Math.min(digit + 1, base - 1);
-	ret += table[index] || "";
-      }
-      return ret;
-    }
-  };
 })();
 
 
@@ -6371,7 +8685,7 @@ var ListStyleType = (function(){
 	}
 	return decimal.toString(10);
       }
-      return Cardinal.getStringByName(this.type, decimal);
+      return Nehan.Cardinal.getStringByName(this.type, decimal);
     },
     /**
        @memberof Nehan.ListStyleType
@@ -6380,7 +8694,7 @@ var ListStyleType = (function(){
     getMarkerHtml : function(count){
       var text = this.getMarkerText(count);
       if(this.isZenkaku()){
-	return Html.tagWrap("span", text, {
+	return Nehan.Html.tagWrap("span", text, {
 	  "class":"nehan-tcy"
 	});
       }
@@ -6392,7 +8706,7 @@ var ListStyleType = (function(){
     */
     getMarkerText : function(count){
       if(this.isNoneList()){
-	return Const.space;
+	return Nehan.Const.space;
       }
       if(this.isMarkList()){
 	return __marker_text[this.type] || "";
@@ -6464,7 +8778,7 @@ var ListStyleImage = (function(){
       var url = this.image.url;
       var width = this.image.width || Display.fontSize;
       var height = this.image.height || Display.fontSize;
-      return Html.tagSingle("img", {
+      return Nehan.Html.tagSingle("img", {
 	"src":url,
 	"class":"nehan-list-image",
 	"width":width,
@@ -6532,68 +8846,6 @@ var ListStyle = (function(){
   return ListStyle;
 })();
 
-var Flow = (function(){
-  /**
-     @memberof Nehan
-     @class Flow
-     @classdesc abstraction of flow, left to right as "lr", right to left as "rl", top to bottom as "tb".
-     @constructor
-     @param dir {String}
-     @example
-     * new Flow("lr").isHorizontal(); // true
-     * new Flow("rl").isHorizontal(); // true
-     * new Flow("lr").isLeftToRight(); // true
-     * new Flow("rl").isLeftToRight(); // false
-     * new Flow("rl").isRightToLeft(); // true
-     * new Flow("tb").isHorizontal(); // false
-     * new Flow("tb").isVertical(); // true
-  */
-  function Flow(dir){
-    this.dir = dir;
-  }
-
-  Flow.prototype = {
-    /**
-       @memberof Nehan.Flow
-       @param dir {String}
-    */
-    init : function(dir){
-      this.dir = dir;
-    },
-    /**
-       @memberof Nehan.Flow
-       @return {boolean}
-    */
-    isHorizontal : function(){
-      return (this.dir === "lr" || this.dir === "rl");
-    },
-    /**
-       @memberof Nehan.Flow
-       @return {boolean}
-    */
-    isVertical : function(){
-      return (this.dir === "tb");
-    },
-    /**
-       @memberof Nehan.Flow
-       @return {boolean}
-    */
-    isLeftToRight : function(){
-      return this.dir === "lr";
-    },
-    /**
-       @memberof Nehan.Flow
-       @return {boolean}
-    */
-    isRightToLeft : function(){
-      return this.dir === "rl";
-    }
-  };
-
-  return Flow;
-})();
-
-
 var BlockFlow = (function(){
   /**
      @memberof Nehan
@@ -6606,10 +8858,10 @@ var BlockFlow = (function(){
      * var bf = new BlockFlow("tb");
   */
   function BlockFlow(dir){
-    Flow.call(this, dir);
+    Nehan.Flow.call(this, dir);
   }
 
-  Class.extend(BlockFlow, Flow);
+  Nehan.Class.extend(BlockFlow, Nehan.Flow);
 
   /**
      get flipped block direction. If direction is "tb", nothing happend.
@@ -6618,9 +8870,9 @@ var BlockFlow = (function(){
      @method flip
      @return {string} fliped block direction
      @example
-     * new BlockFlow("tb").flip(); // => "tb" (nothing happened)
-     * new BlockFlow("lr").flip(); // => "rl"
-     * new BlockFlow("rl").flip(); // => "lr"
+     * new BlockFlow("tb").flip(); // => "lr" or "rl"(nothing happened)
+     * new BlockFlow("lr").flip(); // => "tb"
+     * new BlockFlow("rl").flip(); // => "tb"
   */
   BlockFlow.prototype.flip = function(){
     switch(this.dir){
@@ -6684,9 +8936,9 @@ var InlineFlow = (function(){
      @param dir {String} - "lr" or "rl"(but not supported) or "tb"
    */
   function InlineFlow(dir){
-    Flow.call(this, dir);
+    Nehan.Flow.call(this, dir);
   }
-  Class.extend(InlineFlow, Flow);
+  Nehan.Class.extend(InlineFlow, Nehan.Flow);
 
   /**
      @memberof Nehan.InlineFlow
@@ -6943,7 +9195,7 @@ var BoxFlow = (function(){
        * new BoxFlow("tb", "lr").getBoxSize(100, 200); // BoxSize(200, 100)
      */
     getBoxSize : function(measure, extent){
-      var size = new BoxSize(0, 0);
+      var size = new Nehan.BoxSize(0, 0);
       size[this.getPropMeasure()] = measure;
       size[this.getPropExtent()] = extent;
       return size;
@@ -6985,944 +9237,6 @@ var BoxFlows = {
     return this[name] || null;
   }
 };
-
-/**
-   utility module for box physical direction(top, right, bottom, left).
-
-   @namespace Nehan.BoxRect
-*/
-var BoxRect = {
-  /**
-     iterate all direction of [obj] by [fn]
-     @memberof Nehan.BoxRect
-     @param obj {Object}
-     @param fn {Function}
-   */
-  iter : function(obj, fn){
-    List.iter(Const.cssBoxDirs, function(dir){
-      if(obj[dir]){
-	fn(dir, obj[dir]);
-      }
-    });
-  },
-  /**
-     @memberof Nehan.BoxRect
-     @param dst {Object}
-     @param flow {Nehan.BoxFlow}
-     @param value {Object}
-   */
-  setValue : function(dst, flow, value){
-    if(typeof value.start != "undefined"){
-      this.setStart(dst, flow, value.start);
-    }
-    if(typeof value.end != "undefined"){
-      this.setEnd(dst, flow, value.end);
-    }
-    if(typeof value.before != "undefined"){
-      this.setBefore(dst, flow, value.before);
-    }
-    if(typeof value.after != "undefined"){
-      this.setAfter(dst, flow, value.after);
-    }
-    return dst;
-  },
-  /**
-     @memberof Nehan.BoxRect
-     @param dst {Object}
-     @param flow {Nehan.BoxFlow}
-     @param value
-   */
-  setBefore : function(dst, flow, value){
-    dst[flow.getPropBefore()] = value;
-  },
-  /**
-     @memberof Nehan.BoxRect
-     @param dst {Object}
-     @param flow {Nehan.BoxFlow}
-     @param value
-   */
-  setAfter : function(dst, flow, value){
-    dst[flow.getPropAfter()] = value;
-  },
-  /**
-     @memberof Nehan.BoxRect
-     @param dst {Object}
-     @param flow {Nehan.BoxFlow}
-     @param value
-   */
-  setStart : function(dst, flow, value){
-    dst[flow.getPropStart()] = value;
-  },
-  /**
-     @memberof Nehan.BoxRect
-     @param dst {Object}
-     @param flow {Nehan.BoxFlow}
-     @param value
-   */
-  setEnd : function(dst, flow, value){
-    dst[flow.getPropEnd()] = value;
-  }
-};
-
-
-/**
-   @namespace Nehan.BoxCorner
-*/
-var BoxCorner = (function(){
-  var __sort = function(dir1, dir2){
-    var order = {top:0, bottom:1, left:2, right:3};
-    return [dir1, dir2].sort(function (c1, c2){
-      return order[c1] - order[c2];
-    });
-  };
-  return {
-    /**
-       get normalized(and camel-cased) corner property name
-       @memberof Nehan.BoxCorner
-       @param dir1 {string}
-       @param dir2 {string}
-       @return {string}
-       @example
-       * BoxCorner.getCornerName("right", "top"); // => "topRight"
-    */
-    getCornerName : function(dir1, dir2){
-      var dirs = __sort(dir1, dir2);
-      return [dirs[0], Utils.capitalize(dirs[1])].join("");
-    }
-  };
-})();
-
-var Font = (function(){
-  /**
-     @memberof Nehan
-     @class Font
-     @classdesc css 'font' abstraction
-     @constructor
-     @param size {int} - font size in px
-  */
-  function Font(size){
-    this.size = size;
-  }
-
-  Font.prototype = {
-    /**
-       @memberof Nehan.Font
-       @return {boolean}
-    */
-    isBold : function(){
-      return this.weight && this.weight !== "normal" && this.weight !== "lighter";
-    },
-    /**
-       @memberof Nehan.Font
-       @return {string}
-    */
-    toString : function(){
-      return [
-	this.weight || "normal",
-	this.style || "normal",
-	this.size + "px",
-	this.family || "monospace"
-      ].join(" ");
-    },
-    /**
-       @memberof Nehan.Font
-       @return {Object}
-    */
-    getCss : function(){
-      var css = {};
-      if(this.size){
-	css["font-size"] = this.size + "px";
-      }
-      if(this.weight){
-	css["font-weight"] = this.weight;
-      }
-      if(this.style){
-	css["font-style"] = this.style;
-      }
-      if(this.family){
-	css["font-family"] = this.family;
-      }
-      return css;
-    }
-  };
-
-  return Font;
-})();
-
-
-var Edge = (function(){
-  /**
-     @memberof Nehan
-     @class Edge
-     @classdesc abstraction of physical edge size for each css directions(top, right, bottom, left).
-     @constructor
-     @param type {String} - "margin" or "padding" or "border"
-  */
-  function Edge(type){
-    this._type = type;
-    this.top = 0;
-    this.right = 0;
-    this.bottom = 0;
-    this.left = 0;
-  }
-
-  Edge.prototype = {
-    /**
-       @memberof Nehan.Edge
-    */
-    clear : function(){
-      this.top = 0;
-      this.right = 0;
-      this.bottom = 0;
-      this.left = 0;
-    },
-    /**
-       @memberof Nehan.Edge
-    */
-    clearBefore : function(flow){
-      this[flow.getPropBefore()] = 0;
-    },
-    /**
-       @memberof Nehan.Edge
-    */
-    clearAfter : function(flow){
-      this[flow.getPropAfter()] = 0;
-    },
-    /**
-       @memberof Nehan.Edge
-       @param dst {Nehan.Edge}
-       @return {Nehan.Edge}
-    */
-    copyTo : function(dst){
-      var self = this;
-      List.iter(Const.cssBoxDirs, function(dir){
-	dst[dir] = self[dir];
-      });
-      return dst;
-    },
-    /**
-       @memberof Nehan.Edge
-       @param dir {String} - "top", "right", "bottom", "left"
-       @return {String}
-    */
-    getDirProp : function(dir){
-      return [this._type, dir].join("-");
-    },
-    /**
-       @memberof Nehan.Edge
-       @return {Object}
-    */
-    getCss : function(){
-      var css = {};
-      var self = this;
-      List.iter(["top", "right", "bottom", "left"], function(dir){
-	var value = self[dir];
-	if(value > 0){
-	  css[self.getDirProp(dir)] = self[dir] + "px";
-	}
-      });
-      return css;
-    },
-    /**
-       @memberof Nehan.Edge
-       @return {int}
-    */
-    getWidth : function(){
-      return this.left + this.right;
-    },
-    /**
-       @memberof Nehan.Edge
-       @return {int}
-    */
-    getHeight : function(){
-      return this.top + this.bottom;
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-    */
-    getMeasure : function(flow){
-      return flow.isTextVertical()? this.getHeight() : this.getWidth();
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-    */
-    getExtent : function(flow){
-      return flow.isBlockflowVertical()? this.getHeight() : this.getWidth();
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @param size {Object}
-       @param size.top {int}
-       @param size.right {int}
-       @param size.bottom {int}
-       @param size.left {int}
-    */
-    setSize : function(flow, size){
-      BoxRect.setValue(this, flow, size);
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @param value {int}
-    */
-    setStart : function(flow, value){
-      this[flow.getPropStart()] = value;
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @param value {int}
-    */
-    setEnd : function(flow, value){
-      this[flow.getPropEnd()] = value;
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @param value {int}
-    */
-    setBefore : function(flow, value){
-      this[flow.getPropBefore()] = value;
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @param value {int}
-    */
-    setAfter : function(flow, value){
-      this[flow.getPropAfter()] = value;
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-    */
-    getStart : function(flow){
-      return this[flow.getPropStart()];
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-    */
-    getEnd : function(flow){
-      return this[flow.getPropEnd()];
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-    */
-    getBefore : function(flow){
-      return this[flow.getPropBefore()];
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-    */
-    getAfter : function(flow){
-      return this[flow.getPropAfter()];
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @param name {String} - before, end, after, start
-    */
-    setByName : function(flow, name, value){
-      switch(name){
-      case "before":
-	this.setBefore(flow, value);
-	break;
-      case "end":
-	this.setEnd(flow, value);
-	break;
-      case "after":
-	this.setAfter(flow, value);
-	break;
-      case "start":
-	this.setStart(flow, value);
-	break;
-      default:
-	console.error("Edge::setByName, undefined direction:", name);
-      }
-    },
-    /**
-       @memberof Nehan.Edge
-       @param flow {Nehan.BoxFlow}
-       @param name {String} - before, end, after, start
-       @return {int}
-    */
-    getByName : function(flow, name){
-      switch(name){
-      case "before":
-	return this.getBefore(flow);
-      case "end":
-	return this.getEnd(flow);
-      case "after":
-	return this.getAfter(flow);
-      case "start":
-	return this.getStart(flow);
-      default:
-	consolo.error("Edge::getByName, undefined direction:", name);
-	return 0;
-      }
-    }
-  };
-
-  return Edge;
-})();
-
-var Radius2d = (function(){
-  /**
-     @memberof Nehan
-     @class Radius2d
-     @classdesc abstraction of radius with 2 direction vert and hori.
-     @constructor
-  */
-  function Radius2d(){
-    this.hori = 0;
-    this.vert = 0;
-  }
-
-  Radius2d.prototype = {
-    clone : function(){
-      var radius2d = new Radius2d();
-      radius2d.hori = this.hori;
-      radius2d.vert = this.vert;
-      return radius2d;
-    },
-    /**
-       @memberof Nehan.Radius2d
-       @param value {Array<int>} - 2 length array, value[0] as horizontal radius, value[1] as vertical radius.
-       @param value.0 {int} - horizontal radius
-       @param value.1 {int} - vertical radius
-    */
-    setSize : function(value){
-      this.hori = value[0];
-      this.vert = value[1];
-    },
-    /**
-       @memberof Nehan.Radius2d
-       @return {String}
-    */
-    getCssValueHori : function(){
-      return this.hori + "px";
-    },
-    /**
-       @memberof Nehan.Radius2d
-       @return {String}
-    */
-    getCssValueVert : function(){
-      return this.vert + "px";
-    }
-  };
-  
-  return Radius2d;
-})();
-
-var BorderRadius = (function(){
-  /**
-     @memberof Nehan
-     @class BorderRadius
-     @classdesc logical border radius object
-     @constructor
-  */
-  function BorderRadius(){
-    this.topLeft = new Radius2d();
-    this.topRight = new Radius2d();
-    this.bottomRight = new Radius2d();
-    this.bottomLeft = new Radius2d();
-  }
-
-  BorderRadius.prototype = {
-    /**
-       @memberof Nehan.BorderRadius
-       @method clone
-       @return {Nehan.BorderRadius}
-    */
-    clone : function(){
-      var radius = new BorderRadius();
-      radius.topLeft = this.topLeft.clone();
-      radius.topRight = this.topRight.clone();
-      radius.bottomRight = this.bottomRight.clone();
-      radius.bottomLeft = this.bottomLeft.clone();
-      return radius;
-    },
-    /**
-       @memberof Nehan.BorderRadius
-       @method getArray
-       @return {Array.<Nehan.Radius2d>}
-    */
-    getArray : function(){
-      return [
-	this.topLeft,
-	this.topRight,
-	this.bottomRight,
-	this.bottomLeft
-      ];
-    },
-    /**
-       get css value of border-radius for horizontal direction
-       @memberof Nehan.BorderRadius
-       @method getCssValueHroi
-       @return {Object}
-    */
-    getCssValueHori : function(){
-      return List.map(this.getArray(), function(radius){
-	return radius.getCssValueHori();
-      }).join(" ");
-    },
-    /**
-       get css value of border-radius for vertical direction
-       @memberof Nehan.BorderRadius
-       @method getCssValueVert
-       @return {Object}
-    */
-    getCssValueVert : function(){
-      return List.map(this.getArray(), function(radius){
-	return radius.getCssValueVert();
-      }).join(" ");
-    },
-    /**
-       get css value of border-radius for both vert and horizontal direction
-       @memberof Nehan.BorderRadius
-       @method getCssValue
-       @return {Object}
-    */
-    getCssValue : function(){
-      return [this.getCssValueHori(), this.getCssValueVert()].join("/");
-    },
-    /**
-       get css object of border-radius
-       @memberof Nehan.BorderRadius
-       @method getCss
-       @return {Object}
-    */
-    getCss : function(){
-      var css = {};
-      var css_value = this.getCssValue();
-      css["border-radius"] = css_value; // without vender prefix
-      List.iter(Const.cssVenderPrefixes, function(prefix){
-	var prop = [prefix, "border-radius"].join("-"); // with vender prefix
-	css[prop] = css_value;
-      });
-      return css;
-    },
-    /**
-       get corner value
-       @memberof Nehan.BorderRadius
-       @method getCorner
-       @param dir1 {string} - physical direction of logical start or end
-       @param dir2 {string} - physical direction of logical before or after
-       @return {Nehan.Radius2d}
-    */
-    getCorner : function(dir1, dir2){
-      var name = BoxCorner.getCornerName(dir1, dir2);
-      return this[name];
-    },
-    /**
-       set corner size
-       @memberof Nehan.BorderRadius
-       @method setSize
-       @param flow {Nehan.BoxFlow} - base layout flow
-       @param size {Object} - size values for each logical corner
-       @param size.start-before {int}
-       @param size.start-after {int}
-       @param size.end-before {int}
-       @param size.end-after {int}
-    */
-    setSize : function(flow, size){
-      if(typeof size["start-before"] != "undefined"){
-	this.setStartBefore(flow, size["start-before"]);
-      }
-      if(typeof size["start-after"] != "undefined"){
-	this.setStartAfter(flow, size["start-after"]);
-      }
-      if(typeof size["end-before"] != "undefined"){
-	this.setEndBefore(flow, size["end-before"]);
-      }
-      if(typeof size["end-after"] != "undefined"){
-	this.setEndAfter(flow, size["end-after"]);
-      }
-    },
-    /**
-       set corner of logical "start-before"
-       @memberof Nehan.BorderRadius
-       @method setStartBefore
-       @param flow {Nehan.BoxFlow} - base layout flow
-       @param value {Array<int>} - 2d radius value
-       @example
-       * new BorderRadius().setStartBefore(BoxFlows.getByName("lr-tb"), [5, 10]); // horizontal 5px, vertical 10px
-    */
-    setStartBefore : function(flow, value){
-      var radius = this.getCorner(flow.getPropStart(), flow.getPropBefore());
-      radius.setSize(value);
-    },
-    /**
-       set corner of logical "start-after"
-       @memberof Nehan.BorderRadius
-       @method setStartAfter
-       @param flow {Nehan.BoxFlow} - base layout flow
-       @param value {Array<int>} - 2d radius value
-    */
-    setStartAfter : function(flow, value){
-      var radius = this.getCorner(flow.getPropStart(), flow.getPropAfter());
-      radius.setSize(value);
-    },
-    /**
-       set corner of logical "end-before"
-       @memberof Nehan.BorderRadius
-       @method setEndBefore
-       @param flow {Nehan.BoxFlow} - base layout flow
-       @param value {Array<int>} - 2d radius value
-    */
-    setEndBefore : function(flow, value){
-      var radius = this.getCorner(flow.getPropEnd(), flow.getPropBefore());
-      radius.setSize(value);
-    },
-    /**
-       set corner of logical "end-after"
-       @memberof Nehan.BorderRadius
-       @method setEndAfter
-       @param flow {Nehan.BoxFlow} - base layout flow
-       @param value {Array<int>} - 2d radius value
-    */
-    setEndAfter :  function(flow, value){
-      var radius = this.getCorner(flow.getPropEnd(), flow.getPropAfter());
-      radius.setSize(value);
-    },
-    /**
-       clear corner values of logical before direction("start-before" and "end-before")
-       @memberof Nehan.BorderRadius
-       @method clearBefore
-       @param flow {Nehan.BoxFlow} - base layout flow
-    */
-    clearBefore : function(flow){
-      this.setStartBefore(flow, [0, 0]);
-      this.setEndBefore(flow, [0, 0]);
-    },
-    /**
-       clear corner values of logical before direction("start-after" and "end-after")
-       @memberof Nehan.BorderRadius
-       @method clearAfter
-       @param flow {Nehan.BoxFlow} - base layout flow
-    */
-    clearAfter : function(flow){
-      this.setStartAfter(flow, [0, 0]);
-      this.setEndAfter(flow, [0, 0]);
-    }
-  };
-
-  return BorderRadius;
-})();
-
-var BorderColor = (function(){
-  /**
-     @memberof Nehan
-     @class BorderColor
-     @classdesc logical border color object
-     @constructor
-  */
-  function BorderColor(){
-  }
-
-  BorderColor.prototype = {
-    /**
-       @memberof Nehan.BorderColor
-       @method clone
-       @return {Nehan.BorderColor}
-    */
-    clone : function(){
-      var border_color = new BorderColor();
-      List.iter(Const.cssBoxDirs, function(dir){
-	if(this[dir]){
-	  border_color[dir] = this[dir];
-	}
-      }.bind(this));
-      return border_color;
-    },
-    /**
-       @memberof Nehan.BorderColor
-       @method setColor
-       @param flow {Nehan.BoxFlow}
-       @param value {Object} - color values, object or array or string available.
-       @param value.before {Nehan.Color}
-       @param value.end {Nehan.Color}
-       @param value.after {Nehan.Color}
-       @param value.start {Nehan.Color}
-    */
-    setColor : function(flow, value){
-      var self = this;
-
-      // first, set as it is(obj, array, string).
-      BoxRect.setValue(this, flow, value);
-
-      // second, map as color class.
-      BoxRect.iter(this, function(dir, val){
-	self[dir] = new Color(val);
-      });
-    },
-    /**
-       get css object of border color
-
-       @memberof Nehan.BorderColor
-       @method getCss
-    */
-    getCss : function(){
-      var css = {};
-      BoxRect.iter(this, function(dir, color){
-	var prop = ["border", dir, "color"].join("-");
-	css[prop] = color.getCssValue();
-      });
-      return css;
-    }
-  };
-
-  return BorderColor;
-})();
-
-var BorderStyle = (function(){
-  /**
-     @memberof Nehan
-     @class BorderStyle
-     @classdesc logical border style object
-     @constructor
-  */
-  function BorderStyle(){
-  }
-
-  BorderStyle.prototype = {
-    /**
-       @memberof Nehan.BorderStyle
-       @method clone
-       @return {Nehan.BorderStyle}
-    */
-    clone : function(){
-      var style = new BorderStyle();
-      List.iter(Const.cssBoxDirs, function(dir){
-	if(this[dir]){
-	  style[dir] = this[dir];
-	}
-      }.bind(this));
-      return style;
-    },
-    /**
-       @memberof Nehan.BorderStyle
-       @method setStyle
-       @param flow {Nehan.BoxFlow}
-       @param value {Object} - logical style values for each logical direction
-       @param value.before {string}
-       @param value.end {string}
-       @param value.after {string}
-       @param value.start {string}
-    */
-    setStyle : function(flow, value){
-      BoxRect.setValue(this, flow, value);
-    },
-    /**
-       get css object of logical border style
-       @memberof Nehan.BorderStyle
-       @return {Object}
-    */
-    getCss : function(){
-      var css = {};
-      BoxRect.iter(this, function(dir, style){
-	var prop = ["border", dir, "style"].join("-");
-	css[prop] = style;
-      });
-      return css;
-    }
-  };
-
-  return BorderStyle;
-})();
-
-var Padding = (function(){
-  /**
-     @memberof Nehan
-     @class Padding
-     @classdesc abstraction of padding.
-     @extends {Nehan.Edge}
-  */
-  function Padding(){
-    Edge.call(this, "padding");
-  }
-  Class.extend(Padding, Edge);
-
-  /**
-     @memberof Nehan.Padding
-     @override
-     @return {Nehan.Padding}
-  */
-  Padding.prototype.clone = function(){
-    return this.copyTo(new Padding());
-  };
-
-  return Padding;
-})();
-
-
-var Margin = (function(){
-  /**
-     @memberof Nehan
-     @class Margin
-     @classdesc abstraction of physical margin
-     @constructor
-     @extends {Nehan.Edge}
-  */
-  function Margin(){
-    Edge.call(this, "margin");
-  }
-  Class.extend(Margin, Edge);
-
-  /**
-     @memberof Nehan.Margin
-     @method clone
-     @override
-     @return {Nehan.Margin}
-  */
-  Margin.prototype.clone = function(){
-    return this.copyTo(new Margin());
-  };
-
-  return Margin;
-})();
-
-
-var Border = (function(){
-  /**
-     @memberof Nehan
-     @class Border
-     @classdesc logical border object that contains border-width, border-radius, border-style, border-color for each logical directions.
-     @constructor
-     @extends {Nehan.Edge}
-  */
-  function Border(){
-    Edge.call(this, "border");
-  }
-  Class.extend(Border, Edge);
-
-  /**
-     return cloned border object
-     @memberof Nehan.Border
-     @method clone
-     @return {Nehan.Border}
-  */
-  Border.prototype.clone = function(){
-    var border = this.copyTo(new Border());
-    if(this.radius){
-      border.radius = this.radius.clone();
-    }
-    if(this.style){
-      border.style = this.style.clone();
-    }
-    if(this.color){
-      border.color = this.color.clone();
-    }
-    return border;
-  };
-
-  /**
-     clear border values of logical before
-     @memberof Nehan.Border
-     @method clearBefore
-     @param flow {Nehan.BoxFlow}
-  */
-  Border.prototype.clearBefore = function(flow){
-    this.setBefore(flow, 0);
-    if(this.radius){
-      this.radius.clearBefore(flow);
-    }
-  };
-
-  /**
-     clear border values of logical after
-     @memberof Nehan.Border
-     @method clearAfter
-     @param flow {Nehan.BoxFlow}
-  */
-  Border.prototype.clearAfter = function(flow){
-    this.setAfter(flow, 0);
-    if(this.radius){
-      this.radius.clearAfter(flow);
-    }
-  };
-
-  /**
-     @memberof Nehan.Border
-     @method getDirProp
-     @param dir {string} - "top", "right", "bottom", "left"
-     @example
-     * new Border().getDirProp("top"); // => "border-top-width"
-  */
-  Border.prototype.getDirProp = function(dir){
-    return ["border", dir, "width"].join("-");
-  };
-
-  /**
-     set border radius
-     @memberof Nehan.Border
-     @method setRadius
-     @param flow {Nehan.BoxFlow}
-     @param radius {Nehan.BorderRadius}
-  */
-  Border.prototype.setRadius = function(flow, radius){
-    this.radius = new BorderRadius();
-    this.radius.setSize(flow, radius);
-  };
-
-  /**
-     set border color
-     @memberof Nehan.Border
-     @method setColor
-     @param flow {Nehan.BoxFlow}
-     @param color {Nehan.Color}
-  */
-  Border.prototype.setColor = function(flow, color){
-    this.color = new BorderColor();
-    this.color.setColor(flow, color);
-  };
-
-  /**
-     set border style
-     @memberof Nehan.Border
-     @method setStyle
-     @param flow {Nehan.BoxFlow}
-     @param style {Nehan.BorderStyle}
-  */
-  Border.prototype.setStyle = function(flow, style){
-    this.style = new BorderStyle();
-    this.style.setStyle(flow, style);
-  };
-
-  /**
-     get css object
-     @memberof Nehan.Border
-     @method getCss
-     @return {Object}
-  */
-  Border.prototype.getCss = function(){
-    var css = Edge.prototype.getCss.call(this);
-    if(this.radius){
-      Args.copy(css, this.radius.getCss());
-    }
-    if(this.color){
-      Args.copy(css, this.color.getCss());
-    }
-    if(this.style){
-      Args.copy(css, this.style.getCss());
-    }
-    return css;
-  };
-
-  return Border;
-})();
 
 var TextEmphaStyle = (function(){
   var __default_empha_style = "filled dot";
@@ -8015,7 +9329,7 @@ var TextEmphaPos = (function(){
      @param opt.vert {String} - vertical empha pos, default "right"
   */
   function TextEmphaPos(opt){
-    Args.merge(this, {
+    Nehan.Args.merge(this, {
       hori:"over",
       vert:"right"
     }, opt || {});
@@ -8053,7 +9367,7 @@ var TextEmpha = (function(){
     opt = opt || {};
     this.style = opt.style || new TextEmphaStyle();
     this.pos = opt.pos || new TextEmphaPos();
-    this.color = opt.color || new Color(Display.fontColor);
+    this.color = opt.color || new Nehan.Color(Display.fontColor);
   }
 
   TextEmpha.prototype = {
@@ -8091,6 +9405,7 @@ var TextEmpha = (function(){
       css["text-align"] = "left";
       css.width = this.getExtent(font_size) + "px";
       css.height = chr.getAdvance(line.style.flow, line.style.letterSpacing || 0) + "px";
+      css.position = "relative";
       return css;
     },
     /**
@@ -8112,379 +9427,6 @@ var TextEmpha = (function(){
 })();
 
 
-var Uri = (function(){
-  /**
-     @memberof Nehan
-     @class Uri
-     @classdesc abstraction of URI. 
-     @constructor
-     @param address {String}
-  */
-  function Uri(address){
-    this.address = this._normalize(address || "");
-  }
-
-  Uri.prototype = {
-    _normalize : function(address){
-      return address.replace(/\s/g, "");
-    },
-    /**
-       @memberof Nehan.Uri
-       @return {String}
-    */
-    getAddress : function(){
-      return this.address;
-    },
-    /**
-       @memberof Nehan.Uri
-       @return {String}
-       @example
-       * new Uri("http://example.com/top#foo").getAnchorName(); // "foo"
-    */
-    getAnchorName : function(){
-      var sharp_pos = this.address.indexOf("#");
-      if(sharp_pos < 0){
-	return "";
-      }
-      var anchor_name = this.address.substring(sharp_pos + 1);
-      return (anchor_name.length > 0)? anchor_name : "";
-    }
-  };
-
-  return Uri;
-})();
-
-
-var BoxEdge = (function (){
-  /**
-     @memberof Nehan
-     @class BoxEdge
-     @classdesc edges object set(padding, border, margin)
-     @constructor
-     @param opt {Object} - optional argument
-     @param opt.padding {Nehan.Padding} - initial padding
-     @param opt.border {Nehan.Border} - initial border
-     @param opt.margin {Nehan.Margin} - initial margin
-  */
-  function BoxEdge(opt){
-    opt = opt || {};
-    this.padding = opt.padding || new Padding();
-    this.border = opt.border || new Border();
-    this.margin = opt.margin || new Margin();
-  }
-
-  BoxEdge.prototype = {
-    /**
-       @memberof Nehan.BoxEdge
-       @return {Nehan.BoxEdge}
-    */
-    clone : function(){
-      var edge = new BoxEdge();
-      edge.padding = this.padding.clone();
-      edge.border = this.border.clone();
-      edge.margin = this.margin.clone();
-      return edge;
-    },
-    /**
-       clear all edge values
-       @memberof Nehan.BoxEdge
-    */
-    clear : function(){
-      this.padding.clear();
-      this.border.clear();
-      this.margin.clear();
-    },
-    /**
-       get css object
-       @memberof Nehan.BoxEdge
-    */
-    getCss : function(){
-      var css = {};
-      Args.copy(css, this.padding.getCss());
-      Args.copy(css, this.border.getCss());
-      Args.copy(css, this.margin.getCss());
-      return css;
-    },
-    /**
-       get size of physical width amount size in px.
-       @memberof Nehan.BoxEdge
-     */
-    getWidth : function(){
-      var ret = 0;
-      ret += this.padding.getWidth();
-      ret += this.border.getWidth();
-      ret += this.margin.getWidth();
-      return ret;
-    },
-    /**
-       get size of physical height amount size in px.
-       @memberof Nehan.BoxEdge
-     */
-    getHeight : function(){
-      var ret = 0;
-      ret += this.padding.getHeight();
-      ret += this.border.getHeight();
-      ret += this.margin.getHeight();
-      return ret;
-    },
-    /**
-       get size of measure in px.
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    getMeasure : function(flow){
-      var ret = 0;
-      ret += this.padding.getMeasure(flow);
-      ret += this.border.getMeasure(flow);
-      ret += this.margin.getMeasure(flow);
-      return ret;
-    },
-    /**
-       get size of extent in px.
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    getExtent : function(flow){
-      var ret = 0;
-      ret += this.padding.getExtent(flow);
-      ret += this.margin.getExtent(flow);
-      ret += this.border.getExtent(flow);
-      return ret;
-    },
-    /**
-       get size of measure size in px without margin.
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    getInnerMeasureSize : function(flow){
-      var ret = 0;
-      ret += this.padding.getMeasure(flow);
-      ret += this.border.getMeasure(flow);
-      return ret;
-    },
-    /**
-       get size of extent size in px without margin.
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    getInnerExtentSize : function(flow){
-      var ret = 0;
-      ret += this.padding.getExtent(flow);
-      ret += this.border.getExtent(flow);
-      return ret;
-    },
-    /**
-       get before size amount in px.
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    getBefore : function(flow){
-      var ret = 0;
-      ret += this.padding.getBefore(flow);
-      ret += this.border.getBefore(flow);
-      ret += this.margin.getBefore(flow);
-      return ret;
-    },
-    /**
-       get after size amount in px.
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    getAfter : function(flow){
-      var ret = 0;
-      ret += this.padding.getAfter(flow);
-      ret += this.border.getAfter(flow);
-      ret += this.margin.getAfter(flow);
-      return ret;
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    setBorderRadius : function(flow, value){
-      this.border.setRadius(flow, value);
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    setBorderColor : function(flow, value){
-      this.border.setColor(flow, value);
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    setBorderStyle : function(flow, value){
-      this.border.setStyle(flow, value);
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    clearBefore : function(flow){
-      this.padding.clearBefore(flow);
-      this.border.clearBefore(flow);
-      this.margin.clearBefore(flow);
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    clearAfter : function(flow){
-      this.padding.clearAfter(flow);
-      this.border.clearAfter(flow);
-      this.margin.clearAfter(flow);
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    clearBorderStart : function(flow){
-      this.border.clearStart(flow);
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    clearBorderBefore : function(flow){
-      this.border.clearBefore(flow);
-    },
-    /**
-       @memberof Nehan.BoxEdge
-       @param flow {Nehan.BoxFlow}
-     */
-    clearBorderAfter : function(flow){
-      this.border.clearAfter(flow);
-    }
-  };
-
-  return BoxEdge;
-})();
-
-var BoxSize = (function(){
-  /**
-     @memberof Nehan
-     @class BoxSize
-     @classdesc physical box size 'width' and 'height'.
-     @constructor
-     @param width {int} - content width
-     @param height {int} - content height
-  */
-  function BoxSize(width, height){
-    this.width = width; // content width
-    this.height = height; // content height
-  }
-
-  BoxSize.prototype = {
-    /**
-       clone box size object with same values.
-
-       @memberof Nehan.BoxSize
-       @return {Nehan.BoxSize}
-    */
-    clone : function(){
-      return new BoxSize(this.width, this.height);
-    },
-    /**
-       @memberof Nehan.BoxSize
-       @param flow {Nehan.BoxFlow}
-       @param extent {int}
-     */
-    setExtent : function(flow, extent){
-      this[flow.getPropExtent()] = extent;
-    },
-    /**
-       @memberof Nehan.BoxSize
-       @param flow {Nehan.BoxFlow}
-       @param measure {int}
-     */
-    setMeasure : function(flow, measure){
-      this[flow.getPropMeasure()] = measure;
-    },
-    /**
-       @memberof Nehan.BoxSize
-       @param flow {Nehan.BoxFlow}
-       @return {Object}
-     */
-    getCss : function(flow){
-      var css = {};
-      css.width = this.width + "px";
-      css.height = this.height + "px";
-      return css;
-    },
-    /**
-       get content size of measure
-
-       @memberof Nehan.BoxSize
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-     */
-    getMeasure : function(flow){
-      return this[flow.getPropMeasure()];
-    },
-    /**
-       get content size of extent
-
-       @memberof Nehan.BoxSize
-       @param flow {Nehan.BoxFlow}
-       @return {int}
-    */
-    getExtent : function(flow){
-      return this[flow.getPropExtent()];
-    }
-  };
-
-  return BoxSize;
-})();
-
-var BoxPosition = (function(){
-  /**
-     @memberof Nehan
-     @class BoxPosition
-     @classdesc logical css 'position' property
-     @constructor
-     @param position {string}
-  */
-  function BoxPosition(position){
-    this.position = position;
-  }
-
-  BoxPosition.prototype = {
-    /**
-       @memberof Nehan.BoxPosition
-       @return {boolean}
-    */
-    isAbsolute : function(){
-      return this.position === "absolute";
-    },
-    /**
-       @memberof Nehan.BoxPosition
-       @return {Object}
-    */
-    getCss : function(flow){
-      var css = {};
-      css.position = this.position;
-      if(this.start){
-	css[flow.getPropStart()] = this.start + "px";
-      }
-      if(this.end){
-	css[flow.getPropEnd()] = this.end + "px";
-      }
-      if(this.before){
-	css[flow.getPropBefore()] = this.before + "px";
-      }
-      if(this.after){
-	css[flow.getPropAfter()] = this.after + "px";
-      }
-      return css;
-    }
-  };
-
-  return BoxPosition;
-})();
-
-
 var Box = (function(){
   /**
      @memberof Nehan
@@ -8503,7 +9445,7 @@ var Box = (function(){
   }
 
   var __filter_text = function(elements){
-    return List.fold(elements, [], function(ret, element){
+    return Nehan.List.fold(elements, [], function(ret, element){
       if(element instanceof Box){
 	return ret.concat(__filter_text(element.elements || []));
       }
@@ -8525,7 +9467,7 @@ var Box = (function(){
        @param element {Array.<Nehan.Box | Nehan.Char | Nehan.Word | Nehan.Tcy>}
     */
     addElements : function(elements){
-      List.iter(elements, function(element){
+      Nehan.List.iter(elements, function(element){
 	this.addElement(element);
       }.bind(this));
     },
@@ -8565,7 +9507,7 @@ var Box = (function(){
     */
     toString : function(){
       var texts = __filter_text(this.elements || []);
-      return List.fold(texts, "", function(ret, text){
+      return Nehan.List.fold(texts, "", function(ret, text){
 	var str = (text instanceof Ruby)? text.getRbString() : (text.data || "");
 	return ret + str;
       });
@@ -8582,7 +9524,7 @@ var Box = (function(){
        @return {Array.<string>}
     */
     getClassName : function(){
-      return this.classes? this.classes.join(" ") : "";
+      return this.classes? Nehan.List.map(this.classes, Nehan.Css.addNehanPrefix).join(" ") : "";
     },
     /**
        @memberof Nehan.Box
@@ -8819,7 +9761,7 @@ var HtmlLexer = (function (){
 
   // discard close tags defined as single tag in LexingRule.
   var __replace_single_close_tags = function(str){
-    return List.fold(LexingRule.getSingleTagNames(), str, function(ret, name){
+    return Nehan.List.fold(LexingRule.getSingleTagNames(), str, function(ret, name){
       return ret.replace(new RegExp("</" + name + ">", "g"), "");
     });
   };
@@ -8935,7 +9877,7 @@ var HtmlLexer = (function (){
       return {closed:false, content:this.buff};
     },
     _parseTag : function(tagstr){
-      var tag = new Tag(tagstr);
+      var tag = new Nehan.Tag(tagstr);
       this._stepBuff(tagstr.length);
       var tag_name = tag.getName();
       if(LexingRule.isSingleTag(tag_name)){
@@ -8977,7 +9919,7 @@ var TextLexer = (function (){
     HtmlLexer.call(this, src);
   }
 
-  Class.extend(TextLexer, HtmlLexer);
+  Nehan.Class.extend(TextLexer, HtmlLexer);
 
   TextLexer.prototype._getToken = function(){
     if(this.buff === ""){
@@ -9012,672 +9954,6 @@ var TextLexer = (function (){
 })();
 
 
-var SectionHeader = (function(){
-  /**
-     @memberof Nehan
-     @class SectionHeader
-     @classdesc abstraction of section header with header rank, header title, and system unique id(optional).
-     @constructor
-  */
-  function SectionHeader(rank, title, id){
-    this.rank = rank;
-    this.title = title;
-    this._id = id || 0;
-  }
-
-  SectionHeader.prototype = {
-    /**
-       @memberof Nehan.SectionHeader
-       @return {int}
-    */
-    getId : function(){
-      return this._id;
-    }
-  };
-
-  return SectionHeader;
-})();
-
-var Section = (function(){
-  /**
-     @memberof Nehan
-     @class Section
-     @classdesc section tree node with parent, next, child pointer.
-     @constructor
-  */
-  function Section(type, parent, page_no){
-    this._type = type;
-    this._header = null;
-    this._auto = false;
-    this._next = null;
-    this._child = null;
-    this._parent = parent || null;
-    this._pageNo = page_no || 0;
-  }
-
-  Section.prototype = {
-    /**
-       @memberof Nehan.Section
-       @return {boolean}
-    */
-    isRoot : function(){
-      return this._parent === null;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {boolean}
-    */
-    isAuto : function(){
-      return this._auto;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {boolean}
-    */
-    hasHeader : function(){
-      return this._header !== null;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {boolean}
-    */
-    hasHeaderId : function(){
-      return this.getHeaderId() > 0;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {boolean}
-    */
-    hasChild : function(){
-      return this._child !== null;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {boolean}
-    */
-    hasNext : function(){
-      return this._next !== null;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {Nehan.Section}
-    */
-    getNext : function(){
-      return this._next;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {Nehan.Section}
-    */
-    getChild : function(){
-      return this._child;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {Nehan.Section}
-    */
-    getParent : function(){
-      return this._parent;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {Nehan.SectionHeader}
-    */
-    getHeader : function(){
-      return this._header;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {int}
-    */
-    getHeaderId : function(){
-      if(this._header){
-	return this._header.getId();
-      }
-      return null;
-    },
-    /**
-       @memberof Nehan.Section
-       @param header {Nehan.SectionHeader}
-    */
-    setHeader : function(header){
-      this._header = header;
-    },
-    /**
-       @memberof Nehan.Section
-    */
-    setAuto : function(){
-      this._auto = true;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {int}
-    */
-    getRank : function(){
-      return this._header? this._header.rank : 0;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {String}
-    */
-    getTitle : function(){
-      return this._header? this._header.title : ["untitled", this._type].join(" ");
-    },
-    /**
-       @memberof Nehan.Section
-       @return {String}
-    */
-    getType : function(){
-      return this._type;
-    },
-    /**
-       @memberof Nehan.Section
-       @return {int}
-    */
-    getPageNo : function(){
-      return this._pageNo;
-    },
-    /**
-       @memberof Nehan.Section
-       @param page_no {int}
-    */
-    updatePageNo : function(page_no){
-      this._pageNo = page_no;
-    },
-    /**
-       @memberof Nehan.Section
-       @param section {Nehan.Section}
-    */
-    addChild : function(section){
-      if(this._child === null){
-	this._child = section;
-      } else {
-	this._child.addNext(section);
-      }
-    },
-    /**
-       @memberof Nehan.Section
-       @param section {Nehan.Section}
-    */
-    addNext : function(section){
-      if(this._next === null){
-	this._next = section;
-      } else {
-	this._next.addNext(section);
-      }
-    }
-  };
-
-  return Section;
-})();
-
-
-var TocContext = (function(){
-  /**
-     @memberof Nehan
-     @class TocContext
-     @classdesc context data of toc parsing.
-     @constructor
-  */
-  function TocContext(){
-    this.stack = [1];
-  }
-
-  TocContext.prototype = {
-    /**
-       @memberof Nehan.TocContext
-       @return {String}
-       @example
-       * // assume that current toc stack is [1,2,1].
-       * ctx.toString(); // "1.2.1"
-    */
-    toString : function(){
-      return this.stack.join(".");
-    },
-    /**
-       countup toc count of current depth.
-
-       @memberof Nehan.TocContext
-       @return {Nehan.TocContext}
-       @example
-       * // assume that current toc stack is [1,2], and
-       * // current toc depth is at 1(0 is first).
-       * ctx.toString(); // "1.2"
-       * ctx.stepNext();
-       * ctx.toString(); // "1.3"
-    */
-    stepNext : function(){
-      if(this.stack.length > 0){
-	this.stack[this.stack.length - 1]++;
-      }
-      return this;
-    },
-    /**
-       append toc root
-
-       @memberof Nehan.TocContext
-       @return {Nehan.TocContext}
-       @example
-       * // assume that current toc stack is [1,2].
-       * ctx.toString(); // "1.2"
-       * ctx.startRoot();
-       * ctx.toString(); // "1.2.1"
-    */
-    startRoot : function(){
-      this.stack.push(1);
-      return this;
-    },
-    /**
-       finish toc root
-
-       @memberof Nehan.TocContext
-       @return {Nehan.TocContext}
-       @example
-       * // assume that current toc stack is [1,2].
-       * ctx.toString(); // "1.2"
-       * ctx.startRoot();
-       * ctx.toString(); // "1.2.1"
-       * ctx.endRoot();
-       * ctx.toString(); // "1.2"
-    */
-    endRoot : function(){
-      this.stack.pop();
-      return this;
-    }
-  };
-
-  return TocContext;
-})();
-
-var OutlineContext = (function(){
-  /**
-     @memberof Nehan
-     @class OutlineContext
-     @classdesc outline context object. outline is generated by section root element, sectionning element, heading element etc.
-     @constructor
-     @param markup_name {String} - section root name like "body", "fieldset", "blockquote" etc.
-  */
-  function OutlineContext(markup_name){
-    this.logs = [];
-    this.markupName = markup_name;
-  }
-
-  OutlineContext.prototype = {
-    /**
-       @memberof Nehan.OutlineContext
-       @return {boolean}
-    */
-    isEmpty : function(){
-      return this.logs.length === 0;
-    },
-    /**
-       @memberof Nehan.OutlineContext
-       @return {Object} log object
-    */
-    get : function(index){
-      return this.logs[index] || null;
-    },
-    /**
-       @memberof Nehan.OutlineContext
-       @return {String}
-    */
-    getMarkupName : function(){
-      return this.markupName;
-    },
-    /**
-       @memberof Nehan.OutlineContext
-       @param type {String} - markup name
-       @return {Nehan.OutlineContext}
-    */
-    startSection : function(type){
-      this.logs.push({
-	name:"start-section",
-	type:type,
-	pageNo:DocumentContext.getPageNo()
-      });
-      return this;
-    },
-    /**
-       @memberof Nehan.OutlineContext
-       @param type {String} - markup name
-       @return {Nehan.OutlineContext}
-    */
-    endSection : function(type){
-      this.logs.push({
-	name:"end-section",
-	type:type
-      });
-      return this;
-    },
-    /**
-       @memberof Nehan.OutlineContext
-       @param opt {Object}
-       @param opt.type {String} - markup name
-       @param opt.rank {int} - header rank(1 - 6)
-       @param opt.title {String} - header title
-       @return {String} header id
-    */
-    addHeader : function(opt){
-      // header id is used to associate header box object with outline.
-      var header_id = DocumentContext.genHeaderId();
-      this.logs.push({
-	name:"set-header",
-	type:opt.type,
-	rank:opt.rank,
-	title:opt.title,
-	pageNo:DocumentContext.getPageNo(),
-	headerId:header_id
-      });
-      return header_id;
-    }
-  };
-
-  return OutlineContext;
-})();
-
-/**
-   parser module to convert from context to section tree object.
-
-   @namespace Nehan.OutlineContextParser
-*/
-var OutlineContextParser = (function(){
-  var _parse = function(context, parent, ptr){
-    var log = context.get(ptr++);
-    if(log === null){
-      return;
-    }
-    switch(log.name){
-    case "start-section":
-      var section = new Section(log.type, parent, log.pageNo);
-      if(parent){
-	parent.addChild(section);
-      }
-      _parse(context, section, ptr);
-      break;
-
-    case "end-section":
-      _parse(context, parent.getParent(), ptr);
-      break;
-
-    case "set-header":
-      var header = new SectionHeader(log.rank, log.title, log.headerId);
-      if(parent === null){
-	var auto_section = new Section("section", null, log.pageNo);
-	auto_section.setHeader(header);
-	_parse(context, auto_section, ptr);
-      } else if(!parent.hasHeader()){
-	parent.setHeader(header);
-	_parse(context, parent, ptr);
-      } else {
-	var rank = log.rank;
-	var parent_rank = parent.getRank();
-	if(rank < parent_rank){ // higher rank
-	  ptr = Math.max(0, ptr - 1);
-	  _parse(context, parent.getParent(), ptr);
-	} else if(log.rank == parent_rank){ // same rank
-	  var next_section = new Section("section", parent, log.pageNo);
-	  next_section.setHeader(header);
-	  parent.addNext(next_section);
-	  _parse(context, next_section, ptr);
-	} else { // lower rank
-	  var child_section = new Section("section", parent, log.pageNo);
-	  child_section.setHeader(header);
-	  parent.addChild(child_section);
-	  _parse(context, child_section, ptr);
-	}
-      }
-      break;
-    }
-    return parent;
-  };
-
-  return {
-    /**
-       @memberof Nehan.OutlineContextParser
-       @param context {Nehan.OutlineContext}
-       @return {Nehan.Section} section tree root
-    */
-    parse : function(context){
-      var ptr = 0;
-      var root = new Section("section", null, 0);
-      return _parse(context, root, ptr);
-    }
-  };
-})();
-
-/*
-  outline mapping
-  ===============
-
-  <ol>
-    <li> root.title
-      <ol>
-        <li> root.child.title  </li>
-	<li> root.child.next.title </li>
-      </ol>
-    </li>
-
-    <li> root.next.title
-      <ol>
-        <li> root.next.child.title </li>
-	<li> root.next.child.next.title </li>
-      </ol>
-   </li>
-  </ol>
-*/
-/**
-   convert section tree({@link Nehan.Section}) to DOMElement.
-
-   @namespace Nehan.SectionTreeConverter
-*/
-var SectionTreeConverter = (function(){
-  var default_callbacks = {
-    onClickLink : function(toc){
-      return false;
-    },
-    createToc : function(toc_ctx, tree){
-      return {
-	tocPos:toc_ctx.toString(),
-	title:tree.getTitle(),
-	pageNo:tree.getPageNo(),
-	headerId:tree.getHeaderId()
-      };
-    },
-    createRoot : function(toc){
-      var root = document.createElement("ul");
-      root.className = "nehan-toc-root";
-      return root;
-    },
-    createChild : function(toc){
-      var li = document.createElement("li");
-      li.className = "nehan-toc-item";
-      return li;
-    },
-    createLink : function(toc){
-      var link = document.createElement("a");
-      var title = toc.title.replace(/<a[^>]+>/gi, "").replace(/<\/a>/gi, "");
-      link.href = "#" + toc.pageNo;
-      link.innerHTML = title;
-      link.className = "nehan-toc-link";
-      link.id = Css.addNehanTocLinkPrefix(toc.tocId);
-      return link;
-    },
-    createPageNoItem : function(toc){
-      return null;
-    }
-  };
-
-  var parse = function(toc_ctx, parent, tree, callbacks){
-    if(tree === null){
-      return parent;
-    }
-    var toc = callbacks.createToc(toc_ctx, tree);
-    var li = callbacks.createChild(toc);
-    var link = callbacks.createLink(toc);
-    if(link){
-      link.onclick = function(){
-	return callbacks.onClickLink(toc);
-      };
-      li.appendChild(link);
-    }
-    var page_no_item = callbacks.createPageNoItem(toc);
-    if(page_no_item){
-      li.appendChild(page_no_item);
-    }
-    parent.appendChild(li);
-
-    var child = tree.getChild();
-    if(child){
-      toc_ctx = toc_ctx.startRoot();
-      var child_toc = callbacks.createToc(toc_ctx, child);
-      var ol = callbacks.createRoot(child_toc);
-      parse(toc_ctx, ol, child, callbacks);
-      li.appendChild(ol);
-      toc_ctx = toc_ctx.endRoot();
-    }
-    var next = tree.getNext();
-    if(next){
-      parse(toc_ctx.stepNext(), parent, next, callbacks);
-    }
-    return parent;
-  };
-
-  return {
-    /**
-       create DOMElement from section tree object.
-
-       @memberof Nehan.SectionTreeConverter
-       @param section_tree {Nehan.Section} - outlie tree object generated by {@link Nehan.OutlineContextParser}({@link Nehan.OutlineContext} -> {@link Nehan.Section})
-       @param callbacks {Object} - callbacks object
-       @param callbacks.onClickLink {Function} - called when link object is clicked. do nothing by default.
-       @param callbacks.createRoot {Function} - called when create dom root node, create <ul> by default.
-       @param callbacks.createChild {Function} - called when create dom child, create &lt;li&gt; by default.
-       @param callbacks.createLink {Function} - called when create link node in dom child, create &lt;a&gt; by default.
-       @param callbacks.createToc {Function} - called when create toc object from toc and tree context.<br>
-       * it is used in other callbacks as a callback argument.<br>
-       * create {tocPos:xxx, title:xxx, pageNo:xxx, headerId:xxx} by default.
-       @param callbacks.createPageNoItem {Function} - called when create page no item node in link object, create nothing by default.
-    */
-    convert : function(outline_tree, callbacks){
-      callbacks = Args.merge({}, default_callbacks, callbacks || {});
-      var toc_context = new TocContext();
-      var root_node = callbacks.createRoot();
-      return parse(toc_context, root_node, outline_tree, callbacks); // section tree -> dom node
-    }
-  };
-})();
-
-var DocumentHeader = (function(){
-  /**
-     @memberof Nehan
-     @class DocumentHeader
-     @classdesc html &lt;head&gt; data wrapper.
-     @constructor
-  */
-  function DocumentHeader(){
-    this.title = "";
-    this.metas = [];
-    this.links = [];
-    this.scripts = [];
-    this.styles = [];
-  }
-
-  DocumentHeader.prototype = {
-    /**
-       @memberof Nehan.DocumentHeader
-       @param title {String}
-    */
-    setTitle :function(title){
-      this.title = title;
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @return {String}
-    */
-    getTitle : function(){
-      return this.title;
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @param markup {Nehan.Tag}
-    */
-    addLink : function(markup){
-      this.links.push(markup);
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @return {Array.<Nehan.Tag>}
-    */
-    getLinks : function(){
-      return this.links;
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @param markup {Nehan.Tag}
-    */
-    addMeta : function(markup){
-      this.metas.push(markup);
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @return {Array.<Nehan.Tag>}
-    */
-    getMetas : function(){
-      return this.metas;
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @param name {String}
-       @return {Nehan.Tag}
-    */
-    getMetaByName : function(name){
-      return List.find(this.metas, function(meta){
-	return meta.getTagAttr("name") === name;
-      });
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @param name {String}
-       @return {String}
-    */
-    getMetaContentByName : function(name){
-      var meta = this.getMetaByName(name);
-      return meta? meta.getTagAttr("content") : null;
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @param markup {Nehan.Tag}
-    */
-    addScript : function(markup){
-      this.scripts.push(markup);
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @return {Array.<Nehan.Tag>}
-    */
-    getScripts : function(){
-      return this.scripts;
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @param markup {Nehan.Tag}
-    */
-    addStyle : function(markup){
-      this.styles.push(markup);
-    },
-    /**
-       @memberof Nehan.DocumentHeader
-       @return {Array.<Nehan.Tag>}
-    */
-    getStyles : function(){
-      return this.styles;
-    }
-  };
-
-  return DocumentHeader;
-})();
-
-
 /**
    global context data for all layout engines defined in same browser window.
 
@@ -9695,19 +9971,19 @@ var DocumentContext = (function(){
   var __root_block_id = 0; // unique block-id for direct children of <body>.
 
   var __get_outline_contexts_by_name = function(section_root_name){
-    return List.filter(__outline_contexts, function(context){
+    return Nehan.List.filter(__outline_contexts, function(context){
       return context.getMarkupName() === section_root_name;
     });
   };
 
   var __convert_outline_context_to_element = function(context, callbacks){
-    var tree = OutlineContextParser.parse(context);
-    return tree? SectionTreeConverter.convert(tree, callbacks) : null;
+    var tree = Nehan.OutlineContextParser.parse(context);
+    return tree? Nehan.SectionTreeConverter.convert(tree, callbacks) : null;
   };
 
   var __create_outline_elements_by_name = function(section_root_name, callbacks){
     var contexts = __get_outline_contexts_by_name(section_root_name);
-    return List.fold(contexts, [], function(ret, context){
+    return Nehan.List.fold(contexts, [], function(ret, context){
       var element = __convert_outline_context_to_element(context, callbacks);
       return element? ret.concat(element) : ret;
     });
@@ -10095,7 +10371,7 @@ var TokenStream = (function(){
 	  break;
 	}
 	if(token instanceof Char && token.isLigature()){
-	  var last = List.last(this.tokens);
+	  var last = Nehan.List.last(this.tokens);
 	  if(last instanceof Char){
 	    last.setLigature(token.data);
 	    continue;
@@ -10111,14 +10387,14 @@ var TokenStream = (function(){
       this._setPseudoAttribute(this.tokens);
     },
     _setPseudoAttribute : function(tokens){
-      var tags = List.filter(tokens, function(token){
-	return (token instanceof Tag);
+      var tags = Nehan.List.filter(tokens, function(token){
+	return (token instanceof Nehan.Tag);
       });
       if(tags.length === 0){
 	return;
       }
       var type_of_tags = {};
-      List.iter(tags, function(tag){
+      Nehan.List.iter(tags, function(tag){
 	var tag_name = tag.getName();
 	if(type_of_tags[tag_name]){
 	  type_of_tags[tag_name].push(tag);
@@ -10155,7 +10431,7 @@ var RubyTokenStream = (function(){
     this.tokens = this._parse(new TokenStream(str));
     this.pos = 0;
   }
-  Class.extend(RubyTokenStream, TokenStream);
+  Nehan.Class.extend(RubyTokenStream, TokenStream);
 
   RubyTokenStream.prototype._parse = function(stream){
     var tokens = [];
@@ -10197,35 +10473,6 @@ var RubyTokenStream = (function(){
 })();
 
 
-var Page = (function(){
-  /**
-     @memberof Nehan
-     @class Page
-     @classdesc abstract evaluated page object.
-     @constructor
-     @param opt {Object}
-     @param opt.element {DOMElement} - generated DOMElement.
-     @param opt.seekPos {int} - page seek position in literal string pos.
-     @param opt.pageNo {int} - page index starts from 0.
-     @param opt.charPos {int} - character position of this page from first page.
-     @param opt.charCount {int} - character count included in this page object.
-     @param opt.percent {int}
-  */
-  function Page(opt){
-    Args.merge(this, {
-      element:null,
-      seekPos:0,
-      pageNo:0,
-      charPos:0,
-      charCount:0,
-      percent:0
-    }, opt);
-  }
-
-  return Page;
-})();
-
-
 var PageEvaluator = (function(){
   /**
      @memberof Nehan
@@ -10249,7 +10496,7 @@ var PageEvaluator = (function(){
        @return {Nehan.Page}
     */
     evaluate : function(tree){
-      return tree? new Page({
+      return tree? new Nehan.Page({
 	element:this.evaluator.evaluate(tree),
 	percent:tree.percent,
 	seekPos:tree.seekPos,
@@ -10348,7 +10595,7 @@ var PageStream = (function(){
     asyncGet : function(opt){
       var wait = opt.wait || 0;
       var max_page_count = opt.maxPageCount || -1;
-      Args.merge(this, {
+      Nehan.Args.merge(this, {
 	onComplete : function(sender, time){},
 	onProgress : function(sender, tree){},
 	onError : function(sender){}
@@ -10410,7 +10657,7 @@ var PageStream = (function(){
        @return {Nehan.Box}
     */
     findTree : function(fn){
-      return List.find(this._trees, fn);
+      return Nehan.List.find(this._trees, fn);
     },
     /**
        find page object by fn(Nehan.Page -> bool).
@@ -10420,7 +10667,7 @@ var PageStream = (function(){
        @return {Nehan.Page}
     */
     findPage : function(fn){
-      return List.find(this._pages, fn);
+      return Nehan.List.find(this._pages, fn);
     },
     // () -> tree
     _yield : function(){
@@ -10557,256 +10804,6 @@ var Kerning = {
   }
 };
 
-var FloatDirection = (function(){
-  /**
-     @memberof Nehan
-     @class FloatDirection
-     @classdesc abstraction of logical float direction.
-     @constructor
-     @param value {String} - "start" or "end" or "none"
-   */
-  function FloatDirection(value){
-    this.value = value || "none";
-  }
-
-  FloatDirection.prototype = {
-    /**
-       @memberof Nehan.FloatDirection
-       @param flow {Nehan.BoxFlow}
-       @return {Object}
-    */
-    getCss : function(flow){
-      var css = {};
-      if(flow.isTextHorizontal()){
-	if(this.isStart()){
-	  css["css-float"] = "left";
-	} else if(this.isEnd()){
-	  css["css-float"] = "right";
-	}
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.FloatDirection
-       @return {boolean}
-    */
-    isStart : function(){
-      return this.value === "start";
-    },
-    /**
-       @memberof Nehan.FloatDirection
-       @return {boolean}
-    */
-    isEnd : function(){
-      return this.value === "end";
-    },
-    /**
-       @memberof Nehan.FloatDirection
-       @return {boolean}
-    */
-    isNone : function(){
-      return this.value === "none";
-    }
-  };
-
-  return FloatDirection;
-})();
-
-
-/**
-   pre defined logical float direction collection.
-   @namespace Nehan.FloatDirections
- */
-var FloatDirections = {
-  /**
-     @memberof Nehan.FloatDirections
-     @type {Nehan.FloatDirection}
-  */
-  start:(new FloatDirection("start")),
-  /**
-     @memberof Nehan.FloatDirections
-     @type {Nehan.FloatDirection}
-  */
-  end:(new FloatDirection("end")),
-  /**
-     @memberof Nehan.FloatDirections
-     @type {Nehan.FloatDirection}
-  */
-  none:(new FloatDirection("none")),
-  /**
-     get {@link Nehan.FloatDirection} by float name.
-     
-     @memberof Nehan.FloatDirections
-     @param name {String} - "start" or "end" or "none"
-     @return {Nehan.FloatDirection}
-  */
-  get : function(name){
-    return this[name] || null;
-  }
-};
-
-var Break = (function(){
-  /**
-     @memberof Nehan
-     @class Break
-     @classdesc logical abstraction for css 'page-break-before' or 'page-break-after'
-     @constructor
-     @param value {string} - "always" or "avoid" or "left" or "right"
-   */
-  function Break(value){
-    this.value = value;
-  }
-
-  Break.prototype = {
-    /**
-       @memberof Nehan.Break
-       @return {boolean}
-     */
-    isAlways : function(){
-      return this.value === "always";
-    },
-    /**
-       @memberof Nehan.Break
-       @return {boolean}
-     */
-    isAvoid : function(){
-      return this.value === "avoid";
-    },
-    /**
-       @memberof Nehan.Break
-       @return {boolean}
-     */
-    isFirst : function(){
-      return (Display.getPagingDirection() === "lr")? (this.value === "left") : (this.value === "right");
-    },
-    /**
-       @memberof Nehan.Break
-       @return {boolean}
-     */
-    isSecond : function(){
-      return (Display.getPagingDirection() === "lr")? (this.value === "right") : (this.value === "left");
-    },
-    /**
-       (TODO)
-       @memberof Nehan.Break
-       @param order {int}
-       @return {boolean}
-     */
-    isNth : function(order){
-    }
-  };
-
-  return Break;
-})();
-
-
-/**
-   pre defined break collection.
-   @namespace Nehan.Breaks
-*/
-var Breaks = {
-  before:{
-    always:(new Break("always")),
-    avoid:(new Break("avoid")),
-    left:(new Break("left")),
-    right:(new Break("right")),
-    first:(new Break("first")), // correspond to break-before:"left"
-    second:(new Break("second")) // correspond to break-before:"right"
-  },
-  after:{
-    always:(new Break("always")),
-    avoid:(new Break("avoid")),
-    left:(new Break("left")),
-    right:(new Break("right")),
-    first:(new Break("first")), // correspond to break-before:"left"
-    second:(new Break("second")) // correspond to break-before:"right"
-  },
-  /**
-     @memberof Nehan.Breaks
-     @param value {String} - "always", "avoid", "left", "right", "first", "second"
-  */
-  getBefore : function(value){
-    return this.before[value] || null;
-  },
-  /**
-     @memberof Nehan.Breaks
-     @param value {String} - "always", "avoid", "left", "right", "first", "second"
-  */
-  getAfter : function(value){
-    return this.after[value] || null;
-  }
-};
-
-
-var TextAlign = (function(){
-  /**
-     @memberof Nehan
-     @class TextAlign
-     @classdesc abstraction of logical text align(start, end, center)
-     @constructor
-     @param value {String} - logical align direction, "start" or "end" or "center"
-  */
-  function TextAlign(value){
-    this.value = value || "start";
-  }
-
-  TextAlign.prototype = {
-    /**
-       @memberof Nehan.TextAlign
-       @return {boolean}
-    */
-    isStart : function(){
-      return this.value === "start";
-    },
-    /**
-       @memberof Nehan.TextAlign
-       @return {boolean}
-    */
-    isEnd : function(){
-      return this.value === "end";
-    },
-    /**
-       @memberof Nehan.TextAlign
-       @return {boolean}
-    */
-    isCenter : function(){
-      return this.value === "center";
-    },
-    /**
-       @memberof Nehan.TextAlign
-       @return {Object}
-    */
-    getCss : function(line){
-      var css = {};
-      if(this.value === "center"){
-      }
-      return css;
-    }
-  };
-
-  return TextAlign;
-})();
-
-
-/**
-   pre defined text align set
-
-   @namespace Nehan.TextAligns
-*/
-var TextAligns = {
-  start:(new TextAlign("start")),
-  end:(new TextAlign("end")),
-  center:(new TextAlign("center")),
-  /**
-     @memberof Nehan.TextAligns
-     @param value - logical text align direction, "start" or "end" or "center".
-     @return {Nehan.TextAlign}
-  */
-  get : function(value){
-    return this[value] || null;
-  }
-};
-
 var PartitionUnit = (function(){
   /**
      @memberof Nehan
@@ -10868,7 +10865,7 @@ var Partition = (function(){
 
   var __levelize = function(sizes, min_size){
     // filter parts that is smaller than min_size.
-    var smaller_parts = List.filter(sizes, function(size){ return size < min_size; });
+    var smaller_parts = Nehan.List.filter(sizes, function(size){ return size < min_size; });
 
     // if all elements has enough space for min_size, nothing to do.
     if(smaller_parts.length === 0){
@@ -10876,10 +10873,10 @@ var Partition = (function(){
     }
 
     // total size that must be added to small parts.
-    var delta_plus_total = List.fold(smaller_parts, 0, function(ret, size){ return ret + (min_size - size); });
+    var delta_plus_total = Nehan.List.fold(smaller_parts, 0, function(ret, size){ return ret + (min_size - size); });
 
     // filter parts that has enough space.
-    var larger_parts = List.filter(sizes, function(size){
+    var larger_parts = Nehan.List.filter(sizes, function(size){
       return size - min_size >= min_size; // check if size is more than min_size and over even if min_size is subtracted.
     });
 
@@ -10889,7 +10886,7 @@ var Partition = (function(){
     }
 
     var delta_minus_avg = Math.floor(delta_plus_total / larger_parts.length);
-    return List.map(sizes, function(size){
+    return Nehan.List.map(sizes, function(size){
       return (size < min_size)? min_size : ((size - min_size >= min_size)? size - delta_minus_avg : size);
     });
   };
@@ -10915,7 +10912,7 @@ var Partition = (function(){
        @return {int}
     */
     getTotalWeight : function(){
-      return List.fold(this._punits, 0, function(ret, punit){
+      return Nehan.List.fold(this._punits, 0, function(ret, punit){
 	return ret + punit.weight;
       });
     },
@@ -10932,7 +10929,7 @@ var Partition = (function(){
       // merge(this._punits[1], partition._punits[1]),
       // ...
       // merge(this._punits[n-1], partition._punits[n-1])
-      var merged_punits =  List.mapi(this._punits, function(i, punit){
+      var merged_punits =  Nehan.List.mapi(this._punits, function(i, punit){
 	return punit.mergeTo(partition.get(i));
       });
       return new Partition(merged_punits);
@@ -10944,7 +10941,7 @@ var Partition = (function(){
     */
     mapMeasure : function(measure){
       var total_weight = this.getTotalWeight();
-      var sizes =  List.map(this._punits, function(punit){
+      var sizes =  Nehan.List.map(this._punits, function(punit){
 	return punit.getSize(measure, total_weight);
       });
       return __levelize(sizes, Display.minTableCellSize);
@@ -10965,9 +10962,9 @@ var PartitionHashSet = (function(){
      @extends {Nehan.HashSet}
    */
   function PartitionHashSet(){
-    HashSet.call(this);
+    Nehan.HashSet.call(this);
   }
-  Class.extend(PartitionHashSet, HashSet);
+  Nehan.Class.extend(PartitionHashSet, Nehan.HashSet);
 
   /**
      @memberof Nehan.PartitionHashSet
@@ -11149,7 +11146,7 @@ var SelectorContext = (function(){
   function SelectorContext(style, cursor_context){
     SelectorPropContext.call(this, style, cursor_context);
   }
-  Class.extend(SelectorContext, SelectorPropContext);
+  Nehan.Class.extend(SelectorContext, SelectorPropContext);
 
   /**
      @memberof Nehan.SelectorContext
@@ -11268,11 +11265,11 @@ var StyleContext = (function(){
   ];
 
   var __is_managed_css_prop = function(prop){
-    return List.exists(__managed_css_props, Closure.eq(prop));
+    return Nehan.List.exists(__managed_css_props, Nehan.Closure.eq(prop));
   };
 
   var __is_callback_css_prop = function(prop){
-    return List.exists(__callback_css_props, Closure.eq(prop));
+    return Nehan.List.exists(__callback_css_props, Nehan.Closure.eq(prop));
   };
 
   /**
@@ -11326,9 +11323,9 @@ var StyleContext = (function(){
       // so by updating css value, you can update calculation of internal style object.
       this.selectorContext = new SelectorContext(this, args.cursorContext || null);
 
-      this.managedCss = new CssHashSet();
-      this.unmanagedCss = new CssHashSet();
-      this.callbackCss = new CssHashSet();
+      this.managedCss = new Nehan.CssHashSet();
+      this.unmanagedCss = new Nehan.CssHashSet();
+      this.callbackCss = new Nehan.CssHashSet();
 
       // load managed css from
       // 1. load selector css.
@@ -11447,7 +11444,7 @@ var StyleContext = (function(){
        @memberof Nehan.StyleContext
     */
     startOutlineContext : function(){
-      this.outlineContext = new OutlineContext(this.getMarkupName());
+      this.outlineContext = new Nehan.OutlineContext(this.getMarkupName());
     },
     /**
        called when section root(body, blockquote, fieldset, figure, td) ends.
@@ -11465,7 +11462,10 @@ var StyleContext = (function(){
        @method startSectionContext
     */
     startSectionContext : function(){
-      this.getOutlineContext().startSection(this.getMarkupName());
+      this.getOutlineContext().startSection({
+	type:this.getMarkupName(),
+	pageNo:DocumentContext.getPageNo()
+      });
     },
     /**
        called when section content(article, aside, nav, section) ends.
@@ -11485,6 +11485,8 @@ var StyleContext = (function(){
     */
     startHeaderContext : function(opt){
       return this.getOutlineContext().addHeader({
+	headerId:DocumentContext.genHeaderId(),
+	pageNo:DocumentContext.getPageNo(),
 	type:opt.type,
 	rank:opt.rank,
 	title:opt.title
@@ -11562,7 +11564,7 @@ var StyleContext = (function(){
       this.initContextSize(measure, extent);
 
       // force re-culculate context-size of children based on new context-size of parent.
-      List.iter(this.childs, function(child){
+      Nehan.List.iter(this.childs, function(child){
 	child.forceUpdateContextSize(null, null);
       });
     },
@@ -11590,7 +11592,7 @@ var StyleContext = (function(){
     */
     appendChild : function(child_style){
       if(this.childs.length > 0){
-	var last_child = List.last(this.childs);
+	var last_child = Nehan.List.last(this.childs);
 	last_child.next = child_style;
 	child_style.prev = last_child;
       }
@@ -11602,7 +11604,7 @@ var StyleContext = (function(){
        @return {Nehan.StyleContext | null} removed child or null if nothing removed.
     */
     removeChild : function(child_style){
-      var index = List.indexOf(this.childs, function(child){
+      var index = Nehan.List.indexOf(this.childs, function(child){
 	return child === child_style;
       });
       if(index >= 0){
@@ -11621,7 +11623,7 @@ var StyleContext = (function(){
        @return {Nehan.StyleContext}
     */
     createChild : function(tag_name, css, tag_attr){
-      var tag = new Tag("<" + tag_name + ">");
+      var tag = new Nehan.Tag("<" + tag_name + ">");
       tag.setAttrs(tag_attr || {});
       return new StyleContext(tag, this, {forceCss:(css || {})});
     },
@@ -11705,7 +11707,7 @@ var StyleContext = (function(){
       box.edge = edge;
       box.addElements(elements);
       box.classes = classes;
-      box.charCount = List.fold(elements, 0, function(total, element){
+      box.charCount = Nehan.List.fold(elements, 0, function(total, element){
 	return total + (element.charCount || 0);
       });
       box.breakAfter = this.isBreakAfter() || opt.breakAfter || false;
@@ -11734,7 +11736,7 @@ var StyleContext = (function(){
       var width = this.getMarkupAttr("width")? parseInt(this.getMarkupAttr("width"), 10) : (this.staticMeasure || this.getFontSize());
       var height = this.getMarkupAttr("height")? parseInt(this.getMarkupAttr("height"), 10) : (this.staticExtent || this.getFontSize());
       var classes = ["nehan-block", "nehan-image"].concat(this.markup.getClasses());
-      var image_size = new BoxSize(width, height);
+      var image_size = new Nehan.BoxSize(width, height);
       var image = new Box(image_size, this);
       image.display = this.display; // inline, block, inline-block
       image.edge = this.edge || null;
@@ -11810,7 +11812,7 @@ var StyleContext = (function(){
 	}
 	var edge_size = Math.floor(line.maxFontSize * this.getLineHeight()) - line.maxExtent;
 	if(line.elements.length > 0 && edge_size > 0){
-	  line.edge = new BoxEdge();
+	  line.edge = new Nehan.BoxEdge();
 	  line.edge.padding.setBefore(this.flow, (line.lineNo > 0)? edge_size : Math.floor(edge_size / 2));
 	}
       }
@@ -11870,7 +11872,7 @@ var StyleContext = (function(){
       if(this.display === "none"){
 	return true;
       }
-      if(List.exists(__disabled_markups, Closure.eq(this.getMarkupName()))){
+      if(Nehan.List.exists(__disabled_markups, Nehan.Closure.eq(this.getMarkupName()))){
 	return true;
       }
       if(this.contentMeasure <= 0 || this.contentExtent <= 0){
@@ -12178,7 +12180,7 @@ var StyleContext = (function(){
       }
       // if value is function, call with selector context, and format the returned value.
       if(typeof value === "function"){
-	return CssParser.formatValue(name, value(this.selectorPropContext));
+	return Nehan.CssParser.formatValue(name, value(this.selectorPropContext));
       }
       return value; // already formatted
     },
@@ -12246,7 +12248,6 @@ var StyleContext = (function(){
        @return {String}
     */
     getMarkupId : function(){
-      // if markup is <p id="foo">, markup.id is "nehan-foo".
       return this.markup.getId();
     },
     /**
@@ -12284,22 +12285,22 @@ var StyleContext = (function(){
     getContent : function(){
       var content = this.getCssAttr("content") || this.markup.getContent();
       var before = Selectors.getValuePe(this, "before");
-      if(!Obj.isEmpty(before)){
-	content = Html.tagWrap("before", before.content || "") + content;
+      if(!Nehan.Obj.isEmpty(before)){
+	content = Nehan.Html.tagWrap("before", before.content || "") + content;
       }
       var after = Selectors.getValuePe(this, "after");
-      if(!Obj.isEmpty(after)){
-	content = content + Html.tagWrap("after", after.content || "");
+      if(!Nehan.Obj.isEmpty(after)){
+	content = content + Nehan.Html.tagWrap("after", after.content || "");
       }
       var first_letter = Selectors.getValuePe(this, "first-letter");
-      if(!Obj.isEmpty(first_letter)){
+      if(!Nehan.Obj.isEmpty(first_letter)){
 	content = content.replace(__rex_first_letter, function(match, p1, p2, p3){
-	  return p1 + Html.tagWrap("first-letter", p3);
+	  return p1 + Nehan.Html.tagWrap("first-letter", p3);
 	});
       }
       var first_line = Selectors.getValuePe(this, "first-line");
-      if(!Obj.isEmpty(first_line)){
-	content = Html.tagWrap("first-line", content);
+      if(!Nehan.Obj.isEmpty(first_line)){
+	content = Nehan.Html.tagWrap("first-line", content);
       }
       return content;
     },
@@ -12336,7 +12337,7 @@ var StyleContext = (function(){
        @return {Nehan.TextAlign}
     */
     getTextAlign : function(){
-      return this.textAlign || TextAligns.get("start");
+      return this.textAlign || Nehan.TextAligns.get("start");
     },
     /**
        @memberof Nehan.StyleContext
@@ -12372,14 +12373,14 @@ var StyleContext = (function(){
 	return this.parent.getListMarkerSize();
       }
       var font_size = this.getFontSize();
-      return new BoxSize(font_size, font_size);
+      return new Nehan.BoxSize(font_size, font_size);
     },
     /**
        @memberof Nehan.StyleContext
        @return {Nehan.Color}
     */
     getColor : function(){
-      return this.color || (this.parent? this.parent.getColor() : new Color(Display.fontColor));
+      return this.color || (this.parent? this.parent.getColor() : new Nehan.Color(Display.fontColor));
     },
     /**
        @memberof Nehan.StyleContext
@@ -12411,7 +12412,7 @@ var StyleContext = (function(){
     */
     getChildIndex : function(){
       var self = this;
-      return List.indexOf(this.getParentChilds(), function(child){
+      return Nehan.List.indexOf(this.getParentChilds(), function(child){
 	return child === self;
       });
     },
@@ -12421,7 +12422,7 @@ var StyleContext = (function(){
     */
     getChildIndexOfType : function(){
       var self = this;
-      return List.indexOf(this.getParentChildsOfType(this.getMarkupName()), function(child){
+      return Nehan.List.indexOf(this.getParentChildsOfType(this.getMarkupName()), function(child){
 	return child === self;
       });
     },
@@ -12453,7 +12454,7 @@ var StyleContext = (function(){
        @return {Nehan.StyleContext}
     */
     getParentChildsOfType : function(markup_name){
-      return List.filter(this.getParentChilds(), function(child){
+      return Nehan.List.filter(this.getParentChilds(), function(child){
 	return child.getMarkupName() === markup_name;
       });
     },
@@ -12579,34 +12580,35 @@ var StyleContext = (function(){
       // notice that box-size, box-edge is box local variable,<br>
       // so style of box-size(content-size) and edge-size are generated at Box::getCssBlock
       var css = {};
+      var is_vert = this.isTextVertical();
       css.display = "block";
       if(this.font){
-	Args.copy(css, this.font.getCss());
+	Nehan.Args.copy(css, this.font.getCss());
       }
       if(this.parent){
-	Args.copy(css, this.parent.flow.getCss());
+	Nehan.Args.copy(css, this.parent.flow.getCss());
       }
       if(this.color){
-	Args.copy(css, this.color.getCss());
+	Nehan.Args.copy(css, this.color.getCss());
       }
-      if(this.letterSpacing && !this.isTextVertical()){
+      if(this.letterSpacing && !is_vert){
 	css["letter-spacing"] = this.letterSpacing + "px";
       }
       if(this.floatDirection){
-	Args.copy(css, this.floatDirection.getCss(this.flow));
+	Nehan.Args.copy(css, this.floatDirection.getCss(is_vert));
       }
       if(this.position){
-	Args.copy(css, this.position.getCss());
+	Nehan.Args.copy(css, this.position.getCss());
       }
       if(this.zIndex){
 	css["z-index"] = this.zIndex;
       }
       this.unmanagedCss.copyValuesTo(css);
-      Args.copy(css, block.size.getCss(this.flow)); // content size
+      Nehan.Args.copy(css, block.size.getCss(this.flow)); // content size
       if(block.edge){
-	Args.copy(css, block.edge.getCss());
+	Nehan.Args.copy(css, block.edge.getCss());
       }
-      Args.copy(css, block.css); // some dynamic values
+      Nehan.Args.copy(css, block.css); // some dynamic values
       return css;
     },
     /**
@@ -12618,18 +12620,18 @@ var StyleContext = (function(){
       // notice that line-size, line-edge is box local variable,
       // so style of line-size(content-size) and edge-size are generated at Box::getBoxCss
       var css = {};
-      Args.copy(css, line.size.getCss(this.flow));
+      Nehan.Args.copy(css, line.size.getCss(this.flow));
       if(line.edge){
-	Args.copy(css, line.edge.getCss());
+	Nehan.Args.copy(css, line.edge.getCss());
       }
       if(this.isRootLine()){
-	Args.copy(css, this.flow.getCss());
+	Nehan.Args.copy(css, this.flow.getCss());
       }
       if(this.font && (!this.isRootLine() || this.isFirstLine())){
-	Args.copy(css, this.font.getCss());
+	Nehan.Args.copy(css, this.font.getCss());
       }
       if(this.color){
-	Args.copy(css, this.color.getCss());
+	Nehan.Args.copy(css, this.color.getCss());
       }
       if(this.isRootLine()){
 	css["line-height"] = this.getFontSize() + "px";
@@ -12638,7 +12640,7 @@ var StyleContext = (function(){
 	css["display"] = "block";
       }
       this.unmanagedCss.copyValuesTo(css);
-      Args.copy(css, line.css);
+      Nehan.Args.copy(css, line.css);
       css["background-color"] = this.getCssAttr("background-color", "transparent");
       return css;
     },
@@ -12651,9 +12653,9 @@ var StyleContext = (function(){
       // notice that line-size, line-edge is box local variable,
       // so style of line-size(content-size) and edge-size are generated at Box::getCssInline
       var css = {};
-      Args.copy(css, line.size.getCss(this.flow));
+      Nehan.Args.copy(css, line.size.getCss(this.flow));
       if(line.edge){
-	Args.copy(css, line.edge.getCss());
+	Nehan.Args.copy(css, line.edge.getCss());
       }
       if(this.isTextVertical()){
 	css["display"] = "block";
@@ -12662,7 +12664,7 @@ var StyleContext = (function(){
 	  css["letter-spacing"] = "-0.001em";
 	}
       } else {
-	Args.copy(css, this.flow.getCss());
+	Nehan.Args.copy(css, this.flow.getCss());
 	css["line-height"] = line.maxFontSize + "px";
 
 	// enable line-height only when horizontal mode.
@@ -12677,7 +12679,7 @@ var StyleContext = (function(){
 	}
       }
       this.unmanagedCss.copyValuesTo(css);
-      Args.copy(css, line.css);
+      Nehan.Args.copy(css, line.css);
       css["background-color"] = this.getCssAttr("background-color", "transparent");
       return css;
     },
@@ -12693,7 +12695,7 @@ var StyleContext = (function(){
 	  delete css["css-float"];
 	}
       } else {
-	Args.copy(css, this.flow.getCss());
+	Nehan.Args.copy(css, this.flow.getCss());
       }
       css.display = "inline-block";
       return css;
@@ -12771,16 +12773,16 @@ var StyleContext = (function(){
       if(space_measure <= 0){
 	return;
       }
-      var padding = new Padding();
+      var padding = new Nehan.Padding();
       if(text_align.isCenter()){
 	var start_offset = Math.floor(space_measure / 2);
 	line.size.setMeasure(this.flow, content_measure - start_offset);
 	padding.setStart(this.flow, start_offset);
-	Args.copy(line.css, padding.getCss());
+	Nehan.Args.copy(line.css, padding.getCss());
       } else if(text_align.isEnd()){
 	line.size.setMeasure(this.flow, line.inlineMeasure);
 	padding.setStart(this.flow, space_measure);
-	Args.copy(line.css, padding.getCss());
+	Nehan.Args.copy(line.css, padding.getCss());
       }
     },
     // argument 'baseline' is not used yet.
@@ -12789,32 +12791,32 @@ var StyleContext = (function(){
     // In nehan.js, 'central' is used when vertical writing mode.
     // see http://dev.w3.org/csswg/css-writing-modes-3/#text-baselines
     _setVertBaseline : function(root_line, baseline){
-      List.iter(root_line.elements, function(element){
+      Nehan.List.iter(root_line.elements, function(element){
 	var font_size = element.maxFontSize;
 	var from_after = Math.floor((root_line.maxFontSize - font_size) / 2);
 	if (from_after > 0){
 	  var edge = element.edge || null;
-	  edge = edge? edge.clone() : new BoxEdge();
+	  edge = edge? edge.clone() : new Nehan.BoxEdge();
 	  edge.padding.setAfter(this.flow, from_after); // set offset to padding
 	  element.size.width = (root_line.maxExtent - from_after);
 	  
 	  // set edge to dynamic css, it has higher priority over static css(given by element.style.getCssInline)
-	  Args.copy(element.css, edge.getCss(this.flow));
+	  Nehan.Args.copy(element.css, edge.getCss(this.flow));
 	}
       }.bind(this));
     },
     _setHoriBaseline : function(root_line, baseline){
-      List.iter(root_line.elements, function(element){
+      Nehan.List.iter(root_line.elements, function(element){
 	var font_size = element.maxFontSize;
 	var from_after = root_line.maxExtent - element.maxExtent;
 	if (from_after > 0){
 	  var edge = element.edge || null;
-	  edge = edge? edge.clone() : new BoxEdge();
+	  edge = edge? edge.clone() : new Nehan.BoxEdge();
 	  edge.padding.setBefore(this.flow, from_after); // set offset to padding
 	  //element.size.width = (root_line.maxExtent - from_after);
 	  
 	  // set edge to dynamic css, it has higher priority over static css(given by element.style.getCssInline)
-	  Args.copy(element.css, edge.getCss(this.flow));
+	  Nehan.Args.copy(element.css, edge.getCss(this.flow));
 	}
       }.bind(this));
     },
@@ -12843,14 +12845,14 @@ var StyleContext = (function(){
       }
       var stmts = (style.indexOf(";") >= 0)? style.split(";") : [style];
       var allowed_props = Config.allowedInlineStyleProps || [];
-      var values = List.fold(stmts, {}, function(ret, stmt){
+      var values = Nehan.List.fold(stmts, {}, function(ret, stmt){
 	var nv = stmt.split(":");
 	if(nv.length >= 2){
-	  var prop = Utils.trim(nv[0]).toLowerCase();
-	  var value = Utils.trim(nv[1]);
-	  var fmt_prop = CssParser.formatProp(prop);
-	  var fmt_value = CssParser.formatValue(prop, value);
-	  if(allowed_props.length === 0 || List.exists(allowed_props, Closure.eq(fmt_prop))){
+	  var prop = Nehan.Utils.trim(nv[0]).toLowerCase();
+	  var value = Nehan.Utils.trim(nv[1]);
+	  var fmt_prop = Nehan.CssParser.formatProp(prop);
+	  var fmt_value = Nehan.CssParser.formatValue(prop, value);
+	  if(allowed_props.length === 0 || Nehan.List.exists(allowed_props, Nehan.Closure.eq(fmt_prop))){
 	    ret[fmt_prop] = fmt_value;
 	  }
 	}
@@ -12866,7 +12868,7 @@ var StyleContext = (function(){
       }
     },
     _registerCssValues : function(values){
-      Obj.iter(values, function(prop, value){
+      Nehan.Obj.iter(values, function(prop, value){
 	if(__is_callback_css_prop(prop)){
 	  this.callbackCss.add(prop, value);
 	} else if(__is_managed_css_prop(prop)){
@@ -12902,9 +12904,9 @@ var StyleContext = (function(){
       if(value === "start"){
 	return null;
       }
-      var position = new BoxPosition(value);
+      var position = new Nehan.BoxPosition(value);
       var self = this;
-      List.iter(Const.cssBoxDirsLogical, function(dir){
+      Nehan.List.iter(Nehan.Const.cssBoxDirsLogical, function(dir){
 	var value = self.getCssAttr(dir, "auto");
 	if(value !== "auto"){
 	  position[value] = self._computeUnitSize(start, self.font.size);
@@ -12918,7 +12920,7 @@ var StyleContext = (function(){
     _loadColor : function(){
       var value = this.getCssAttr("color", "inherit");
       if(value !== "inherit"){
-	return new Color(value);
+	return new Nehan.Color(value);
       }
     },
     _loadFont : function(){
@@ -12935,7 +12937,7 @@ var StyleContext = (function(){
       if(this.parent && this.parent.isBlock() && font_size === "inherit" && font_family === "inherit" && font_weight === "inherit" && font_style === "inherit"){
 	return null;
       }
-      var font = new Font(parent_font.size);
+      var font = new Nehan.Font(parent_font.size);
 
       // if root font, initialize font by default styles.
       if(this.parent === null){
@@ -12968,7 +12970,7 @@ var StyleContext = (function(){
       if(padding === null && margin === null && border === null){
 	return null;
       }
-      return new BoxEdge({
+      return new Nehan.BoxEdge({
 	padding:padding,
 	margin:margin,
 	border:border
@@ -12986,7 +12988,7 @@ var StyleContext = (function(){
       if(edge_size === null){
 	return null;
       }
-      var padding = new Padding();
+      var padding = new Nehan.Padding();
       padding.setSize(flow, edge_size);
       return padding;
     },
@@ -12995,7 +12997,7 @@ var StyleContext = (function(){
       if(edge_size === null){
 	return null;
       }
-      var margin = new Margin();
+      var margin = new Nehan.Margin();
       margin.setSize(flow, edge_size);
 
       // if inline, disable margin-before and margin-after.
@@ -13233,7 +13235,7 @@ var StyleContext = (function(){
       if(edge_size === null && border_radius === null){
 	return null;
       }
-      var border = new Border();
+      var border = new Nehan.Border();
       if(edge_size){
 	border.setSize(flow, edge_size);
       }
@@ -13262,7 +13264,7 @@ var StyleContext = (function(){
       if(value === "inherit" && this.parent && this.parent.textAlign){
 	return this.parent.textAlign;
       }
-      return TextAligns.get(value || "start");
+      return Nehan.TextAligns.get(value || "start");
     },
     _loadTextEmpha : function(){
       var empha_style = this.getCssAttr("text-emphasis-style", "none");
@@ -13274,7 +13276,7 @@ var StyleContext = (function(){
       return new TextEmpha({
 	style:new TextEmphaStyle(empha_style),
 	pos:new TextEmphaPos(empha_pos),
-	color:(empha_color? new Color(empha_color) : this.getColor())
+	color:(empha_color? new Nehan.Color(empha_color) : this.getColor())
       });
     },
     _loadTextEmphaStyle : function(){
@@ -13295,15 +13297,15 @@ var StyleContext = (function(){
       if(name === "none"){
 	return null;
       }
-      return FloatDirections.get(name);
+      return Nehan.FloatDirections.get(name);
     },
     _loadBreakBefore : function(){
       var value = this.getCssAttr("break-before");
-      return value? Breaks.getBefore(value) : null;
+      return value? Nehan.Breaks.getBefore(value) : null;
     },
     _loadBreakAfter : function(){
       var value = this.getCssAttr("break-after");
-      return value? Breaks.getAfter(value) : null;
+      return value? Nehan.Breaks.getAfter(value) : null;
     },
     _loadWordBreak : function(){
       return this.getCssAttr("word-break");
@@ -14031,7 +14033,7 @@ var InlineContext = (function(){
        @return {Nehan.Char | Nehan.Word | Nehan.Tcy}
     */
     getLastElement : function(){
-      return List.last(this.elements);
+      return Nehan.List.last(this.elements);
     },
     /**
        get all elements.
@@ -14131,7 +14133,7 @@ var InlineContext = (function(){
       // if ptr moved, justification is executed.
       if(0 <= ptr && ptr < last){
 	// disable text after new tail pos.
-	this.elements = List.filter(this.elements, function(element){
+	this.elements = Nehan.List.filter(this.elements, function(element){
 	  return element.pos? (element.pos < head.pos) : true;
 	});
 	return head; // return new head
@@ -14292,7 +14294,7 @@ var LayoutGenerator = (function(){
      @return {Nehan.Box | Nehan.Char | Nehan.Word | Nehan.Tcy}
   */
   LayoutGenerator.prototype.peekLastCache = function(){
-    return List.last(this._cachedElements);
+    return Nehan.List.last(this._cachedElements);
   };
 
   /**
@@ -14399,11 +14401,11 @@ var LayoutGenerator = (function(){
       return new RubyTokenStream(style.getMarkupContent());
     case "tbody": case "thead": case "tfoot":
       return new TokenStream(style.getContent(), {
-	filter:Closure.isTagName(["tr"])
+	filter:Nehan.Closure.isTagName(["tr"])
       });
     case "tr":
       return new TokenStream(style.getContent(), {
-	filter:Closure.isTagName(["td", "th"])
+	filter:Nehan.Closure.isTagName(["td", "th"])
       });
     default: return new TokenStream(style.getContent());
     } 
@@ -14553,7 +14555,7 @@ var BlockGenerator = (function(){
     }
     this.blockId = DocumentContext.genBlockId();
   }
-  Class.extend(BlockGenerator, LayoutGenerator);
+  Nehan.Class.extend(BlockGenerator, LayoutGenerator);
 
   BlockGenerator.prototype._yield = function(context){
     if(!context.hasBlockSpaceFor(1, !this.hasNext())){
@@ -14708,7 +14710,7 @@ var BlockGenerator = (function(){
       */
       if(!this.hasCache() && this.isFirstOutput()){
 	// size 'zero' has special meaning... so we use 1.
-	return new Box(new BoxSize(1,1), this.style, "void"); // empty void element
+	return new Box(new Nehan.BoxSize(1,1), this.style, "void"); // empty void element
       }
       return null;
     }
@@ -14772,7 +14774,7 @@ var InlineGenerator = (function(){
       this.setChildLayout(child_generator);
     }
   }
-  Class.extend(InlineGenerator, LayoutGenerator);
+  Nehan.Class.extend(InlineGenerator, LayoutGenerator);
 
   InlineGenerator.prototype._yield = function(context){
     if(!context.hasInlineSpaceFor(1)){
@@ -14805,7 +14807,7 @@ var InlineGenerator = (function(){
     // if element is the last full-filled line, skip continuous <br>.
     if(element && element.lineOver && this._child && !this._child.hasNext()){
       this.stream.skipIf(function(token){
-	return (token instanceof Tag && token.getName() === "br");
+	return (token instanceof Nehan.Tag && token.getName() === "br");
       });
     }
     return this._createOutput(context);
@@ -14972,10 +14974,10 @@ var InlineBlockGenerator = (function (){
   function InlineBlockGenerator(style, stream){
     BlockGenerator.call(this, style, stream);
   }
-  Class.extend(InlineBlockGenerator, BlockGenerator);
+  Nehan.Class.extend(InlineBlockGenerator, BlockGenerator);
 
   InlineBlockGenerator.prototype._onCreate = function(context, block){
-    var max_inline = List.maxobj(block.elements, function(element){
+    var max_inline = Nehan.List.maxobj(block.elements, function(element){
       return element.getContentMeasure();
     });
     if(max_inline){
@@ -15008,7 +15010,7 @@ var TextGenerator = (function(){
   function TextGenerator(style, stream){
     LayoutGenerator.call(this, style, stream);
   }
-  Class.extend(TextGenerator, LayoutGenerator);
+  Nehan.Class.extend(TextGenerator, LayoutGenerator);
 
   var __find_head_text = function(element){
     return (element instanceof Box)? __find_head_text(element.elements[0]) : element;
@@ -15130,7 +15132,7 @@ var TextGenerator = (function(){
     if(token instanceof Text){
       var head_c1 = token.getContent().substring(0,1);
       return new Char(head_c1);
-    } else if(token instanceof Tag){
+    } else if(token instanceof Nehan.Tag){
       if(token.name === "ruby"){
 	return null; // generally, ruby is not both tail-NG and head-NG.
       }
@@ -15143,7 +15145,7 @@ var TextGenerator = (function(){
   // estimate 'maybe' size, not strict!!
   TextGenerator.prototype._estimateParentNextHeadMeasure = function(token){
     var font_size = this.style.getFontSize();
-    if(token instanceof Tag && token.name === "ruby"){
+    if(token instanceof Nehan.Tag && token.name === "ruby"){
       var ruby = new RubyTokenStream(token.getContent()).get();
       var char_count = ruby.getCharCount();
       var rt_char_count = ruby.getRtString().length;
@@ -15340,7 +15342,7 @@ var LinkGenerator = (function(){
     InlineGenerator.call(this, style, stream);
     __add_anchor(style); // set anchor at this point
   }
-  Class.extend(LinkGenerator, InlineGenerator);
+  Nehan.Class.extend(LinkGenerator, InlineGenerator);
 
   LinkGenerator.prototype._onComplete = function(context, output){
     __add_anchor(this.style); // overwrite anchor on complete
@@ -15365,7 +15367,7 @@ var FirstLineGenerator = (function(){
   function FirstLineGenerator(style, stream){
     BlockGenerator.call(this, style, stream);
   }
-  Class.extend(FirstLineGenerator, BlockGenerator);
+  Nehan.Class.extend(FirstLineGenerator, BlockGenerator);
 
   FirstLineGenerator.prototype._onAddElement = function(context, element){
     // first-line yieled, so switch style to parent one.
@@ -15398,7 +15400,7 @@ var LazyGenerator = (function(){
     LayoutGenerator.call(this, style, null);
     this.output = output; // only output this gen yields.
   }
-  Class.extend(LazyGenerator, LayoutGenerator);
+  Nehan.Class.extend(LazyGenerator, LayoutGenerator);
 
   /**
      @memberof Nehan.LazyGenerator
@@ -15439,7 +15441,7 @@ var FlipGenerator = (function(){
   function FlipGenerator(style, stream){
     BlockGenerator.call(this, style, stream);
   }
-  Class.extend(FlipGenerator, BlockGenerator);
+  Nehan.Class.extend(FlipGenerator, BlockGenerator);
 
   /**
      @memberof Nehan.FlipGenerator
@@ -15469,7 +15471,7 @@ var FloatGroup = (function(){
   */
   function FloatGroup(elements, float_direction){
     this.elements = elements || [];
-    this.floatDirection = float_direction || FloatDirections.get("start");
+    this.floatDirection = float_direction || Nehan.FloatDirections.get("start");
   }
 
   FloatGroup.prototype = {
@@ -15507,23 +15509,25 @@ var FloatGroup = (function(){
        @return {Array.<Nehan.Box>}
     */
     getElements : function(){
-      return this.isFloatStart()? this.elements : List.reverse(this.elements);
+      return this.isFloatStart()? this.elements : Nehan.List.reverse(this.elements);
     },
     /**
        @memberof Nehan.FloatGroup
+       @param flow {Nehan.BoxFlow}
        @return {int}
     */
     getMeasure : function(flow){
-      return List.fold(this.elements, 0, function(measure, element){
+      return Nehan.List.fold(this.elements, 0, function(measure, element){
 	return measure + element.getLayoutMeasure(flow);
       });
     },
     /**
        @memberof Nehan.FloatGroup
+       @param flow {Nehan.BoxFlow}
        @return {int}
     */
     getExtent : function(flow){
-      return List.fold(this.elements, 0, function(extent, element){
+      return Nehan.List.fold(this.elements, 0, function(extent, element){
 	return Math.max(extent, element.getLayoutExtent(flow));
       });
     }
@@ -15579,12 +15583,12 @@ var FloatGroupStack = (function(){
      @param end_blocks {Array.<Nehan.Box>}
   */
   function FloatGroupStack(flow, start_blocks, end_blocks){
-    var start_groups = __make_float_groups(flow, FloatDirections.get("start"), start_blocks);
-    var end_groups = __make_float_groups(flow, FloatDirections.get("end"), end_blocks);
+    var start_groups = __make_float_groups(flow, Nehan.FloatDirections.get("start"), start_blocks);
+    var end_groups = __make_float_groups(flow, Nehan.FloatDirections.get("end"), end_blocks);
     this.stack = start_groups.concat(end_groups).sort(function(g1, g2){
       return g1.getExtent(flow) - g2.getExtent(flow);
     });
-    var max_group = List.maxobj(this.stack, function(group){
+    var max_group = Nehan.List.maxobj(this.stack, function(group){
       return group.getExtent(flow);
     });
     //console.log("max group from %o is %o", this.stack, max_group);
@@ -15645,7 +15649,7 @@ var FloatGenerator = (function(){
     // so we must keep original style immutable.
     this.setChildLayout(new BlockGenerator(style.clone({"float":"start"}), stream));
   }
-  Class.extend(FloatGenerator, LayoutGenerator);
+  Nehan.Class.extend(FloatGenerator, LayoutGenerator);
 
   /**
      @memberof Nehan.FloatGenerator
@@ -15659,7 +15663,7 @@ var FloatGenerator = (function(){
   };
 
   FloatGenerator.prototype._hasNextFloat = function(){
-    return List.exists(this.generators, function(gen){
+    return Nehan.List.exists(this.generators, function(gen){
       return gen.hasNext();
     });
   };
@@ -15751,15 +15755,15 @@ var FloatGenerator = (function(){
   FloatGenerator.prototype._sortFloatRest = function(floated, rest){
     var floated_elements = floated.getElements();
     var elements = floated.isFloatStart()? floated_elements.concat(rest) : [rest].concat(floated_elements);
-    return List.filter(elements, function(element){ return element !== null; });
+    return Nehan.List.filter(elements, function(element){ return element !== null; });
   };
 
   FloatGenerator.prototype._wrapBlocks = function(blocks){
     var flow = this.style.flow;
-    var elements = List.filter(blocks, function(block){ return block !== null; });
+    var elements = Nehan.List.filter(blocks, function(block){ return block !== null; });
     var measure = elements[0].getLayoutMeasure(flow); // block1 and block2 has same measure
-    var extent = List.sum(elements, 0, function(element){ return element.getLayoutExtent(flow); });
-    var break_after = List.exists(elements, function(element){ return element.breakAfter; });
+    var extent = Nehan.List.sum(elements, 0, function(element){ return element.getLayoutExtent(flow); });
+    var break_after = Nehan.List.exists(elements, function(element){ return element.breakAfter; });
 
     // wrapping block always float to start direction
     return this.style.createChild("div", {"float":"start", measure:measure}).createBlock({
@@ -15773,7 +15777,7 @@ var FloatGenerator = (function(){
     var flow = this.style.flow;
     var extent = floated.getExtent(flow);
     var elements = this._sortFloatRest(floated, rest || null);
-    var break_after = List.exists(elements, function(element){ return element.breakAfter; });
+    var break_after = Nehan.List.exists(elements, function(element){ return element.breakAfter; });
     return this.style.createChild("div", {"float":"start", measure:measure}).createBlock({
       elements:elements,
       breakAfter:break_after,
@@ -15789,7 +15793,7 @@ var FloatGenerator = (function(){
   
   FloatGenerator.prototype._yieldFloatStack = function(context){
     var start_blocks = [], end_blocks = [];
-    List.iter(this.generators, function(gen){
+    Nehan.List.iter(this.generators, function(gen){
       var block = gen.yield(context);
       if(block){
 	if(gen.style.isFloatStart()){
@@ -15820,7 +15824,7 @@ var ParallelGenerator = (function(){
     LayoutGenerator.call(this, style, null);
     this.generators = generators;
   }
-  Class.extend(ParallelGenerator, LayoutGenerator);
+  Nehan.Class.extend(ParallelGenerator, LayoutGenerator);
 
   ParallelGenerator.prototype._yield = function(context){
     if(this.hasCache()){
@@ -15854,21 +15858,21 @@ var ParallelGenerator = (function(){
     if(this.hasCache()){
       return true;
     }
-    return List.exists(this.generators, function(gen){
+    return Nehan.List.exists(this.generators, function(gen){
       return gen.hasNext();
     });
   };
 
   ParallelGenerator.prototype._yieldParallelBlocks = function(context){
-    var blocks = List.map(this.generators, function(gen){
+    var blocks = Nehan.List.map(this.generators, function(gen){
       return gen.yield(context);
     });
-    return List.forall(blocks, function(block){ return block === null; })? null : blocks;
+    return Nehan.List.forall(blocks, function(block){ return block === null; })? null : blocks;
   };
 
   ParallelGenerator.prototype._findMaxBlock = function(blocks){
     var flow = this.style.flow;
-    return List.maxobj(blocks, function(block){
+    return Nehan.List.maxobj(blocks, function(block){
       return block? block.getLayoutExtent(flow) : 0;
     });
   };
@@ -15876,7 +15880,7 @@ var ParallelGenerator = (function(){
   ParallelGenerator.prototype._alignContentExtent = function(blocks, content_extent){
     var flow = this.style.flow;
     var generators = this.generators;
-    return List.mapi(blocks, function(i, block){
+    return Nehan.List.mapi(blocks, function(i, block){
       if(block === null){
 	return generators[i].style.createBlock({
 	  elements:[],
@@ -15921,7 +15925,7 @@ var SectionRootGenerator = (function(){
     BlockGenerator.call(this, style, stream);
     this.style.startOutlineContext(); // create new section root
   }
-  Class.extend(SectionRootGenerator, BlockGenerator);
+  Nehan.Class.extend(SectionRootGenerator, BlockGenerator);
 
   SectionRootGenerator.prototype._onComplete = function(context, block){
     this.style.endOutlineContext();
@@ -15944,7 +15948,7 @@ var SectionContentGenerator = (function(){
     BlockGenerator.call(this, style, stream);
     this.style.startSectionContext();
   }
-  Class.extend(SectionContentGenerator, BlockGenerator);
+  Nehan.Class.extend(SectionContentGenerator, BlockGenerator);
 
   SectionContentGenerator.prototype._onComplete = function(context, block){
     this.style.endSectionContext();
@@ -15970,7 +15974,7 @@ var ListGenerator = (function(){
     // by setting max item count, 'this.style.listMarkerSize' is created.
     this.style.setListItemCount(this.stream.getTokenCount());
   }
-  Class.extend(ListGenerator, BlockGenerator);
+  Nehan.Class.extend(ListGenerator, BlockGenerator);
 
   return ListGenerator;
 })();
@@ -15992,7 +15996,7 @@ var ListItemGenerator = (function(){
       this._createListBodyGenerator(style, stream)
     ]);
   }
-  Class.extend(ListItemGenerator, ParallelGenerator);
+  Nehan.Class.extend(ListItemGenerator, ParallelGenerator);
 
   ListItemGenerator.prototype._createListMarkGenerator = function(style){
     var marker_size = style.getListMarkerSize();
@@ -16055,7 +16059,7 @@ var TableGenerator = (function(){
       stream.rewind();
     }
   }
-  Class.extend(TableGenerator, BlockGenerator);
+  Nehan.Class.extend(TableGenerator, BlockGenerator);
 
   TableGenerator.prototype._createAutoPartition = function(stream){
     var pset = new PartitionHashSet();
@@ -16070,14 +16074,14 @@ var TableGenerator = (function(){
       switch(token.getName()){
       case "tbody": case "thead": case "tfoot":
 	var pset2 = this._createAutoPartition(new TokenStream(token.getContent(), {
-	  filter:Closure.isTagName(["tr"])
+	  filter:Nehan.Closure.isTagName(["tr"])
 	}));
 	pset = pset.union(pset2);
 	break;
 
       case "tr":
 	var cell_tags = new TokenStream(token.getContent(), {
-	  filter:Closure.isTagName(["td", "th"])
+	  filter:Nehan.Closure.isTagName(["td", "th"])
 	}).getTokens();
 	var cell_count = cell_tags.length;
 	var partition = this._getPartition(cell_tags);
@@ -16090,7 +16094,7 @@ var TableGenerator = (function(){
 
   TableGenerator.prototype._getPartition = function(cell_tags){
     var partition_count = cell_tags.length;
-    var partition_units = List.map(cell_tags, function(cell_tag){
+    var partition_units = Nehan.List.map(cell_tags, function(cell_tag){
       return this._getPartitionUnit(cell_tag, partition_count);
     }.bind(this));
     return new Partition(partition_units);
@@ -16105,7 +16109,7 @@ var TableGenerator = (function(){
     var lines = cell_tag.getContent().replace(/<br \/>/g, "\n").replace(/<br>/g, "\n").split("\n");
     // this sizing algorithem is not strict, but still effective,
     // especially for text only table.
-    var max_line = List.maxobj(lines, function(line){ return line.length; });
+    var max_line = Nehan.List.maxobj(lines, function(line){ return line.length; });
     var max_weight = Math.floor(this.style.contentMeasure / 2);
     var min_weight = Math.floor(this.style.contentMeasure / (partition_count * 2));
     var weight = max_line.length * this.style.getFontSize();
@@ -16139,11 +16143,11 @@ var TableRowGenerator = (function(){
     var generators = this._getGenerators(style, stream);
     ParallelGenerator.call(this, style, generators);
   }
-  Class.extend(TableRowGenerator, ParallelGenerator);
+  Nehan.Class.extend(TableRowGenerator, ParallelGenerator);
 
   TableRowGenerator.prototype._getGenerators = function(style_tr, stream){
     var child_styles = this._getChildStyles(style_tr, stream);
-    return List.map(child_styles, function(child_style){
+    return Nehan.List.map(child_styles, function(child_style){
       return new TableCellGenerator(child_style, this._createStream(child_style));
     }.bind(this));
   };
@@ -16157,7 +16161,7 @@ var TableRowGenerator = (function(){
       partitionCount:child_tags.length,
       measure:style_tr.contentMeasure
     }) : [];
-    return List.mapi(child_tags, function(i, tag){
+    return Nehan.List.mapi(child_tags, function(i, tag){
       var default_style = new StyleContext(tag, style_tr);
       var static_measure = default_style.staticMeasure;
       var measure = (static_measure && rest_measure >= static_measure)? static_measure : Math.floor(rest_measure / (child_tags.length - i));
@@ -16165,15 +16169,15 @@ var TableRowGenerator = (function(){
 	measure = part_sizes[i];
       }
       rest_measure -= measure;
-      default_style.floatDirection = FloatDirections.get("start");
+      default_style.floatDirection = Nehan.FloatDirections.get("start");
       default_style.initContextMeasure(measure);
       return default_style;
     });
   };
 
   TableRowGenerator.prototype._getChildTags = function(stream){
-    return List.filter(stream.getTokens(), function(token){
-      return (token instanceof Tag && (token.getName() === "td" || token.getName() === "th"));
+    return Nehan.List.filter(stream.getTokens(), function(token){
+      return (token instanceof Nehan.Tag && (token.getName() === "td" || token.getName() === "th"));
     });
   };
 
@@ -16194,7 +16198,7 @@ var TableCellGenerator = (function(){
     SectionRootGenerator.call(this, style, stream);
   }
   // notice that table-cell is sectioning root, so extends SectionRootGenerator.
-  Class.extend(TableCellGenerator, SectionRootGenerator);
+  Nehan.Class.extend(TableCellGenerator, SectionRootGenerator);
 
   return TableCellGenerator;
 })();
@@ -16213,7 +16217,7 @@ var HeaderGenerator = (function(){
   function HeaderGenerator(style, stream){
     BlockGenerator.call(this, style, stream);
   }
-  Class.extend(HeaderGenerator, BlockGenerator);
+  Nehan.Class.extend(HeaderGenerator, BlockGenerator);
 
   HeaderGenerator.prototype._getHeaderRank = function(block){
     if(this.style.getMarkupName().match(/h([1-6])/)){
@@ -16228,7 +16232,7 @@ var HeaderGenerator = (function(){
       rank:this._getHeaderRank(),
       title:this.style.getMarkupContent()
     });
-    block.id = Css.addNehanHeaderPrefix(header_id);
+    block.id = Nehan.Css.addNehanHeaderPrefix(header_id);
   };
   
   return HeaderGenerator;
@@ -16245,10 +16249,10 @@ var BodyGenerator = (function(){
      @param text {string} - content source of html
   */
   function BodyGenerator(text){
-    var tag = new Tag("<body>", text);
+    var tag = new Nehan.Tag("<body>", text);
     SectionRootGenerator.call(this, new StyleContext(tag, null), new TokenStream(text));
   }
-  Class.extend(BodyGenerator, SectionRootGenerator);
+  Nehan.Class.extend(BodyGenerator, SectionRootGenerator);
 
   BodyGenerator.prototype._onCreate = function(context, block){
     block.seekPos = this.stream.getSeekPos();
@@ -16279,10 +16283,10 @@ var HtmlGenerator = (function(){
   */
   function HtmlGenerator(text){
     this.stream = new TokenStream(text, {
-      filter:Closure.isTagName(["head", "body"])
+      filter:Nehan.Closure.isTagName(["head", "body"])
     });
     if(this.stream.isEmptyTokens()){
-      this.stream.tags = [new Tag("body", text)];
+      this.stream.tags = [new Nehan.Tag("body", text)];
     }
     this.generator = this._createGenerator();
   }
@@ -16322,7 +16326,7 @@ var HtmlGenerator = (function(){
 	switch(tag.getName()){
 	case "head":
 	  this._parseDocumentHeader(new TokenStream(tag.getContent(), {
-	    filter:Closure.isTagName(["title", "meta", "link", "style", "script"])
+	    filter:Nehan.Closure.isTagName(["title", "meta", "link", "style", "script"])
 	  }));
 	  break;
 	case "body":
@@ -16335,7 +16339,7 @@ var HtmlGenerator = (function(){
       return new BodyGenerator(text);
     },
     _parseDocumentHeader : function(stream){
-      var document_header = new DocumentHeader();
+      var document_header = new Nehan.DocumentHeader();
       while(stream.hasNext()){
 	var tag = stream.get();
 	switch(tag.getName()){
@@ -16374,10 +16378,10 @@ var DocumentGenerator = (function(){
   */
   function DocumentGenerator(text){
     this.stream = new TokenStream(text, {
-      filter:Closure.isTagName(["!doctype", "html"])
+      filter:Nehan.Closure.isTagName(["!doctype", "html"])
     });
     if(this.stream.isEmptyTokens()){
-      this.stream.tokens = [new Tag("html", text)];
+      this.stream.tokens = [new Nehan.Tag("html", text)];
     }
     this.generator = this._createGenerator();
   }
@@ -16422,7 +16426,7 @@ var DocumentGenerator = (function(){
 	  return this._createHtmlGenerator(tag);
 	}
       }
-      var html_tag = new Tag("<html>", this.stream.getSrc());
+      var html_tag = new Nehan.Tag("<html>", this.stream.getSrc());
       return this._createHtmlGenerator(html_tag);
     },
     _createHtmlGenerator : function(html_tag){
@@ -16468,7 +16472,7 @@ var LayoutEvaluator = (function(){
     _createElement : function(name, opt){
       opt = opt || {};
       var css = opt.css || {};
-      var attrs = opt.attrs? ((opt.attrs instanceof TagAttrs)? opt.attrs.attrs : opt.attrs) : {};
+      var attrs = opt.attrs? ((opt.attrs instanceof Nehan.TagAttrs)? opt.attrs.attrs : opt.attrs) : {};
       var dataset = opt.attrs? opt.attrs.dataset : {};
       var dom = document.createElement(name);
       if(opt.id){
@@ -16488,9 +16492,9 @@ var LayoutEvaluator = (function(){
       }
 
       // store css value to dom.style[<camelized-css-property>]
-      Obj.iter(css, function(style_name, value){
+      Nehan.Obj.iter(css, function(style_name, value){
 	try {
-	  dom.style[Utils.camelize(style_name)] = value;
+	  dom.style[Nehan.Utils.camelize(style_name)] = value;
 	} catch(error){
 	  //console.warn(error);
 	}
@@ -16500,7 +16504,7 @@ var LayoutEvaluator = (function(){
       // why? because
       // 1. markup of anonymous line is shared by parent block, but both are given different class names.
       // 2. sometimes we add some special class name like "nehan-div", "nehan-body", "nehan-p"... etc.
-      Obj.iter(attrs, function(attr_name, value){ // pure attributes(without dataset defined in TagAttrs::attrs)
+      Nehan.Obj.iter(attrs, function(attr_name, value){ // pure attributes(without dataset defined in TagAttrs::attrs)
 	// "style" is readonly and "class" is already set by opt.className.
 	if(attr_name !== "style" && attr_name !== "class"){
 	  try {
@@ -16512,7 +16516,7 @@ var LayoutEvaluator = (function(){
       });
 
       // dataset attributes(defined in TagAttrs::dataset)
-      Args.copy(dom.dataset, dataset);
+      Nehan.Args.copy(dom.dataset, dataset);
       return dom;
     },
     _createClearFix : function(clear){
@@ -16522,7 +16526,7 @@ var LayoutEvaluator = (function(){
     },
     _appendChild : function(root, child){
       if(child instanceof Array){
-	List.iter(child, function(child){
+	Nehan.List.iter(child, function(child){
 	  this._appendChild(root, child);
 	}.bind(this));
       } else {
@@ -16531,7 +16535,7 @@ var LayoutEvaluator = (function(){
     },
     _evaluate : function(tree, opt){
       var root = this._evalElementRoot(tree, opt || {});
-      var dom = root.innerHTML? root : List.fold(tree.elements, root, function(root, child){
+      var dom = root.innerHTML? root : Nehan.List.fold(tree.elements, root, function(root, child){
 	if(child._type === "void"){
 	  return root; // do nothing
 	}
@@ -16611,7 +16615,7 @@ var LayoutEvaluator = (function(){
     },
     // if link uri has anchor address, add page-no to dataset where the anchor is defined.
     _evalLink : function(line, link){
-      var uri = new Uri(link.style.getMarkupAttr("href"));
+      var uri = new Nehan.Uri(link.style.getMarkupAttr("href"));
       var anchor_name = uri.getAnchorName();
       if(anchor_name){
 	var page_no = DocumentContext.getAnchorPageNo(anchor_name);
@@ -16652,7 +16656,7 @@ var VertEvaluator = (function(){
   function VertEvaluator(){
     LayoutEvaluator.call(this, "vert");
   }
-  Class.extend(VertEvaluator, LayoutEvaluator);
+  Nehan.Class.extend(VertEvaluator, LayoutEvaluator);
 
   VertEvaluator.prototype._evalLinkElement = function(line, link){
     return this._evaluate(link, {
@@ -16668,7 +16672,7 @@ var VertEvaluator = (function(){
   };
 
   VertEvaluator.prototype._evalRb = function(line, ruby){
-    var rb_style = new StyleContext(new Tag("<rb>"), line.style);
+    var rb_style = new StyleContext(new Nehan.Tag("<rb>"), line.style);
     var rb_line = rb_style.createLine({
       elements:ruby.getRbs()
     });
@@ -16683,7 +16687,7 @@ var VertEvaluator = (function(){
       new TokenStream(ruby.getRtString()),
       null // outline context
     )).yield();
-    Args.copy(rt.css, ruby.getCssVertRt(line));
+    Nehan.Args.copy(rt.css, ruby.getCssVertRt(line));
     return this._evaluate(rt);
   };
 
@@ -16801,7 +16805,7 @@ var VertEvaluator = (function(){
   // for example, if we use <div> instead, parent bg-color is not inherited.
   VertEvaluator.prototype._evalCharWithBr = function(line, chr){
     chr.withBr = true;
-    return document.createTextNode(Html.unescape(chr.getData()));
+    return document.createTextNode(Nehan.Html.unescape(chr.getData()));
   };
 
   VertEvaluator.prototype._evalCharLetterSpacing = function(line, chr){
@@ -16860,9 +16864,9 @@ var VertEvaluator = (function(){
   };
 
   VertEvaluator.prototype._evalImgChar = function(line, chr){
-    var color = line.color || new Color(Display.fontColor);
+    var color = line.color || new Nehan.Color(Display.fontColor);
     var font_rgb = color.getRgb();
-    var palette_color = Palette.getColor(font_rgb).toUpperCase();
+    var palette_color = Nehan.Palette.getColor(font_rgb).toUpperCase();
     return this._createElement("img", {
       className:"nehan-img-char",
       attrs:{
@@ -16919,7 +16923,7 @@ var HoriEvaluator = (function(){
   function HoriEvaluator(){
     LayoutEvaluator.call(this, "hori");
   }
-  Class.extend(HoriEvaluator, LayoutEvaluator);
+  Nehan.Class.extend(HoriEvaluator, LayoutEvaluator);
 
   HoriEvaluator.prototype._evalInlineChildTree = function(line, tree){
     return this._evaluate(tree, {
@@ -16948,7 +16952,7 @@ var HoriEvaluator = (function(){
   };
 
   HoriEvaluator.prototype._evalRb = function(line, ruby){
-    var rb_style = new StyleContext(new Tag("<rb>"), line.style);
+    var rb_style = new StyleContext(new Nehan.Tag("<rb>"), line.style);
     var rb_line = rb_style.createLine({
       elements:ruby.getRbs()
     });
@@ -16984,7 +16988,7 @@ var HoriEvaluator = (function(){
       return this._evalTabChar(line, chr);
     }
     if(chr.isCharRef()){
-      return document.createTextNode(Html.unescape(chr.getData()));
+      return document.createTextNode(Nehan.Html.unescape(chr.getData()));
     }
     if(chr.isKerningChar()){
       return this._evalKerningChar(line, chr);
@@ -17076,17 +17080,14 @@ var HoriEvaluator = (function(){
 
 
 // set engine args
-Args.copy(Config, __engine_args.config || {});
-Args.copy2(Display, __engine_args.display || {});
+Nehan.Args.copy(Config, __engine_args.config || {});
+Nehan.Args.copy2(Display, __engine_args.display || {});
 
 Selectors.setValues(Nehan.globalStyle || {}); // set global style.
 Selectors.setValues(__engine_args.style || {}); // set local style
 
 // register global single tags
-List.iter(Nehan.singleTagNames, LexingRule.addSingleTagByName);
-
-// export utilities
-Nehan.List = List;
+Nehan.List.iter(Nehan.singleTagNames, LexingRule.addSingleTagByName);
 
 /**
    @memberof Nehan
@@ -17182,6 +17183,7 @@ Engine.prototype = {
   }
 };
 
+// this is the returned value of Nehan.setup(defined in nehan-setup-start.js).
 return new Engine();
 
 }; // Nehan.createEngine
