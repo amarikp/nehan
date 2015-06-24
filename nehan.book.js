@@ -71,15 +71,18 @@ Nehan.Book.Model.PageStream = Backbone.Model.extend({
   initialize : function(){
     this.engine = Nehan.setup({
       config:Nehan.Book.NehanConfig,
+      style:{
+	body:{
+	  flow:(this.get("direction") === "vert"? "tb-rl" : "lr-tb"),
+	  fontSize:this.get("fontSize"),
+	  width:this.get("pageWidth"),
+	  height:this.get("pageHeight")
+	}
+      },
       display:{
 	direction:this.get("direction"),
 	width:this.get("layoutWidth")
       }
-    });
-    this.engine.setStyle("body", {
-      "font-size":this.get("fontSize"),
-      "width":this.get("pageWidth"),
-      "height":this.get("pageHeight")
     });
     this.stream = this.engine.createPageStream(this.getText());
   },
