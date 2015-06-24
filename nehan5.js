@@ -34,6 +34,280 @@
 var Nehan = Nehan || {};
 Nehan.version = "5.1.1";
 
+/**
+   standard page settings.
+   @namespace Nehan.Display
+*/
+Nehan.Display = {
+  /**
+     <pre>
+      define root where content text starts from.
+      'body' or 'html' or 'document' are enabled.
+
+      1. 'document'
+         &lt;!doctype xxx&gt; tag is included in content text.
+      2. 'html'
+         &lt;head&gt; and &lt;html&gt; are included in content text.
+      3. 'body'
+         &lt;body&gt; or content of body itself is included in content text.
+     </pre>
+     @memberof Nehan.Display
+     @type {String}
+     @default "document"
+  */
+  root:"document",
+
+  /**
+     standard flow, "tb-rl" or "tb-lr" or "lr-tb".
+
+     @memberof Nehan.Display
+     @type {String}
+     @default "tb-rl"
+  */
+  flow:"tb-rl",
+  /**
+     standard box flow for "vert" and "hori".
+
+     @memberof Nehan.Display
+     @type {Object}
+     @default {hori:"lr-tb", vert:"tb-rl"}
+  */
+  boxFlow:{
+    hori:"lr-tb", // used when direction is 'hori'. notice that rl-tb is not supported yet.
+    vert:"tb-rl", // used when direction is 'vert'. "tb-lr" is also supported.
+  },
+  /**
+     standard page width, used when Style["body"].width is not defined.
+
+     @memberof Nehan.Display
+     @type {int}
+     @default screen.width
+  */
+  width: screen.width,
+  /**
+     standard page height, used when Style["body"].height is not defined.
+
+     @memberof Nehan.Display
+     @type {int}
+     @default screen.height
+  */
+  height: screen.height,
+  /**
+     standard font size, used when Style["body"]["font-size"] is not defined.
+
+     @memberof Nehan.Display
+     @type {int}
+     @default 16
+  */
+  fontSize:16,
+  /**
+     standard minimum font size.
+
+     @memberof Nehan.Display
+     @type {int}
+     @default 12
+  */
+  minFontSize:12,
+  /**
+     standard maximum font size.
+
+     @memberof Nehan.Display
+     @type {int}
+     @default 90
+  */
+  maxFontSize:90,
+  /**
+     standard minimum table cell size. if table-layout is set to 'auto', all sizes of cell are larger than this value.
+
+     @memberof Nehan.Display
+     @type {int}
+     @default 48
+  */
+  minTableCellSize:48,
+  /**
+     standard rate of ruby font size. used when Style.rt["font-size"] is not defined.
+
+     @memberof Nehan.Display
+     @type {Float}
+     @default 0.5
+  */
+  rubyRate:0.5,
+  /**
+     standard bold plus size rate, it's used to calculate sketchy bold metrics in the environment with no canvas element.
+
+     @memberof Nehan.Display
+  */
+  boldRate:0.12,
+  /**
+     standard line-height.
+
+     @memberof Nehan.Display
+     @type {Float}
+     @default 2.0
+  */
+  lineHeight: 2.0,
+  /**
+     various kind of spacing rate
+
+     @memberof Nehan.Display
+     @type {Array.<Float>}
+  */
+  spaceSizeRate:{
+    thinsp:0.2, // &thinsp;
+    nbsp:0.38,  // &nbsp;
+    ensp:0.5,   // &ensp;
+    emsp:1.0    // &emsp;
+  },
+  /**
+     count of tab space
+
+     @memberof Nehan.Display
+     @type {int}
+     @default 4
+  */
+  tabCount: 4,
+  /**
+     standard font color. this is required for browsers not supporting writing-mode to display vertical font-images.
+
+     @memberof Nehan.Display
+     @type {String}
+     @default "000000"
+  */
+  fontColor:"000000",
+  /**
+     standard link color. this is required for browsers not supporting writing-mode to display vertical font-images.
+
+     @memberof Nehan.Display
+     @type {String}
+     @default "0000FF"
+  */
+  linkColor:"0000FF",
+  /**
+     font image url. this is required for browsers not supporting writing-mode to display vertical font-images.
+
+     @memberof Nehan.Display
+     @type {String}
+     @default "https://raw.githubusercontent.com/tategakibunko/nehan.js/master/char-img"
+  */
+  fontImgRoot:"https://raw.githubusercontent.com/tategakibunko/nehan.js/master/char-img",
+
+  /**
+     standard font family. this is required to calculate proper text-metrics of alphabetical word.
+
+     @memberof Nehan.Display
+     @type {String}
+     @default "'ヒラギノ明朝 Pro W3','Hiragino Mincho Pro','HiraMinProN-W3','IPA明朝','IPA Mincho', 'Meiryo','メイリオ','ＭＳ 明朝','MS Mincho', monospace"
+  */
+  fontFamily:"'ヒラギノ明朝 Pro W3','Hiragino Mincho Pro','HiraMinProN-W3','IPA明朝','IPA Mincho', 'Meiryo','メイリオ','ＭＳ 明朝','MS Mincho', monospace",
+  //fontFamily:"'Meiryo','メイリオ','Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', monospace",
+
+  /**
+     font sizes defined by name
+
+     @memberof Nehan.Display
+     @type {Object}
+     @default <pre>
+     {
+      "xx-large":"33px",
+      "x-large":"24px",
+      "large":"18px",
+      "medium":"16px",
+      "small":"13px",
+      "x-small":"10px",
+      "xx-small":"8px",
+      "larger":"1.2em",
+      "smaller":"0.8em"
+    }
+     </pre>
+  */
+  fontSizeNames:{
+    "xx-large":"33px",
+    "x-large":"24px",
+    "large":"18px",
+    "medium":"16px",
+    "small":"13px",
+    "x-small":"10px",
+    "xx-small":"8px",
+    "larger":"1.2em",
+    "smaller":"0.8em"
+  },
+  /**
+     @memberof Nehan.Display
+     @param flow {Nehan.BoxFlow}
+     @return {int}
+  */
+  getMeasure : function(flow){
+    return this[flow.getPropMeasure()];
+  },
+  /**
+     @memberof Nehan.Display
+     @param flow {Nehan.BoxFlow}
+     @return {int}
+  */
+  getExtent : function(flow){
+    return this[flow.getPropExtent()];
+  },
+  /**
+     @memberof Nehan.Display
+     @return {string}
+  */
+  getVertBlockDir: function(){
+    return this.boxFlow.vert.splice("-")[1];
+  },
+  /**
+     @memberof Nehan.Display
+     @return {Nehan.BoxFlow}
+  */
+  getStdFont : function(){
+    var font = new Nehan.Font(this.fontSize);
+    font.family = this.fontFamily;
+    font.weight = "normal";
+    font.style = "normal";
+    return font;
+  },
+  /**
+     @memberof Nehan.Display
+     @return {Nehan.BoxFlow}
+  */
+  getStdBoxFlow : function(){
+    //var flow_name = this.boxFlow[this.direction];
+    //return BoxFlows.getByName(flow_name);
+    return Nehan.BoxFlows.getByName(this.flow);
+  },
+  /**
+     @memberof Nehan.Display
+     @return {Nehan.BoxFlow}
+  */
+  getStdVertFlow : function(){
+    return Nehan.BoxFlows.getByName(this.boxFlow.vert);
+  },
+  /**
+     @memberof Nehan.Display
+     @return {Nehan.BoxFlow}
+  */
+  getStdHoriFlow : function(){
+    return Nehan.BoxFlows.getByName(this.boxFlow.hori);
+  },
+  /**
+     @memberof Nehan.Display
+     @return {int}
+  */
+  getRtFontSize : function(base_font_size){
+    return Math.round(this.rubyRate * base_font_size);
+  },
+  /**
+     @memberof Nehan.Display
+     @return {String}
+  */
+  getPaletteFontColor : function(color){
+    if(color.getValue().toLowerCase() !== this.fontColor.toLowerCase()){
+      return color.getPaletteValue();
+    }
+    return this.fontColor;
+  }
+};
+
+
 Nehan.Client = (function(){
   /**
      @memberof Nehan
@@ -5462,18 +5736,20 @@ Nehan.Break = (function(){
       return this.value === "avoid";
     },
     /**
+       true if breaking at first page of 2-page spread.
        @memberof Nehan.Break
        @return {boolean}
      */
-    isFirst : function(){
-      return (Display.getPagingDirection() === "lr")? (this.value === "left") : (this.value === "right");
+    isFirst : function(flow){
+      return flow.isLeftToRight()? (this.value === "left") : (this.value === "right");
     },
     /**
+       true if breaking at second page of 2-page spread.
        @memberof Nehan.Break
        @return {boolean}
      */
-    isSecond : function(){
-      return (Display.getPagingDirection() === "lr")? (this.value === "right") : (this.value === "left");
+    isSecond : function(flow){
+      return flow.isLeftToRight()? (this.value === "right") : (this.value === "left");
     },
     /**
        (TODO)
@@ -5616,6 +5892,2467 @@ Nehan.Flow = (function(){
   };
 
   return Flow;
+})();
+
+
+Nehan.BlockFlow = (function(){
+  /**
+     @memberof Nehan
+     @class BlockFlow
+     @classdesc flow direction at block level.
+     @constructor
+     @param dir {string} - "lr" or "rl" or "tb"
+     @extends Nehan.Flow
+     @example
+     * var bf = new BlockFlow("tb");
+  */
+  function BlockFlow(dir){
+    Nehan.Flow.call(this, dir);
+  }
+
+  Nehan.Class.extend(BlockFlow, Nehan.Flow);
+
+  /**
+     get flipped block direction. If direction is "tb", nothing happend.
+
+     @memberof Nehan.BlockFlow
+     @method flip
+     @return {string} fliped block direction
+     @example
+     * new BlockFlow("tb").flip(); // => "lr" or "rl"(nothing happened)
+     * new BlockFlow("lr").flip(); // => "tb"
+     * new BlockFlow("rl").flip(); // => "tb"
+  */
+  BlockFlow.prototype.flip = function(){
+    switch(this.dir){
+    case "lr": case "rl": return "tb";
+    case "tb": return Nehan.Display.getVertBlockdir();
+    default: return "";
+    }
+  };
+
+  /**
+     get physical directional property of logical before.
+
+     @memberof Nehan.BlockFlow
+     @method getPropBefore
+     @return {string}
+     @example
+     * new BlockFlow("tb").getPropBefore(); // => "top"
+     * new BlockFlow("lr").getPropBefore(); // => "left"
+     * new BlockFlow("rl").getPropBefore(); // => "right"
+  */
+  BlockFlow.prototype.getPropBefore = function(){
+    switch(this.dir){
+    case "lr": return "left";
+    case "rl": return "right";
+    case "tb": return "top";
+    default: return "";
+    }
+  };
+
+  /**
+     get physical directional property of logical before.
+
+     @memberof Nehan.BlockFlow
+     @method getPropAfter
+     @return {string}
+     @example
+     * new BlockFlow("tb").getPropAfter(); // => "bottom"
+     * new BlockFlow("lr").getPropAfter(); // => "right"
+     * new BlockFlow("rl").getPropAfter(); // => "left"
+  */
+  BlockFlow.prototype.getPropAfter = function(){
+    switch(this.dir){
+    case "lr": return "right";
+    case "rl": return "left";
+    case "tb": return "bottom";
+    default: return "";
+    }
+  };
+
+  return BlockFlow;
+})();
+
+
+Nehan.InlineFlow = (function(){
+  /**
+     @memberof Nehan
+     @class InlineFlow
+     @classdesc flow abstraction at inline level.
+     @constructor
+     @extends {Nehan.Flow}
+     @param dir {String} - "lr" or "rl"(but not supported) or "tb"
+   */
+  function InlineFlow(dir){
+    Nehan.Flow.call(this, dir);
+  }
+  Nehan.Class.extend(InlineFlow, Nehan.Flow);
+
+  /**
+     @memberof Nehan.InlineFlow
+     @return {String}
+     @example
+     * new InlineFlow("lr").getPropStart(); // "left"
+     * new InlineFlow("rl").getPropStart(); // "right"
+     * new InlineFlow("tb").getPropStart(); // "top"
+  */
+  InlineFlow.prototype.getPropStart = function(){
+    switch(this.dir){
+    case "lr": return "left";
+    case "rl": return "right";
+    case "tb": return "top";
+    default: return "";
+    }
+  };
+
+  /**
+     @memberof Nehan.InlineFlow
+     @return {String}
+     @example
+     * new InlineFlow("lr").getPropEnd(); // "right"
+     * new InlineFlow("rl").getPropEnd(); // "left"
+     * new InlineFlow("tb").getPropEnd(); // "bottom"
+  */
+  InlineFlow.prototype.getPropEnd = function(){
+    switch(this.dir){
+    case "lr": return "right";
+    case "rl": return "left";
+    case "tb": return "bottom";
+    default: return "";
+    }
+  };
+
+  return InlineFlow;
+})();
+
+
+Nehan.BoxFlow = (function(){
+  /**
+     @memberof Nehan
+     @class BoxFlow
+     @classdesc abstract inline and block direction
+     @constructor
+     @param indir {string} - "lr" or "tb"("rl" not supported yet)
+     @param blockdir {string} - "tb" or "lr" or "rl"
+  */
+  function BoxFlow(indir, blockdir){
+    this.inflow = new Nehan.InlineFlow(indir);
+    this.blockflow = new Nehan.BlockFlow(blockdir);
+  }
+
+  BoxFlow.prototype = {
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isTextLineFirst : function(){
+      if(this.isTextVertical() && this.blockflow.isLeftToRight()){
+	return true;
+      }
+      return false;
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isBlockflowVertical : function(){
+      return this.blockflow.isVertical();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isTextVertical : function(){
+      return this.inflow.isVertical();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isTextHorizontal : function(){
+      return this.inflow.isHorizontal();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isTextLeftToRight : function(){
+      return this.inflow.isLeftToRight();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isTextRightToLeft : function(){
+      return this.inflow.isRightToLeft();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isBlockLeftToRight : function(){
+      return this.blockflow.isLeftToRight();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {boolean}
+    */
+    isBlockRightToLeft : function(){
+      return this.blockflow.isRightToLeft();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {Object}
+    */
+    getCss : function(){
+      var css = {};
+
+      // notice that "float" property is converted into "cssFloat" in evaluation time.
+      if(this.isTextVertical()){
+	css["css-float"] = this.isBlockLeftToRight()? "left" : "right";
+      } else {
+	css["css-float"] = this.isTextLeftToRight()? "left" : "right";
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+       @example
+       * new BlockFlow("tb", "rl").getName(); // "tb-rl"
+       * new BlockFlow("lr", "tb").getName(); // "lr-tb"
+    */
+    getName : function(){
+      return [this.inflow.dir, this.blockflow.dir].join("-");
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {String}
+       @example
+       * new BlockFlow("tb", "rl").getTextHorizontalDir(); // "rl"
+       * new BlockFlow("tb", "lr").getTextHorizontalDir(); // "lr"
+       * new BlockFlow("lr", "tb").getTextHorizontalDir(); // "" (empty)
+    */
+    getTextHorizontalDir : function(){
+      if(this.isTextHorizontal()){
+	return this.inflow.dir;
+      }
+      return "";
+    },
+    /**
+       get physical property name from logical property.
+       @memberof Nehan.BoxFlow
+       @param prop {string} - logical direction name
+       @return {string}
+       @example
+       * new BlockFlow("tb", "rl").getProp("start"); // "top"
+       * new BlockFlow("lr", "tb").getProp("end"); // "right"
+    */
+    getProp : function(prop){
+      switch(prop){
+      case "start":
+	return this.getPropStart();
+      case "end":
+	return this.getPropEnd();
+      case "before":
+	return this.getPropBefore();
+      case "after":
+	return this.getPropAfter();
+      }
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropStart : function(){
+      return this.inflow.getPropStart();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropEnd : function(){
+      return this.inflow.getPropEnd();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropBefore : function(){
+      return this.blockflow.getPropBefore();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropAfter : function(){
+      return this.blockflow.getPropAfter();
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropExtent : function(){
+      return this.isTextVertical()? "width" : "height";
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropMeasure : function(){
+      return this.isTextVertical()? "height" : "width";
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropWidth : function(){
+      return this.isTextVertical()? "extent" : "measure";
+    },
+    /**
+       @memberof Nehan.BoxFlow
+       @return {string}
+    */
+    getPropHeight : function(){
+      return this.isTextVertical()? "measure" : "extent";
+    },
+    /**
+       get flipped box flow, but result depends on setting of Nehan.Display.boxFlow.
+
+       @memberof Nehan.BoxFlow
+       @return {Nehan.BoxFlow}
+       @example
+       * // if  Nehan.Display.boxFlow.hori = "lr-tb"
+       * // and Nehan.Display.boxFlow.vert = "tb-rl"
+       * new BlockFlow("tb", "rl").getFlipFlow(); // BoxFlow("lr", "tb")
+       * new BlockFlow("lr", "tb").getFlipFlow(); // BoxFlow("tb", "rl")
+    */
+    getFlipFlow : function(){
+      return this.isTextVertical()? Nehan.Display.getStdHoriFlow() : Nehan.Display.getStdVertFlow();
+    },
+    /**
+       get physical box size interpreted by this box flow.
+
+       @memberof Nehan.BoxFlow
+       @param measure {int}
+       @param extent {int}
+       @return {Nehan.BoxSize}
+       @example
+       * new BoxFlow("lr", "tb").getBoxSize(100, 200); // BoxSize(100, 200)
+       * new BoxFlow("tb", "rl").getBoxSize(100, 200); // BoxSize(200, 100)
+       * new BoxFlow("tb", "lr").getBoxSize(100, 200); // BoxSize(200, 100)
+     */
+    getBoxSize : function(measure, extent){
+      var size = new Nehan.BoxSize(0, 0);
+      size[this.getPropMeasure()] = measure;
+      size[this.getPropExtent()] = extent;
+      return size;
+    }
+  };
+
+  return BoxFlow;
+})();
+
+
+/**
+   pre defined box flow collection.
+   @namespace Nehan.BoxFlows
+*/
+Nehan.BoxFlows = {
+  "tb-rl":(new Nehan.BoxFlow("tb", "rl")),
+  "tb-lr":(new Nehan.BoxFlow("tb", "lr")),
+  "lr-tb":(new Nehan.BoxFlow("lr", "tb")),
+  "rl-tb":(new Nehan.BoxFlow("rl", "tb")),
+  /**
+     get box flow by inflow and blockflow.
+
+     @memberof Nehan.BoxFlows
+     @param inflow {string} - "tb" or "lr"
+     @param blockflow {string} - "tb" or "lr" or "rl"
+     @return {Nehan.BoxFlow}
+  */
+  get: function(inflow, blockflow){
+    return this.getByName([inflow, blockflow].join("-"));
+  },
+  /**
+     get box flow by flow-name.
+
+     @memberof Nehan.BoxFlows
+     @param name {string} - "lr-tb" or "tb-rl" or "tb-lr"
+     @return {Nehan.BoxFlow}
+  */
+  getByName : function(name){
+    return this[name] || null;
+  }
+};
+
+/**
+   utility module to get more strict metrics using canvas.
+
+   @namespace Nehan.TextMetrics
+*/
+Nehan.TextMetrics = (function(){
+  var __canvas = document.createElement("canvas");
+  __canvas.style.width = Math.max(Nehan.Display.width, Nehan.Display.height) + "px";
+  __canvas.style.height = Nehan.Display.maxFontSize + "px";
+
+  var __canvas_context;
+  if(__canvas.getContext){
+    __canvas_context = __canvas.getContext("2d");
+    __canvas_context.textAlign = "left";
+  }
+
+  return {
+    /**
+       check if client browser is supported.
+
+       @memberof Nehan.TextMetrics
+       @return {boolean}
+    */
+    isEnable : function(){
+      return __canvas_context && (typeof __canvas_context.measureText !== "undefined");
+    },
+    /**
+       @memberof Nehan.TextMetrics
+       @param font {Nehan.Font}
+       @param text {String}
+       @return {Object} - {width:xxx, height:yyy}
+    */
+    getMetrics : function(font, text){
+      __canvas_context.font = font.toString(); // to get accurate metrics, font info is required.
+      // caution: this metrics is not always correct(especially webkit), but firefox is well done.
+      var metrics = __canvas_context.measureText(text);
+      return metrics;
+    },
+    /**
+       @memberof Nehan.TextMetrics
+       @param font {Nehan.Font}
+       @param text {String}
+       @return {int}
+    */
+    getMeasure : function(font, text){
+      var metrics = this.getMetrics(font, text);
+      //console.log("[%s] - %f", text, metrics.width);
+      return metrics.width;
+    }
+  };
+})();
+
+
+Nehan.Text = (function(){
+  /**
+     @memberof Nehan
+     @class Text
+     @param content {String}
+  */
+  function Text(content){
+    this.content = content;
+  }
+
+  Text.prototype = {
+    isWhiteSpaceOnly: function(){
+      // \s contain multi character space,
+      // but we want to replace half one only.
+      var replaced = this.content
+	.replace(/ /g, "") // half space
+	.replace(/\n/g, "")
+	.replace(/\t/g, "");
+      return replaced === "";
+    },
+    getContent: function(){
+      return this.content;
+    }
+  };
+
+  return Text;
+})();
+
+Nehan.Char = (function(){
+  /**
+     @memberof Nehan
+     @class Char
+     @classdesc character object
+     @param c1 {String}
+     @param is_ref {boolean} - is character reference?
+  */
+  function Char(c1, is_ref){
+    this.data = c1;
+    this._type = "char";
+    this.isRef = is_ref || false;
+    if(this.isRef){
+      this._setupRef(c1);
+    } else {
+      this._setupNormal(c1.charCodeAt(0));
+    }
+  }
+  var __kuten = ["\u3002","."];
+  var __touten = ["\u3001", ","];
+  var __kakko_start = ["\uff62","\u300c","\u300e","\u3010","\uff3b","\uff08","\u300a","\u3008","\u226a","\uff1c","\uff5b","\x7b","\x5b","\x28", "\u2772", "\u3014"];
+  var __kakko_end = ["\u300d","\uff63","\u300f","\u3011","\uff3d","\uff09","\u300b","\u3009","\u226b","\uff1e","\uff5d","\x7d","\x5d","\x29", "\u2773", "\u3015"];
+  var __small_kana = ["\u3041","\u3043","\u3045","\u3047","\u3049","\u3063","\u3083","\u3085","\u3087","\u308e","\u30a1","\u30a3","\u30a5","\u30a7","\u30a9","\u30f5","\u30f6","\u30c3","\u30e3","\u30e5","\u30e7","\u30ee"];
+  var __head_ng = ["\uff09","\x5c","\x29","\u300d","\u3011","\u3015","\uff3d","\x5c","\x5d","\u3002","\u300f","\uff1e","\u3009","\u300b","\u3001","\uff0e","\x5c","\x2e","\x2c","\u201d","\u301f"];
+  var __tail_ng = ["\uff08","\x5c","\x28","\u300c","\u3010","\uff3b","\u3014","\x5c","\x5b","\u300e","\uff1c","\u3008","\u300a","\u201c","\u301d"];
+  var __voiced_mark = ["\u3099", "\u309a", "\u309b", "\u309c", "\uff9e", "\uff9f"];
+  var __rex_half_char = /[\w!\.\?\/:#;"',]/;
+  var __rex_half_kana = /[\uff65-\uff9f]/;
+  var __rex_half_kana_small = /[\uff67-\uff6f]/;
+
+  Char.prototype = {
+    /**
+       @memberof Nehan.Char
+       @return {string}
+    */
+    getData : function(){
+      var data = this.cnv || this.data;
+      return data + (this.ligature || "");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssPadding : function(line){
+      var padding = new Nehan.Padding();
+      if(this.paddingStart){
+	padding.setStart(line.style.flow, this.paddingStart);
+      }
+      if(this.paddingEnd){
+	padding.setEnd(line.style.flow, this.paddingEnd);
+      }
+      return padding.getCss();
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertGlyph : function(line){
+      var css = {};
+      var is_zenkaku = this.isZenkaku();
+      var is_kakko_start = this.isKakkoStart();
+      var is_kakko_end = this.isKakkoEnd();
+      var padding_enable = this.isPaddingEnable();
+      if(is_zenkaku && is_kakko_start && !padding_enable){
+	css.height = "1em";
+	css["margin-top"] = "-0.5em";
+      } else if(is_zenkaku && is_kakko_end && !padding_enable){
+	css.height = "1em";
+	css["margin-bottom"] = "-0.5em";
+      } else if(!is_kakko_start && !is_kakko_end && this.vscale < 1){
+	css.height = "0.5em";
+	Nehan.Args.copy(css, this.getCssPadding(line));
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertImgChar : function(line){
+      var css = {}, font_size = line.style.getFontSize();
+      css.display = "block";
+      css.width = font_size + "px";
+      css.height = this.getVertHeight(font_size) + "px";
+      if(this.isPaddingEnable()){
+	Nehan.Args.copy(css, this.getCssPadding(line));
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertSingleHalfChar : function(line){
+      var css = {};
+      if(line.edge){
+	css["padding-left"] = "0.25em"; // base aligned line
+      } else {
+	css["text-align"] = "center"; // normal text line(all text with same font-size)
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertHalfKana : function(line){
+      var css = {};
+      css["text-align"] = "center";
+      if(this.hasLigature()){
+	css["padding-left"] = "0.25em";
+      } else if(this.isHalfKanaSmall()){
+	css["padding-left"] = "0.25em";
+	css["margin-top"] = "-0.25em";
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertRotateCharIE : function(line){
+      var css = {}, font_size = line.style.getFontSize();
+      css["css-float"] = "left";
+      css["writing-mode"] = "tb-rl";
+      css["padding-left"] = Math.round(font_size / 2) + "px";
+      css["line-height"] = font_size + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertDashIE : function(line){
+      var css = {};
+      css["height"] = "0.84em"; // eliminate space between dash for IE.
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertEmphaText : function(line){
+      var css = {}, font_size = line.style.getFontSize();
+      css["font-size"] = "0.5em";
+      css.display = "inline-block";
+      css.width = font_size + "px";
+      css.height = font_size + "px";
+      css["position"] = "absolute";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssHoriEmphaSrc : function(line){
+      var css = {};
+      css["line-height"] = "1em";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssHoriEmphaText : function(line){
+      var css = {};
+      css.display = "inline-block";
+      css.width = "1em";
+      css.height = "1em";
+      css["padding-left"] = "0.5em";
+      css["line-height"] = "1em";
+      css["font-size"] = "0.5em";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertLetterSpacing : function(line){
+      var css = {};
+      css["margin-bottom"] = line.letterSpacing + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssHoriSpaceChar : function(line){
+      var css = {};
+      css.display = "inline-block";
+      css.width = this.bodySize + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssHoriTabChar : function(line){
+      var css = {};
+      css.display = "inline-block";
+      css.width = this.bodySize + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertSpaceChar : function(line){
+      var css = {};
+      css.height = this.bodySize + "px";
+      css["line-height"] = this.bodySize + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertTabChar : function(line){
+      var css = {};
+      css.height = this.bodySize + "px";
+      css["line-height"] = this.bodySize + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVertSmallKana : function(){
+      var css = {};
+      css.position = "relative";
+      css.top = "-0.1em";
+      css.right = "-0.12em";
+      css.height = this.bodySize + "px";
+      css["line-height"] = this.bodySize + "px";
+      css.clear = "both";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Float | Int}
+    */
+    getHoriScale : function(){
+      return this.hscale || 1;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Float | Int}
+    */
+    getVertScale : function(){
+      return this.vscale || 1;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Float | Int}
+    */
+    getVertHeight : function(font_size){
+      var vscale = this.getVertScale();
+      return (vscale === 1)? font_size : Math.round(font_size * vscale);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    hasMetrics : function(){
+      return (typeof this.bodySize != "undefined");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Int}
+    */
+    getAdvance : function(flow, letter_spacing){
+      return this.bodySize + this.getPaddingSize() + (letter_spacing || 0);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Int}
+    */
+    getPaddingSize : function(){
+      return (this.paddingStart || 0) + (this.paddingEnd || 0);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Int}
+    */
+    getCharCount : function(){
+      if(this.data === " " || this.data === "\t" || this.data === "\u3000"){
+	return 0;
+      }
+      return 1;
+    },
+    /**
+       @memberof Nehan.Char
+       @param flow {Nehan.BoxFlow}
+       @param font {Nehan.Font}
+    */
+    setMetrics : function(flow, font){
+      var is_vert = flow.isTextVertical();
+      var step_scale = is_vert? this.getVertScale() : this.getHoriScale();
+      this.bodySize = (step_scale != 1)? Math.round(font.size * step_scale) : font.size;
+      if(this.spaceRateStart){
+	this.paddingStart = Math.round(this.spaceRateStart * font.size);
+      }
+      if(this.spaceRateEnd){
+	this.paddingEnd = Math.round(this.spaceRateEnd * font.size);
+      }
+      if(this.img && this.img === "tenten"){
+	this.bodySize = font.size;
+      }
+      if(!is_vert && !this.isRef && this.isHankaku()){
+	this.bodySize = Math.round(font.size / 2);
+      }
+    },
+    _setImg : function(img, vscale, hscale){
+      this.img = img;
+      this.vscale = vscale;
+      this.hscale = hscale;
+    },
+    _setCnv : function(cnv, vscale, hscale){
+      this.cnv = cnv;
+      this.isRef = true;
+      this.vscale = vscale;
+      this.hscale = hscale;
+    },
+    _setRotate : function(angle){
+      this.rotate = angle;
+    },
+    _setRotateOrImg : function(angle, img, vscale, hscale){
+      if(Nehan.Env.isTransformEnable){
+	this._setRotate(angle);
+	this.vscale = vscale;
+	this.hscale = hscale;
+	return;
+      }
+      this._setImg(img, vscale, hscale);
+    },
+    _setupRef : function(c1){
+      this.cnv = c1;
+      switch(c1){
+      case "&nbsp;":
+	this._setupNbsp();
+	break;
+      case "&thinsp;":
+	this.vscale = this.hscale = Nehan.Display.spaceSizeRate.thinsp;
+	break;
+      case "&ensp;":
+	this.vscale = this.hscale = Nehan.Display.spaceSizeRate.ensp;
+	break;
+      case "&emsp;":
+	this.vscale = this.hscale = Nehan.Display.spaceSizeRate.emsp;
+	break;
+      case "&#09;":
+	this._setupTabSpace();
+	break;
+      case "&lt;":
+	this._setRotateOrImg(90, "kakko7", 0.5, 0.5);
+	break;
+      case "&gt;":
+	this._setRotateOrImg(90, "kakko8", 0.5, 0.5);
+	break;
+      }
+    },
+    _setupNbsp : function(){
+      this.vscale = this.hscale = Nehan.Display.spaceSizeRate.nbsp;
+    },
+    _setupTabSpace : function(){
+      this.vscale = this.hscale = Math.floor(Nehan.Display.tabCount / 2);
+    },
+    _setupNormal : function(code){
+      // for half-size char, rotate 90 and half-scale in horizontal by default.
+      if(this.isHankaku()){
+	this.hscale = 0.5;
+	this._setRotate(90);
+      }
+      switch(code){
+      case 9: // tab space char
+	this._setupTabSpace(); break;
+	break;
+      case 32: // half scape char
+	this._setupNbsp(); break;
+      case 12300:
+	this._setImg("kakko1", 0.5, 0.5); break;
+      case 65378:
+	this._setImg("kakko1", 0.5, 0.5); break;
+      case 12301:
+	this._setImg("kakko2", 0.5, 0.5); break;
+      case 65379:
+	this._setImg("kakko2", 0.5, 0.5); break;
+      case 12302:
+	this._setImg("kakko3", 0.5, 0.5); break;
+      case 12303:
+	this._setImg("kakko4", 0.5, 0.5); break;
+      case 65288:
+	this._setImg("kakko5", 0.5, 0.5); break;
+      case 40:
+	this._setImg("kakko5", 0.5, 0.5); break;
+      case 65371:
+	this._setImg("kakko5", 0.5, 0.5); break;
+      case 123:
+	this._setImg("kakko5", 0.5, 0.5); break;
+      case 65289:
+	this._setImg("kakko6", 0.5, 0.5); break;
+      case 41:
+	this._setImg("kakko6", 0.5, 0.5); break;
+      case 65373:
+	this._setImg("kakko6", 0.5, 0.5); break;
+      case 125:
+	this._setImg("kakko6", 0.5, 0.5); break;
+      case 65308:
+	this._setImg("kakko7", 0.5, 0.5); break;
+      case 12296:
+	this._setImg("kakko7", 0.5, 0.5); break;
+      case 65310:
+	this._setImg("kakko8", 0.5, 0.5); break;
+      case 12297:
+	this._setImg("kakko8", 0.5, 0.5); break;
+      case 12298:
+	this._setImg("kakko9", 0.5, 0.5); break;
+      case 8810:
+	this._setImg("kakko9", 0.5, 0.5); break;
+      case 12299:
+	this._setImg("kakko10", 0.5, 0.5); break;
+      case 8811:
+	this._setImg("kakko10", 0.5, 0.5); break;
+      case 65339:
+	this._setImg("kakko11", 0.5, 0.5); break;
+      case 12308:
+	this._setImg("kakko11", 0.5, 0.5); break;
+      case 91:
+	this._setImg("kakko11", 0.5, 0.5); break;
+      case 65341:
+	this._setImg("kakko12", 0.5, 0.5); break;
+      case 12309:
+	this._setImg("kakko12", 0.5, 0.5); break;
+      case 93:
+	this._setImg("kakko12", 0.5, 0.5); break;
+      case 12304:
+	this._setImg("kakko17", 0.5, 0.5); break;
+      case 12305:
+	this._setImg("kakko18", 0.5, 0.5); break;
+      case 65306:
+	this._setImg("tenten", 1, 1); break;
+      case 58:
+	this._setImg("tenten", 1, 1); break;
+      case 12290:
+	this._setImg("kuten", 0.5, 0.5); break;
+      case 65377:
+	this._setImg("kuten", 0.5, 0.5); break;
+      case 65294:
+	this._setImg("period", 1, 1); break;
+      case 46:
+	this._setImg("period", 1, 1); break;
+      case 12289:
+	this._setImg("touten", 0.5, 0.5); break;
+      case 65380:
+	this._setImg("touten", 0.5, 0.5); break;
+      case 44:
+	this._setImg("touten", 0.5, 0.5); break;
+      case 65292:
+	this._setImg("touten", 0.5, 0.5); break;
+      case 65374:
+	this._setImg("kara", 1, 1); break;
+      case 12316:
+	this._setImg("kara", 1, 1); break;
+      case 8230:
+	this._setImg("mmm", 1, 1); break;
+      case 8229:
+	this._setImg("mm", 1, 1); break;
+      case 12317:
+	this._setImg("dmn1", 1, 1); break;
+      case 12319:
+	this._setImg("dmn2", 1, 1); break;
+      case 65309:
+	this._setImg("equal", 1, 1); break;
+      case 61:
+	this._setImg("equal", 1, 1); break;
+      case 8212: // Em dash
+      case 8221: // Right Double Quotation Mark
+	this._setRotate(90); break;
+      case 12540:
+	this._setImg("onbiki", 1, 1); break;
+      case 8213: // Horizontal bar(General Punctuation)
+      case 65293: // Halfwidth and Fullwidth Forms
+      case 9472: // Box drawings light horizontal(Box Drawing)
+	this._setCnv("&#8212;", 1, 1);
+	this._setRotate(90);
+	break;
+      case 8593: // up
+	this._setCnv("&#8594;", 1, 1); break;
+      case 8594: // right
+	this._setCnv("&#8595;", 1, 1); break;
+      case 8658: // right2
+	this._setCnv("&#8595;", 1, 1); break;
+      case 8595: // down
+	this._setCnv("&#8592;", 1, 1); break;
+      case 8592: // left
+	this._setCnv("&#8593;", 1, 1); break;
+      }
+    },
+    /**
+       @memberof Nehan.Char
+       @param ligature {String}
+    */
+    setLigature : function(ligature){
+      this.ligature = ligature;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isNewLine : function(){
+      return this.data === "\n";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isNbsp : function(){
+      return (this.data === " " || this.cnv === "&nbsp;");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isThinsp : function(){
+      return this.cnv === "&thinsp;";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isEnsp : function(){
+      return this.cnv === "&ensp;";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isEmsp : function(){
+      return this.cnv === "&emsp;";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isTabSpace : function(){
+      return (this.data === "\t" || this.cnv === "&#09;");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isSpace : function(){
+      return this.isNbsp() || this.isTabSpace() || this.isThinsp() || this.isEnsp() || this.isEmsp();
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isIdeographicSpace: function(){
+      return this.data === "\u3000";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isWhiteSpace : function(){
+      return this.isNewLine() || this.isSpace();
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isImgChar : function(){
+      return (typeof this.img != "undefined");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isCnvChar : function(){
+      return (typeof this.cnv != "undefined");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isRotateChar : function(){
+      return (typeof this.rotate != "undefined");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isCharRef : function(){
+      return this.isRef;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isKerningChar : function(){
+      return this.isZenkaku() && (this.isKutenTouten() || this.isKakko());
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+    */
+    isDash : function(){
+      return this.cnv === "&#8212;";
+    },
+    /**
+       @memberof Nehan.Char
+       @param color {Nehan.Color}
+       @return {string}
+     */
+    getImgSrc : function(color){
+      return [Nehan.Display.fontImgRoot, this.img, color + ".png"].join("/");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isPaddingEnable : function(){
+      return (typeof this.paddingStart != "undefined" || typeof this.paddingEnd != "undefined");
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isTenten : function(){
+      return this.img && this.img === "tenten";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isHeadNg : function(){
+      return Nehan.List.mem(__head_ng, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isTailNg : function(){
+      return Nehan.List.mem(__tail_ng, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isSmallKana : function(){
+      return Nehan.List.mem(__small_kana, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isSingleHalfChar : function(){
+      return this.data.length === 1 && __rex_half_char.test(this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isKakkoStart : function(){
+      return Nehan.List.mem(__kakko_start, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isKakkoEnd : function(){
+      return Nehan.List.mem(__kakko_end, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isKakko : function(){
+      return this.isKakkoStart() || this.isKakkoEnd();
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isKuten : function(){
+      return Nehan.List.mem(__kuten, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isTouten : function(){
+      return Nehan.List.mem(__touten, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isKutenTouten : function(){
+      return this.isKuten() || this.isTouten();
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isZenkaku : function(){
+      return escape(this.data).charAt(1) === "u";
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isHankaku : function(){
+      return !this.isZenkaku(this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isHalfKana : function(){
+      return __rex_half_kana.test(this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isHalfKanaSmall : function(){
+      return __rex_half_kana_small.test(this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    isLigature : function(){
+      return Nehan.List.mem(__voiced_mark, this.data);
+    },
+    /**
+       @memberof Nehan.Char
+       @return {boolean}
+     */
+    hasLigature : function(){
+      return (typeof this.ligature !== "undefined");
+    }
+  };
+
+  return Char;
+})();
+
+Nehan.Word = (function(){
+
+  var __cut_word_by_metrics = function(word, font, measure){
+    for(var i = word.data.length - 1; i >= 1; i--){
+      var head_part = word.data.substring(0, i);
+      var part_measure = Math.ceil(Nehan.TextMetrics.getMeasure(font, head_part));
+      //console.log("head_part:%s(%d) for %d", head_part, part_measure, measure);
+      if(part_measure <= measure){
+	var head_word = new Nehan.Word(head_part, true);
+	head_word.bodySize = measure;
+	return head_word;
+      }
+    }
+    return word;
+  };
+
+  var __cut_word_rough = function(word, font, measure){
+    var half_size = Math.round(font.size / 2);
+    var head_count = Math.round(measure / half_size);
+    var head_word = new Nehan.Word(word.data.substring(0, head_count), true);
+    head_word.bodySize = measure;
+    return head_word
+  };
+
+  var __cut_word = function(word, font, measure){
+    if(Nehan.TextMetrics.isEnable()){
+      return __cut_word_by_metrics(word, font, measure);
+    }
+    return __cut_word_rough(word, font, measure);
+  };
+
+  /**
+     @memberof Nehan
+     @class Word
+     @classdesc abstraction of alphabetical phrase.
+     @constructor
+     @param word {String}
+     @param divided {boolean} - true if word is divided by too long phrase and overflow inline.
+  */
+  function Word(word, divided){
+    this.data = word;
+    this._type = "word";
+    this._divided = divided || false;
+  }
+
+  Word.prototype = {
+    /**
+       @memberof Nehan.Word
+       @return {bool}
+    */
+    isHeadNg: function(){
+      return false; // TODO
+    },
+    /**
+       @memberof Nehan.Word
+       @return {bool}
+    */
+    isTailNg: function(){
+      return false; // TODO
+    },
+    /**
+       @memberof Nehan.Word
+       @return {string}
+     */
+    getData : function(){
+      return this.data;
+    },
+    /**
+       @memberof Nehan.Word
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssVertTrans : function(line){
+      var css = {};
+      if(line.style.letterSpacing){
+	css["letter-spacing"] = line.style.letterSpacing + "px";
+      }
+      css.width = line.style.getFontSize() + "px";
+      css.height = this.bodySize + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Word
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssVertTransBody : function(line){
+      var css = {};
+      return css;
+    },
+    /**
+       @memberof Nehan.Word
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssVertTransBodyTrident : function(line){
+      var css = {};
+      css.width = line.style.getFontSize() + "px";
+      css.height = this.bodySize + "px";
+      css["transform-origin"] = "50% 50%";
+
+      // force set line-height to measure(this.bodySize) before rotation,
+      // and fix offset by translate after rotatation.
+      css["line-height"] = this.bodySize + "px";
+      var trans = Math.floor((this.bodySize - line.style.getFontSize()) / 2);
+      if(trans > 0){
+	css.transform = "rotate(90deg) translate(-" + trans + "px, 0)";
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.Word
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssVertTransIE : function(line){
+      var css = {}, font_size = line.style.getFontSize();
+      css["css-float"] = "left";
+      css["writing-mode"] = "tb-rl";
+      css["letter-spacing"] = (line.style.letterSpacing || 0) + "px";
+      css["padding-left"] = Math.round(font_size / 2) + "px";
+      css["line-height"] = font_size + "px";
+      return css;
+    },
+    /**
+       @memberof Nehan.Word
+       @return {int}
+    */
+    getCharCount : function(){
+      return 1; // word is count by 1 character.
+    },
+    /**
+       @memberof Nehan.Word
+       @param flow {Nehan.BoxFlow}
+       @param letter_spacing {int}
+       @return {int}
+    */
+    getAdvance : function(flow, letter_spacing){
+      return Math.floor(this.bodySize + (letter_spacing || 0) * this.getLetterCount());
+    },
+    /**
+       @memberof Nehan.Word
+       @return {boolean}
+    */
+    hasMetrics : function(){
+      return (typeof this.bodySize !== "undefined");
+    },
+    /**
+       @memberof Nehan.Word
+       @return {int}
+    */
+    countUpper : function(){
+      var count = 0;
+      for(var i = 0; i < this.data.length; i++){
+	if(/[A-Z]/.test(this.data.charAt(i))){
+	  count++;
+	}
+      }
+      return count;
+    },
+    /**
+       @memberof Nehan.Word
+       @param flow {Nehan.BoxFlow}
+       @param font {Nehan.Font}
+    */
+    setMetrics : function(flow, font){
+      var rough_measure = Math.ceil(this.data.length * font.size * 0.5);
+      if(Nehan.TextMetrics.isEnable()){
+	var text_measure = Math.ceil(Nehan.TextMetrics.getMeasure(font, this.data));
+	//console.log("[%s]:%d(rough = %d)", this.data, text_measure, rough_measure);
+	this.bodySize = Math.max(text_measure, rough_measure); // use longer one
+	return;
+      }
+      this.bodySize = rough_measure;
+      if(font.isBold()){
+	this.bodySize += Math.floor(Nehan.Display.boldRate * this.bodySize);
+      }
+    },
+    /**
+       @memberof Nehan.Word
+       @return {int}
+    */
+    getLetterCount : function(){
+      return this.data.length;
+    },
+    /**
+       @memberof Nehan.Word
+       @param enable {boolean}
+    */
+    setDivided : function(enable){
+      this._divided = enable;
+    },
+    /**
+       @memberof Nehan.Word
+       @param enable {boolean}
+    */
+    isDivided : function(){
+      return this._divided;
+    },
+    /**
+       devide word by [measure] size and return first half of word.
+
+       @memberof Nehan.Word
+       @param font_size {int}
+       @param measure {int}
+       @return {Nehan.Word}
+    */
+    cutMeasure : function(flow, font, measure){
+      var head_word = __cut_word(this, font, measure);
+      var rest_str = this.data.slice(head_word.data.length);
+      if(rest_str === ""){
+	return this;
+      }
+      this.data = rest_str;
+      this.setDivided(true);
+      this.setMetrics(flow, font); // update bodySize
+      return head_word;
+    }
+  };
+  
+  return Word;
+})();
+
+
+Nehan.Tcy = (function(){
+  /**
+     @memberof Nehan
+     @class Tcy
+     @classdesc abstraction of tcy(tate-chu-yoko) character.
+     @constructor
+     @param tcy {String}
+  */
+  function Tcy(tcy){
+    this.data = tcy;
+    this._type = "tcy";
+  }
+
+  Tcy.prototype = {
+    /**
+       @memberof Nehan.Tcy
+       @return {bool}
+    */
+    isHeadNg: function(){
+      return false; // TODO
+    },
+    /**
+       @memberof Nehan.Tcy
+       @return {bool}
+    */
+    isTailNg: function(){
+      return false; // TODO
+    },
+    /**
+       @memberof Nehan.Tcy
+       @return {string}
+     */
+    getData : function(){
+      return this.data;
+    },
+    /**
+       @memberof Nehan.Tcy
+       @return {int}
+    */
+    getCharCount : function(){
+      return 1;
+    },
+    /**
+       @memberof Nehan.Tcy
+       @return {int}
+    */
+    getAdvance : function(flow, letter_spacing){
+      return this.bodySize + letter_spacing;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssVert : function(line){
+      var css = {};
+      css["text-align"] = "center";
+      css["font-family"] = "monospace";
+      css["font-weight"] = "normal";
+      return css;
+    },
+    /**
+       @memberof Nehan.Char
+       @return {Object}
+    */
+    getCssHori : function(line){
+      var css = {};
+      if(this.data.length === 1){
+	css.display = "inline-block";
+	css.width = "1em";
+	css["text-align"] = "center";
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.Tcy
+       @return {boolean}
+    */
+    hasMetrics : function(){
+      return (typeof this.bodySize != "undefined");
+    },
+    /**
+       @memberof Nehan.Tcy
+       @param flow {Nehan.BoxFlow}
+       @param font {Nehan.Font}
+    */
+    setMetrics : function(flow, font){
+      if(flow.isTextVertical()){
+	this.bodySize = font.size;
+      } else {
+	this.bodySize = (this.data.length <= 1)? font.size : Math.floor(1.2 * font.size);
+      }
+    }
+  };
+
+  return Tcy;
+})();
+
+
+Nehan.Ruby = (function(){
+  /**
+     @memberof Nehan
+     @class Ruby
+     @classdesc abstraction of ruby text.
+     @constructor
+     @param rbs {Array<Nehan.Char>} - characters of &lt;rb&gt; tag.
+     @param rt {Nehan.Tag}
+  */
+  function Ruby(rbs, rt){
+    this._type = "ruby";
+    this.rbs = rbs;
+    this.rt = rt;
+  }
+
+  Ruby.prototype = {
+    /**
+       @memberof Nehan.Ruby
+       @return {boolean}
+    */
+    hasMetrics : function(){
+      return (typeof this.advanceSize !== "undefined");
+    },
+    /**
+       @memberof Nehan.Ruby
+       @return {int}
+    */
+    getCharCount : function(){
+      return this.rbs? this.rbs.length : 0;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @return {int}
+    */
+    getAdvance : function(flow){
+      return this.advanceSize;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @return {Array<Nehan.Char>}
+    */
+    getRbs : function(){
+      return this.rbs;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @return {String}
+    */
+    getRbString : function(){
+      return Nehan.List.map(this.rbs, function(rb){
+	return rb.data || "";
+      }).join("");
+    },
+    /**
+       @memberof Nehan.Ruby
+       @return {String}
+    */
+    getRtString : function(){
+      return this.rt? this.rt.getContent() : "";
+    },
+    /**
+       @memberof Nehan.Ruby
+       @return {int}
+    */
+    getRtFontSize : function(){
+      return this.rtFontSize;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssVertRt : function(line){
+      var css = {};
+      css["css-float"] = "left";
+      return css;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssHoriRt : function(line){
+      var css = {};
+      var offset = Math.floor((line.style.getFontSize() - this.getRtFontSize()) / 3);
+      css["font-size"] = this.getRtFontSize() + "px";
+      css["line-height"] = "1em";
+      return css;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssVertRb : function(line){
+      var css = {};
+      css["css-float"] = "left";
+      if(this.padding){
+	Nehan.Args.copy(css, this.padding.getCss());
+      }
+      return css;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssHoriRb : function(line){
+      var css = {};
+      if(this.padding){
+	Nehan.Args.copy(css, this.padding.getCss());
+      }
+      css["text-align"] = "center";
+      css["line-height"] = "1em";
+      return css;
+    },
+    /**
+       @memberof Nehan.Ruby
+       @param flow {Nehan.BoxFlow}
+       @param font {Nehan.Font}
+       @param letter_spacing {int}
+    */
+    setMetrics : function(flow, font, letter_spacing){
+      this.rtFontSize = Nehan.Display.getRtFontSize(font.size);
+      var advance_rbs = Nehan.List.fold(this.rbs, 0, function(ret, rb){
+	rb.setMetrics(flow, font);
+	return ret + rb.getAdvance(flow, letter_spacing);
+      });
+      var advance_rt = this.rtFontSize * this.getRtString().length;
+      this.advanceSize = advance_rbs;
+      if(advance_rt > advance_rbs){
+	var ctx_space = Math.ceil((advance_rt - advance_rbs) / 2);
+	if(this.rbs.length > 0){
+	  this.padding = new Nehan.Padding();
+	  this.padding.setStart(flow, ctx_space);
+	  this.padding.setEnd(flow, ctx_space);
+	}
+	this.advanceSize += ctx_space + ctx_space;
+      }
+    }
+  };
+
+  return Ruby;
+})();
+
+
+/**
+   utility module to check token type.
+
+   @namespace Nehan.Token
+*/
+Nehan.Token = {
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isTag : function(token){
+    return token instanceof Nehan.Tag;
+  },
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isText : function(token){
+    return (
+      token instanceof Nehan.Text ||
+      token instanceof Nehan.Char ||
+      token instanceof Nehan.Word ||
+      token instanceof Nehan.Tcy ||
+      token instanceof Nehan.Ruby
+    );
+  },
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isChar : function(token){
+    return token instanceof Nehan.Char;
+  },
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isWord : function(token){
+    return token instanceof Nehan.Word;
+  },
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isTcy : function(token){
+    return token instanceof Nehan.Tcy;
+  },
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isEmphaTargetable : function(token){
+    return token instanceof Nehan.Char || token instanceof Nehan.Tcy;
+  },
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isNewLine : function(token){
+    return token instanceof Nehan.Char && token.isNewLine();
+  },
+  /**
+     @memberof Nehan.Token
+     @param {token}
+     @return {boolean}
+  */
+  isWhiteSpace : function(token){
+    return token instanceof Nehan.Char && token.isWhiteSpace();
+  }
+};
+
+
+Nehan.ListStyleType = (function(){
+  /**
+     @memberof Nehan
+     @class ListStyleType
+     @classdesc abstraction of list-style-type.
+     @constructor
+     @param pos {String} - "disc", "circle", "square", "lower-alpha" .. etc
+  */
+  function ListStyleType(type){
+    this.type = type;
+  }
+
+  var __marker_text = {
+    "disc": "&#x2022;",
+    "circle":"&#x25CB;",
+    "square":"&#x25A0;"
+  };
+
+  ListStyleType.prototype = {
+    /**
+       @memberof Nehan.ListStyleType
+       @return {boolean}
+    */
+    isDecimalList : function(){
+      return (this.type === "decimal" || this.type === "decimal-leading-zero");
+    },
+    /**
+       @memberof Nehan.ListStyleType
+       @return {boolean}
+    */
+    isNoneList : function(){
+      return this.type === "none";
+    },
+    /**
+       @memberof Nehan.ListStyleType
+       @return {boolean}
+    */
+    isMarkList : function(){
+      return (this.type === "disc" ||
+	      this.type === "circle" ||
+	      this.type === "square");
+    },
+    /**
+       @memberof Nehan.ListStyleType
+       @return {boolean}
+    */
+    isCountableList : function(){
+      return (!this.isNoneList() && !this.isMarkList());
+    },
+    /**
+       @memberof Nehan.ListStyleType
+       @return {boolean}
+    */
+    isHankaku : function(){
+      return (this.type === "lower-alpha" || this.type === "upper-alpha" ||
+	      this.type === "lower-roman" || this.type === "upper-roman" ||
+	      this.isDecimalList());
+    },
+    /**
+       @memberof Nehan.ListStyleType
+       @return {boolean}
+    */
+    isZenkaku : function(){
+      return !this.isHankaku();
+    },
+    _getMarkerDigitString : function(decimal){
+      if(this.type === "decimal"){
+	return decimal.toString(10);
+      }
+      if(this.type === "decimal-leading-zero"){
+	if(decimal < 10){
+	  return "0" + decimal.toString(10);
+	}
+	return decimal.toString(10);
+      }
+      return Nehan.Cardinal.getStringByName(this.type, decimal);
+    },
+    /**
+       @memberof Nehan.ListStyleType
+       @return {String}
+    */
+    getMarkerHtml : function(count){
+      var text = this.getMarkerText(count);
+      if(this.isZenkaku()){
+	return Nehan.Html.tagWrap("span", text, {
+	  "class":"nehan-tcy"
+	});
+      }
+      return text;
+    },
+    /**
+       @memberof Nehan.ListStyleType
+       @return {String}
+    */
+    getMarkerText : function(count){
+      if(this.isNoneList()){
+	return Nehan.Const.space;
+      }
+      if(this.isMarkList()){
+	return __marker_text[this.type] || "";
+      }
+      var digit = this._getMarkerDigitString(count);
+      return digit + "."; // add period as postfix.
+    }
+  };
+
+  return ListStyleType;
+})();
+
+
+Nehan.ListStylePos = (function(){
+  /**
+     @memberof Nehan
+     @class ListStylePos
+     @classdesc abstraction of list-style-pos.
+     @constructor
+     @param pos {String} - "outside" or "inside"
+  */
+  function ListStylePos(pos){
+    this.pos = pos;
+  }
+
+  ListStylePos.prototype = {
+    /**
+       @memberof Nehan.ListStylePos
+       @return {boolean}
+    */
+    isOutside : function(){
+      return this.pos === "outside";
+    },
+    /**
+       @memberof Nehan.ListStylePos
+       @return {boolean}
+    */
+    isInside : function(){
+      return this.pos === "inside";
+    }
+  };
+
+  return ListStylePos;
+})();
+
+
+Nehan.ListStyleImage = (function(){
+  /**
+     @memberof Nehan
+     @class ListStyleImage
+     @classdesc abstraction of list-style-image.
+     @constructor
+     @param image {Object}
+     @param image.width {Int} - if undefined, use {@link Nehan.Display}.fontSize
+     @param image.height {Int} - if undefined, use {@link Nehan.Display}.fontSize
+     @param image.url {String}
+  */
+  function ListStyleImage(image){
+    this.image = image;
+  }
+
+  ListStyleImage.prototype = {
+    /**
+       @memberof Nehan.ListStyleImage
+       @param count {int}
+       @return {string}
+    */
+    getMarkerHtml : function(count){
+      var url = this.image.url;
+      var width = this.image.width || Nehan.Display.fontSize;
+      var height = this.image.height || Nehan.Display.fontSize;
+      return Nehan.Html.tagSingle("img", {
+	"src":url,
+	"class":"nehan-list-image",
+	"width":width,
+	"height":height
+      });
+    }
+  };
+
+  return ListStyleImage;
+})();
+
+
+Nehan.ListStyle = (function(){
+  /**
+     @memberof Nehan
+     @class ListStyle
+     @classdesc abstraction of list-style.
+     @constructor
+     @param opt {Object}
+     @param opt.type {Nehan.ListStyleType}
+     @param opt.position {Nehan.ListStylePos}
+     @param opt.image {Nehan.ListStyleImage}
+  */
+  function ListStyle(opt){
+    this.type = new Nehan.ListStyleType(opt.type || "none");
+    this.position = new Nehan.ListStylePos(opt.position || "outside");
+    this.image = (opt.image !== "none")? new Nehan.ListStyleImage(opt.image) : null;
+  }
+
+  ListStyle.prototype = {
+    /**
+       @memberof Nehan.ListStyle
+       @return {boolean}
+    */
+    isMultiCol : function(){
+      return this.position.isOutside();
+    },
+    /**
+       @memberof Nehan.ListStyle
+       @return {boolean}
+    */
+    isInside : function(){
+      return this.position.isInside();
+    },
+    /**
+       @memberof Nehan.ListStyle
+       @return {boolean}
+    */
+    isImageList : function(){
+      return (this.image !== null);
+    },
+    /**
+       @memberof Nehan.ListStyle
+       @param count {int}
+       @return {String}
+    */
+    getMarkerHtml : function(count){
+      if(this.image !== null){
+	return this.image.getMarkerHtml(count);
+      }
+      return this.type.getMarkerHtml(count);
+    }
+  };
+
+  return ListStyle;
+})();
+
+Nehan.TextEmphaStyle = (function(){
+  var __default_empha_style = "filled dot";
+  var __empha_marks = {
+    // dot
+    "filled dot":"&#x2022;",
+    "open dot":"&#x25e6;",
+
+    // circle
+    "filled circle":"&#x25cf;",
+    "open circle":"&#x25cb;",
+
+    // double-circle
+    "filled double-circle":"&#x25c9;",
+    "open double-circle":"&#x25ce;",
+
+    // triangle
+    "filled triangle":"&#x25b2;",
+    "open triangle":"&#x25b3;",
+
+    // sesame
+    "filled sesame":"&#xfe45;",
+    "open sesame":"&#xfe46;"
+  };
+
+  /**
+     @memberof Nehan
+     @class TextEmphaStyle
+     @classdesc abstraction of text-empha-position.
+     @constructor
+     @param value {String} - style name. default "none".
+     @example
+     * new TextEmphaStyle().getText(); // ""
+     * new TextEmphaStyle().getText("none"); // ""
+     * new TextEmphaStyle("filled dot").getText(); // "&#x2022";
+     * new TextEmphaStyle("foo").getText(); // "foo";
+  */
+  function TextEmphaStyle(value){
+    this.value = value || "none";
+  }
+
+  TextEmphaStyle.prototype = {
+    /**
+       @memberof Nehan.TextEmphaStyle
+       @return {bool}
+    */
+    isEnable : function(){
+      return this.value != "none";
+    },
+    /**
+       @memberof Nehan.TextEmphaStyle
+       @param value {String} - empha style name
+    */
+    setValue : function(value){
+      this.value = value;
+    },
+    /**
+       @memberof Nehan.TextEmphaStyle
+       @return {String}
+    */
+    getText : function(){
+      if(!this.isEnable()){
+	return "";
+      }
+      return __empha_marks[this.value] || this.value || __empha_marks[__default_empha_style];
+    },
+    /**
+       @memberof Nehan.TextEmphaStyle
+       @return {Object}
+    */
+    getCss : function(){
+      var css = {};
+      //return css["text-emphasis-style"] = this.value;
+      return css;
+    }
+  };
+
+  return TextEmphaStyle;
+})();
+
+
+Nehan.TextEmphaPos = (function(){
+  /**
+     @memberof Nehan
+     @class TextEmphaPos
+     @classdesc abstraction of text-empha-position, but not impremented yet.
+     @constructor
+     @param opt {Object}
+     @param opt.hori {String} - horizontal empha pos, default "over"
+     @param opt.vert {String} - vertical empha pos, default "right"
+  */
+  function TextEmphaPos(opt){
+    Nehan.Args.merge(this, {
+      hori:"over",
+      vert:"right"
+    }, opt || {});
+  }
+
+  TextEmphaPos.prototype = {
+    /**
+       not implemented yet.
+
+       @memberof Nehan.TextEmphaPos
+       @return {Object}
+    */
+    getCss : function(line){
+      var css = {};
+      return css;
+    }
+  };
+
+  return TextEmphaPos;
+})();
+
+
+Nehan.TextEmpha = (function(){
+  /**
+     @memberof Nehan
+     @class TextEmpha
+     @classdesc abstraction of text emphasis.
+     @constructor
+     @param opt {Object}
+     @param opt.style {Nehan.TextEmphaStyle}
+     @param opt.pos {Nehan.TextEmphaPos}
+     @param opt.color {Nehan.Color}
+  */
+  function TextEmpha(opt){
+    opt = opt || {};
+    this.style = opt.style || new Nehan.TextEmphaStyle();
+    this.pos = opt.pos || new Nehan.TextEmphaPos();
+    this.color = opt.color || new Nehan.Color(Nehan.Display.fontColor);
+  }
+
+  TextEmpha.prototype = {
+    /**
+       @memberof Nehan.TextEmpha
+       @return {boolean}
+    */
+    isEnable : function(){
+      return this.style && this.style.isEnable();
+    },
+    /**
+       get text of empha style, see {@link Nehan.TextEmphaStyle}.
+
+       @memberof Nehan.TextEmpha
+       @return {String}
+    */
+    getText : function(){
+      return this.style? this.style.getText() : "";
+    },
+    /**
+       @memberof Nehan.TextEmpha
+       @return {int}
+    */
+    getExtent : function(font_size){
+      return font_size * 3;
+    },
+    /**
+       @memberof Nehan.TextEmpha
+       @param line {Nehan.Box}
+       @param chr {Nehan.Char}
+       @return {Object}
+    */
+    getCssVertEmphaWrap : function(line, chr){
+      var css = {}, font_size = line.style.getFontSize();
+      css["text-align"] = "left";
+      css.width = this.getExtent(font_size) + "px";
+      css.height = chr.getAdvance(line.style.flow, line.style.letterSpacing || 0) + "px";
+      css.position = "relative";
+      return css;
+    },
+    /**
+       @memberof Nehan.TextEmpha
+       @param line {Nehan.Box}
+       @param chr {Nehan.Char}
+       @return {Object}
+    */
+    getCssHoriEmphaWrap : function(line, chr){
+      var css = {}, font_size = line.style.getFontSize();
+      css.display = "inline-block";
+      css.width = chr.getAdvance(line.style.flow, line.style.letterSpacing) + "px";
+      css.height = this.getExtent(font_size) + "px";
+      return css;
+    }
+  };
+
+  return TextEmpha;
+})();
+
+
+/**
+ * kerning utility module<br>
+ * Note that charactors that can be kerned are already kerned in nehan.js.<br>
+ * So this module only 'add' the space to start/end direction.
+
+ @namespace Nehan.Kerning
+*/
+Nehan.Kerning = {
+  /**
+     @memberof Nehan.Kerning
+     @param cur_char(zenkaku) {Nehan.Char}
+     @param prev_text {Nehan.Char | Nehan.Word | Nehan.Tcy}
+     @param next_text {Nehan.Char | Nehan.Word | Nehan.Tcy}
+  */
+  set : function(cur_char, prev_text, next_text){
+    if(cur_char.isKakkoStart()){
+      this._setKerningStart(cur_char, prev_text);
+    } else if(cur_char.isKakkoEnd() || cur_char.isKutenTouten()){
+      this._setKerningEnd(cur_char, next_text);
+    }
+  },
+  _setKerningStart : function(cur_char, prev_text){
+    var space_rate = this._getTextSpaceStart(cur_char, prev_text);
+    if(space_rate > 0){
+      cur_char.spaceRateStart = space_rate;
+    }
+  },
+  _setKerningEnd : function(cur_char, next_text){
+    var space_rate = this._getTextSpaceEnd(cur_char, next_text);
+    if(space_rate > 0){
+      cur_char.spaceRateEnd = space_rate;
+    }
+  },
+  // if previous text is not exists or previous text is not left brace(or paren etc),
+  // add space to start direction.
+  //
+  // [example:add space]
+  //   (  => [SPACE](
+  //   a( => a[SPACE](
+  //
+  // [example:do nothing]
+  //   (( => ((
+  //   {( => {(
+  _getTextSpaceStart : function(cur_char, prev_text){
+    if(prev_text === null){
+      return 0.5;
+    }
+    if(prev_text instanceof Nehan.Char && prev_text.isKakkoStart()){
+      return 0;
+    }
+    return 0.5;
+  },
+  // if next text is not exists or next text is not right brace(or paren etc),
+  // add space to end direction.
+  //
+  // [example:add space]
+  //   )  => )[SPACE]
+  //   )a => )[SPACE]a
+  //
+  // [example:do nothing]
+  //   )) => ))
+  //   )} => )}
+  //   ,( => ,(
+  _getTextSpaceEnd : function(cur_char, next_text){
+    if(next_text === null){
+      return 0.5;
+    }
+    if(next_text instanceof Nehan.Char && (cur_char.isKutenTouten() && next_text.isKakkoStart())){
+      return 0;
+    }
+    if(next_text instanceof Nehan.Char && (next_text.isKakkoEnd() || next_text.isKutenTouten())){
+      return 0;
+    }
+    return 0.5;
+  }
+};
+
+Nehan.PartitionUnit = (function(){
+  /**
+     @memberof Nehan
+     @class PartitionUnit
+     @classdesc abstraction for unit size of partition.
+     @constructor
+     @param opt {Object}
+     @param opt.weight {int} - partition weight, larger one gets more measure.
+     @param opt.isStatic {boolean} - if true, size is fixed.
+  */
+  function PartitionUnit(opt){
+    this.weight = opt.weight || 0;
+    this.isStatic = opt.isStatic || false;
+  }
+
+  PartitionUnit.prototype = {
+    /**
+       get unit size in px.
+
+       @memberof Nehan.PartitionUnit
+       @param measure {int}
+       @param total_weight {int}
+       @return {int} size in px
+    */
+    getSize : function(measure, total_weight){
+      return Math.floor(measure * this.weight / total_weight);
+    },
+    /**
+       @memberof Nehan.PartitionUnit
+       @param punit {Nehan.ParitionUnit}
+       @return {Nehan.PartitionUnit}
+    */
+    mergeTo : function(punit){
+      if(this.isStatic && !punit.isStatic){
+	return this;
+      }
+      if(!this.isStatic && punit.isStatic){
+	return punit;
+      }
+      return (this.weight > punit.weight)? this : punit;
+    }
+  };
+
+  return PartitionUnit;
+})();
+
+
+Nehan.Partition = (function(){
+  /**
+     @memberof Nehan
+     @class Partition
+     @classdesc abstraction for partition of measure size.
+     @constructor
+     @param punits {Array.<PartitionUnit>}
+  */
+  function Partition(punits){
+    this._punits = punits || []; // partition units
+  }
+
+  var __levelize = function(sizes, min_size){
+    // filter parts that is smaller than min_size.
+    var smaller_parts = Nehan.List.filter(sizes, function(size){ return size < min_size; });
+
+    // if all elements has enough space for min_size, nothing to do.
+    if(smaller_parts.length === 0){
+      return sizes;
+    }
+
+    // total size that must be added to small parts.
+    var delta_plus_total = Nehan.List.fold(smaller_parts, 0, function(ret, size){ return ret + (min_size - size); });
+
+    // filter parts that has enough space.
+    var larger_parts = Nehan.List.filter(sizes, function(size){
+      return size - min_size >= min_size; // check if size is more than min_size and over even if min_size is subtracted.
+    });
+
+    // if there are no enough rest space, nothing to do.
+    if(larger_parts.length === 0){
+      return sizes;
+    }
+
+    var delta_minus_avg = Math.floor(delta_plus_total / larger_parts.length);
+    return Nehan.List.map(sizes, function(size){
+      return (size < min_size)? min_size : ((size - min_size >= min_size)? size - delta_minus_avg : size);
+    });
+  };
+
+  Partition.prototype = {
+    /**
+       @memberof Nehan.Partition
+       @param index {int}
+       @return {Nehan.PartitionUnit}
+    */
+    get : function(index){
+      return this._punits[index] || null;
+    },
+    /**
+       @memberof Nehan.Partition
+       @return {int}
+    */
+    getLength : function(){
+      return this._punits.length;
+    },
+    /**
+       @memberof Nehan.Partition
+       @return {int}
+    */
+    getTotalWeight : function(){
+      return Nehan.List.fold(this._punits, 0, function(ret, punit){
+	return ret + punit.weight;
+      });
+    },
+    /**
+       @memberof Nehan.Partition
+       @param partition {Nehan.Partition}
+       @return {Nehan.Partition}
+    */
+    mergeTo : function(partition){
+      if(this.getLength() !== partition.getLength()){
+	throw "Partition::mergeTo, invalid merge target(length not same)";
+      }
+      // merge(this._punits[0], partition._punits[0]),
+      // merge(this._punits[1], partition._punits[1]),
+      // ...
+      // merge(this._punits[n-1], partition._punits[n-1])
+      var merged_punits =  Nehan.List.mapi(this._punits, function(i, punit){
+	return punit.mergeTo(partition.get(i));
+      });
+      return new Nehan.Partition(merged_punits);
+    },
+    /**
+       @memberof Nehan.Partition
+       @param measure {int} - max measure size in px
+       @return {Array<int>} - divided size array
+    */
+    mapMeasure : function(measure){
+      var total_weight = this.getTotalWeight();
+      var sizes =  Nehan.List.map(this._punits, function(punit){
+	return punit.getSize(measure, total_weight);
+      });
+      return __levelize(sizes, Nehan.Display.minTableCellSize);
+    }
+  };
+
+  return Partition;
+})();
+
+
+// key : partition count
+// value : Partition
+Nehan.PartitionHashSet = (function(){
+  /**
+     @memberof Nehan
+     @class PartitionHashSet
+     @classdesc hash set to manage partitioning of layout. key = partition_count, value = {@link Nehan.Partition}.
+     @extends {Nehan.HashSet}
+   */
+  function PartitionHashSet(){
+    Nehan.HashSet.call(this);
+  }
+  Nehan.Class.extend(PartitionHashSet, Nehan.HashSet);
+
+  /**
+     @memberof Nehan.PartitionHashSet
+     @param old_part {Nehan.Partition}
+     @param new_part {Nehan.Partition}
+     @return {Nehan.Partition}
+  */
+  PartitionHashSet.prototype.merge = function(old_part, new_part){
+    return old_part.mergeTo(new_part);
+  };
+
+  /**
+     get partition size(in px) array.
+
+     @memberof Nehan.PartitionHashSet
+     @param opt {Object}
+     @param opt.partitionCount {int}
+     @param opt.measure {int}
+     @return {Array.<int>}
+  */
+  PartitionHashSet.prototype.getSizes = function(opt){
+    var partition = this.get(opt.partitionCount);
+    return partition.mapMeasure(opt.measure);
+  };
+
+  return PartitionHashSet;
 })();
 
 
@@ -5769,14 +8506,6 @@ var Config = {
   useVerticalGlyphIfEnable:true,
 
   /**
-     calculate strict alphabetical metrics using hidden canvas.
-     @memberof Nehan.Config
-     @type {boolean}
-     @default true
-   */
-  useStrictWordMetrics:true,
-
-  /**
      enable ommiting element by start tag.
      @memberof Nehan.Config
      @type {boolean}
@@ -5803,302 +8532,6 @@ var Config = {
   */
   allowedInlineStyleProps:[]
 };
-
-/**
-   standard page settings.
-   @namespace Nehan.Display
-*/
-var Display = {
-  /**
-     <pre>
-      define root where content text starts from.
-      'body' or 'html' or 'document' are enabled.
-      
-      1. 'document'
-         &lt;!doctype xxx&gt; tag is included in content text.
-      2. 'html'
-         &lt;head&gt; and &lt;html&gt; are included in content text.
-      3. 'body'
-         &lt;body&gt; or content of body itself is included in content text.
-     </pre>
-     @memberof Nehan.Display
-     @type {String}
-     @default "document"
-  */
-  root:"document",
-
-  /**
-     standard inline direction, "vert" or "hori".
-
-     @memberof Nehan.Display
-     @type {String}
-     @default "vert"
-  */
-  direction:"vert",
-  /**
-     standard box flow for "vert" and "hori".
-
-     @memberof Nehan.Display
-     @type {Object}
-     @default {hori:"lr-tb", vert:"tb-rl"}
-  */
-  boxFlow:{
-    hori:"lr-tb", // used when direction is 'hori'. notice that rl-tb is not supported yet.
-    vert:"tb-rl", // used when direction is 'vert'. "tb-lr" is also supported.
-  },
-  /**
-     standard paging direction for "vert" and "hori". "lr" means left to right, "rl" means right to left.
-     
-     @memberof Nehan.Display
-     @type {Object}
-     @default {hori:"lr", vert:"rl"}
-  */
-  pagingDirection:{
-    hori:"lr", // paging direction 'left to right'
-    vert:"rl"  // paging direction 'right to left'
-  },
-  /**
-     standard page width, used when Style["body"].width is not defined.
-
-     @memberof Nehan.Display
-     @type {int}
-     @default screen.width
-  */
-  width: screen.width,
-  /**
-     standard page height, used when Style["body"].height is not defined.
-
-     @memberof Nehan.Display
-     @type {int}
-     @default screen.height
-  */
-  height: screen.height,
-  /**
-     standard font size, used when Style["body"]["font-size"] is not defined.
-
-     @memberof Nehan.Display
-     @type {int}
-     @default 16
-  */
-  fontSize:16,
-  /**
-     standard minimum font size.
-
-     @memberof Nehan.Display
-     @type {int}
-     @default 12
-  */
-  minFontSize:12,
-  /**
-     standard maximum font size.
-
-     @memberof Nehan.Display
-     @type {int}
-     @default 90
-  */
-  maxFontSize:90,
-  /**
-     standard minimum table cell size. if table-layout is set to 'auto', all sizes of cell are larger than this value.
-
-     @memberof Nehan.Display
-     @type {int}
-     @default 48
-  */
-  minTableCellSize:48,
-  /**
-     standard rate of ruby font size. used when Style.rt["font-size"] is not defined.
-
-     @memberof Nehan.Display
-     @type {Float}
-     @default 0.5
-  */
-  rubyRate:0.5,
-  /**
-     standard bold plus size rate, it's used to calculate sketchy bold metrics in the environment with no canvas element.
-
-     @memberof Nehan.Display
-  */
-  boldRate:0.12,
-  /**
-     standard line-height.
-
-     @memberof Nehan.Display
-     @type {Float}
-     @default 2.0
-  */
-  lineHeight: 2.0,
-  /**
-     various kind of spacing rate
-
-     @memberof Nehan.Display
-     @type {Array.<Float>}
-  */
-  spaceSizeRate:{
-    thinsp:0.2, // &thinsp;
-    nbsp:0.38,  // &nbsp;
-    ensp:0.5,   // &ensp;
-    emsp:1.0    // &emsp;
-  },
-  /**
-     count of tab space
-
-     @memberof Nehan.Display
-     @type {int}
-     @default 4
-  */
-  tabCount: 4,
-  /**
-     standard font color. this is required for browsers not supporting writing-mode to display vertical font-images.
-
-     @memberof Nehan.Display
-     @type {String}
-     @default "000000"
-  */
-  fontColor:"000000",
-  /**
-     standard link color. this is required for browsers not supporting writing-mode to display vertical font-images.
-
-     @memberof Nehan.Display
-     @type {String}
-     @default "0000FF"
-  */
-  linkColor:"0000FF",
-  /**
-     font image url. this is required for browsers not supporting writing-mode to display vertical font-images.
-
-     @memberof Nehan.Display
-     @type {String}
-     @default "https://raw.githubusercontent.com/tategakibunko/nehan.js/master/char-img"
-  */
-  fontImgRoot:"https://raw.githubusercontent.com/tategakibunko/nehan.js/master/char-img",
-
-  /**
-     standard font family. this is required to calculate proper text-metrics of alphabetical word.
-
-     @memberof Nehan.Display
-     @type {String}
-     @default "'ヒラギノ明朝 Pro W3','Hiragino Mincho Pro','HiraMinProN-W3','IPA明朝','IPA Mincho', 'Meiryo','メイリオ','ＭＳ 明朝','MS Mincho', monospace"
-  */
-  fontFamily:"'ヒラギノ明朝 Pro W3','Hiragino Mincho Pro','HiraMinProN-W3','IPA明朝','IPA Mincho', 'Meiryo','メイリオ','ＭＳ 明朝','MS Mincho', monospace",
-  //fontFamily:"'Meiryo','メイリオ','Hiragino Kaku Gothic Pro','ヒラギノ角ゴ Pro W3','Osaka','ＭＳ Ｐゴシック', monospace",
-
-  /**
-     font sizes defined by name
-
-     @memberof Nehan.Display
-     @type {Object}
-     @default <pre>
-     {
-      "xx-large":"33px",
-      "x-large":"24px",
-      "large":"18px",
-      "medium":"16px",
-      "small":"13px",
-      "x-small":"10px",
-      "xx-small":"8px",
-      "larger":"1.2em",
-      "smaller":"0.8em"
-    }
-     </pre>
-  */
-  fontSizeNames:{
-    "xx-large":"33px",
-    "x-large":"24px",
-    "large":"18px",
-    "medium":"16px",
-    "small":"13px",
-    "x-small":"10px",
-    "xx-small":"8px",
-    "larger":"1.2em",
-    "smaller":"0.8em"
-  },
-  /**
-     @memberof Nehan.Display
-     @param flow {Nehan.BoxFlow}
-     @return {int}
-  */
-  getMeasure : function(flow){
-    return this[flow.getPropMeasure()];
-  },
-  /**
-     @memberof Nehan.Display
-     @param flow {Nehan.BoxFlow}
-     @return {int}
-  */
-  getExtent : function(flow){
-    return this[flow.getPropExtent()];
-  },
-  /**
-     @memberof Nehan.Display
-     @return {String} "lr" or "rl"
-  */
-  getPagingDirection : function(){
-    return this.pagingDirection[this.direction];
-  },
-  /**
-     @memberof Nehan.Display
-     @return {string}
-  */
-  getVertBlockDir: function(){
-    return this.boxFlow.vert.splice("-")[1];
-  },
-  /**
-     @memberof Nehan.Display
-     @return {Nehan.BoxFlow}
-  */
-  getStdFont : function(){
-    var font = new Nehan.Font(Display.fontSize);
-    font.family = Display.fontFamily;
-    font.weight = "normal";
-    font.style = "normal";
-    return font;
-  },
-  /**
-     @memberof Nehan.Display
-     @return {Nehan.BoxFlow}
-  */
-  getStdBoxFlow : function(){
-    var flow_name = this.boxFlow[this.direction];
-    return BoxFlows.getByName(flow_name);
-  },
-  /**
-     @memberof Nehan.Display
-     @return {Nehan.BoxFlow}
-  */
-  getStdVertFlow : function(){
-    return BoxFlows.getByName(this.boxFlow.vert);
-  },
-  /**
-     @memberof Nehan.Display
-     @return {Nehan.BoxFlow}
-  */
-  getStdHoriFlow : function(){
-    return BoxFlows.getByName(this.boxFlow.hori);
-  },
-  /**
-     @memberof Nehan.Display
-     @return {Float}
-  */
-  getRtFontSize : function(base_font_size){
-    var rt = Style.rt || null;
-    var rt_font_size = rt? rt["font-size"] : null;
-    if(rt === null || rt_font_size === null){
-      return Math.round(this.rubyRate * base_font_size);
-    }
-    return StyleContext.prototype._computeUnitSize.call(this, rt_font_size, base_font_size);
-  },
-  /**
-     @memberof Nehan.Display
-     @return {String}
-  */
-  getPaletteFontColor : function(color){
-    if(color.getValue().toLowerCase() !== this.fontColor.toLowerCase()){
-      return color.getPaletteValue();
-    }
-    return this.fontColor;
-  }
-};
-
 
 /**
    module of html lexing rule
@@ -6179,7 +8612,7 @@ var LexingRule = (function(){
   --------------------------------------------
 
     [examples]
-    Assume that Display.direction is "hori" and Display["hori"] is "lr-tb".
+    Assume that Nehan.Display.direction is "hori" and Display["hori"] is "lr-tb".
 
     ex1. {margin:{before:"10px"}} // => {margin:{top:"10px"}}
     ex2. {float:"start"} // => {float:"left"}.
@@ -6241,7 +8674,7 @@ var LexingRule = (function(){
 
   'flip' means toggle Display["hori"] and Display["vert"].
   for example, assume that Display["hori"] is "lr-tb", and Display["vert"] is "tb-rl",
-  and current document direction(Display.direction) is "hori",
+  and current document direction(Nehan.Display.direction) is "hori",
   flow:"flip" means Display["vert"], "tb-rl".
 </pre>
 */
@@ -6845,31 +9278,31 @@ var Style = {
   // font-size classes
   //-------------------------------------------------------
   ".xx-large":{
-    "font-size": Display.fontSizeNames["xx-large"]
+    "font-size": Nehan.Display.fontSizeNames["xx-large"]
   },
   ".x-large":{
-    "font-size": Display.fontSizeNames["x-large"]
+    "font-size": Nehan.Display.fontSizeNames["x-large"]
   },
   ".large":{
-    "font-size": Display.fontSizeNames.large
+    "font-size": Nehan.Display.fontSizeNames.large
   },
   ".medium":{
-    "font-size": Display.fontSizeNames.medium
+    "font-size": Nehan.Display.fontSizeNames.medium
   },
   ".small":{
-    "font-size": Display.fontSizeNames.small
+    "font-size": Nehan.Display.fontSizeNames.small
   },
   ".x-small":{
-    "font-size": Display.fontSizeNames["x-small"]
+    "font-size": Nehan.Display.fontSizeNames["x-small"]
   },
   ".xx-small":{
-    "font-size": Display.fontSizeNames["xx-small"]
+    "font-size": Nehan.Display.fontSizeNames["xx-small"]
   },
   ".larger":{
-    "font-size": Display.fontSizeNames.larger
+    "font-size": Nehan.Display.fontSizeNames.larger
   },
   ".smaller":{
-    "font-size": Display.fontSizeNames.smaller
+    "font-size": Nehan.Display.fontSizeNames.smaller
   },
   //-------------------------------------------------------
   // box-sizing classes
@@ -7104,24 +9537,6 @@ var Style = {
 };
 
 /**
-   requestAnimationFrame wrapper function
-   @namespace Nehan
-   @function reqAnimationFrame
-*/
-var reqAnimationFrame = (function(){
-  var default_wait = 1000 / 60;
-  return window.requestAnimationFrame  ||
-    window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame    ||
-    window.msRequestAnimationFrame     ||
-    function(callback, wait){
-      var _wait = (typeof wait === "undefined")? default_wait : wait;
-      window.setTimeout(callback, _wait);
-    };
-})();
-
-
-/**
    all selector values managed by layout engine.
 
    @namespace Nehan.Selectors
@@ -7255,2199 +9670,6 @@ var Selectors = (function(){
   };
 })();
 
-/**
-   utility module to check token type.
-
-   @namespace Nehan.Token
-*/
-var Token = {
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isTag : function(token){
-    return token instanceof Nehan.Tag;
-  },
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isText : function(token){
-    return (
-      token instanceof Text ||
-      token instanceof Char ||
-      token instanceof Word ||
-      token instanceof Tcy ||
-      token instanceof Ruby
-    );
-  },
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isChar : function(token){
-    return token instanceof Char;
-  },
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isWord : function(token){
-    return token instanceof Word;
-  },
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isTcy : function(token){
-    return token instanceof Tcy;
-  },
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isEmphaTargetable : function(token){
-    return token instanceof Char || token instanceof Tcy;
-  },
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isNewLine : function(token){
-    return token instanceof Char && token.isNewLine();
-  },
-  /**
-     @memberof Nehan.Token
-     @param {token}
-     @return {boolean}
-  */
-  isWhiteSpace : function(token){
-    return token instanceof Char && token.isWhiteSpace();
-  }
-};
-
-
-var Text = (function(){
-  /**
-     @memberof Nehan
-     @class Text
-     @param content {String}
-  */
-  function Text(content){
-    this.content = content;
-  }
-
-  Text.prototype = {
-    isWhiteSpaceOnly: function(){
-      // \s contain multi character space,
-      // but we want to replace half one only.
-      var replaced = this.content
-	.replace(/ /g, "") // half space
-	.replace(/\n/g, "")
-	.replace(/\t/g, "");
-      return replaced === "";
-    },
-    getContent: function(){
-      return this.content;
-    }
-  };
-
-  return Text;
-})();
-
-var Char = (function(){
-  /**
-     @memberof Nehan
-     @class Char
-     @classdesc character object
-     @param c1 {String}
-     @param is_ref {boolean} - is character reference?
-  */
-  function Char(c1, is_ref){
-    this.data = c1;
-    this._type = "char";
-    this.isRef = is_ref || false;
-    if(this.isRef){
-      this._setupRef(c1);
-    } else {
-      this._setupNormal(c1.charCodeAt(0));
-    }
-  }
-  var __kuten = ["\u3002","."];
-  var __touten = ["\u3001", ","];
-  var __kakko_start = ["\uff62","\u300c","\u300e","\u3010","\uff3b","\uff08","\u300a","\u3008","\u226a","\uff1c","\uff5b","\x7b","\x5b","\x28", "\u2772", "\u3014"];
-  var __kakko_end = ["\u300d","\uff63","\u300f","\u3011","\uff3d","\uff09","\u300b","\u3009","\u226b","\uff1e","\uff5d","\x7d","\x5d","\x29", "\u2773", "\u3015"];
-  var __small_kana = ["\u3041","\u3043","\u3045","\u3047","\u3049","\u3063","\u3083","\u3085","\u3087","\u308e","\u30a1","\u30a3","\u30a5","\u30a7","\u30a9","\u30f5","\u30f6","\u30c3","\u30e3","\u30e5","\u30e7","\u30ee"];
-  var __head_ng = ["\uff09","\x5c","\x29","\u300d","\u3011","\u3015","\uff3d","\x5c","\x5d","\u3002","\u300f","\uff1e","\u3009","\u300b","\u3001","\uff0e","\x5c","\x2e","\x2c","\u201d","\u301f"];
-  var __tail_ng = ["\uff08","\x5c","\x28","\u300c","\u3010","\uff3b","\u3014","\x5c","\x5b","\u300e","\uff1c","\u3008","\u300a","\u201c","\u301d"];
-  var __voiced_mark = ["\u3099", "\u309a", "\u309b", "\u309c", "\uff9e", "\uff9f"];
-  var __rex_half_char = /[\w!\.\?\/:#;"',]/;
-  var __rex_half_kana = /[\uff65-\uff9f]/;
-  var __rex_half_kana_small = /[\uff67-\uff6f]/;
-
-  Char.prototype = {
-    /**
-       @memberof Nehan.Char
-       @return {string}
-    */
-    getData : function(){
-      var data = this.cnv || this.data;
-      return data + (this.ligature || "");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssPadding : function(line){
-      var padding = new Nehan.Padding();
-      if(this.paddingStart){
-	padding.setStart(line.style.flow, this.paddingStart);
-      }
-      if(this.paddingEnd){
-	padding.setEnd(line.style.flow, this.paddingEnd);
-      }
-      return padding.getCss();
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertGlyph : function(line){
-      var css = {};
-      var is_zenkaku = this.isZenkaku();
-      var is_kakko_start = this.isKakkoStart();
-      var is_kakko_end = this.isKakkoEnd();
-      var padding_enable = this.isPaddingEnable();
-      if(is_zenkaku && is_kakko_start && !padding_enable){
-	css.height = "1em";
-	css["margin-top"] = "-0.5em";
-      } else if(is_zenkaku && is_kakko_end && !padding_enable){
-	css.height = "1em";
-	css["margin-bottom"] = "-0.5em";
-      } else if(!is_kakko_start && !is_kakko_end && this.vscale < 1){
-	css.height = "0.5em";
-	Nehan.Args.copy(css, this.getCssPadding(line));
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertImgChar : function(line){
-      var css = {}, font_size = line.style.getFontSize();
-      css.display = "block";
-      css.width = font_size + "px";
-      css.height = this.getVertHeight(font_size) + "px";
-      if(this.isPaddingEnable()){
-	Nehan.Args.copy(css, this.getCssPadding(line));
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertSingleHalfChar : function(line){
-      var css = {};
-      if(line.edge){
-	css["padding-left"] = "0.25em"; // base aligned line
-      } else {
-	css["text-align"] = "center"; // normal text line(all text with same font-size)
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertHalfKana : function(line){
-      var css = {};
-      css["text-align"] = "center";
-      if(this.hasLigature()){
-	css["padding-left"] = "0.25em";
-      } else if(this.isHalfKanaSmall()){
-	css["padding-left"] = "0.25em";
-	css["margin-top"] = "-0.25em";
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertRotateCharIE : function(line){
-      var css = {}, font_size = line.style.getFontSize();
-      css["css-float"] = "left";
-      css["writing-mode"] = "tb-rl";
-      css["padding-left"] = Math.round(font_size / 2) + "px";
-      css["line-height"] = font_size + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertDashIE : function(line){
-      var css = {};
-      css["height"] = "0.84em"; // eliminate space between dash for IE.
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertEmphaText : function(line){
-      var css = {}, font_size = line.style.getFontSize();
-      css["font-size"] = "0.5em";
-      css.display = "inline-block";
-      css.width = font_size + "px";
-      css.height = font_size + "px";
-      css["position"] = "absolute";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssHoriEmphaSrc : function(line){
-      var css = {};
-      css["line-height"] = "1em";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssHoriEmphaText : function(line){
-      var css = {};
-      css.display = "inline-block";
-      css.width = "1em";
-      css.height = "1em";
-      css["padding-left"] = "0.5em";
-      css["line-height"] = "1em";
-      css["font-size"] = "0.5em";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertLetterSpacing : function(line){
-      var css = {};
-      css["margin-bottom"] = line.letterSpacing + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssHoriSpaceChar : function(line){
-      var css = {};
-      css.display = "inline-block";
-      css.width = this.bodySize + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssHoriTabChar : function(line){
-      var css = {};
-      css.display = "inline-block";
-      css.width = this.bodySize + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertSpaceChar : function(line){
-      var css = {};
-      css.height = this.bodySize + "px";
-      css["line-height"] = this.bodySize + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertTabChar : function(line){
-      var css = {};
-      css.height = this.bodySize + "px";
-      css["line-height"] = this.bodySize + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVertSmallKana : function(){
-      var css = {};
-      css.position = "relative";
-      css.top = "-0.1em";
-      css.right = "-0.12em";
-      css.height = this.bodySize + "px";
-      css["line-height"] = this.bodySize + "px";
-      css.clear = "both";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Float | Int}
-    */
-    getHoriScale : function(){
-      return this.hscale || 1;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Float | Int}
-    */
-    getVertScale : function(){
-      return this.vscale || 1;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Float | Int}
-    */
-    getVertHeight : function(font_size){
-      var vscale = this.getVertScale();
-      return (vscale === 1)? font_size : Math.round(font_size * vscale);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-    */
-    hasMetrics : function(){
-      return (typeof this.bodySize != "undefined");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Int}
-    */
-    getAdvance : function(flow, letter_spacing){
-      return this.bodySize + this.getPaddingSize() + (letter_spacing || 0);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Int}
-    */
-    getPaddingSize : function(){
-      return (this.paddingStart || 0) + (this.paddingEnd || 0);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Int}
-    */
-    getCharCount : function(){
-      if(this.data === " " || this.data === "\t" || this.data === "\u3000"){
-	return 0;
-      }
-      return 1;
-    },
-    /**
-       @memberof Nehan.Char
-       @param flow {Nehan.BoxFlow}
-       @param font {Nehan.Font}
-    */
-    setMetrics : function(flow, font){
-      var is_vert = flow.isTextVertical();
-      var step_scale = is_vert? this.getVertScale() : this.getHoriScale();
-      this.bodySize = (step_scale != 1)? Math.round(font.size * step_scale) : font.size;
-      if(this.spaceRateStart){
-	this.paddingStart = Math.round(this.spaceRateStart * font.size);
-      }
-      if(this.spaceRateEnd){
-	this.paddingEnd = Math.round(this.spaceRateEnd * font.size);
-      }
-      if(this.img && this.img === "tenten"){
-	this.bodySize = font.size;
-      }
-      if(!is_vert && !this.isRef && this.isHankaku()){
-	this.bodySize = Math.round(font.size / 2);
-      }
-    },
-    _setImg : function(img, vscale, hscale){
-      this.img = img;
-      this.vscale = vscale;
-      this.hscale = hscale;
-    },
-    _setCnv : function(cnv, vscale, hscale){
-      this.cnv = cnv;
-      this.isRef = true;
-      this.vscale = vscale;
-      this.hscale = hscale;
-    },
-    _setRotate : function(angle){
-      this.rotate = angle;
-    },
-    _setRotateOrImg : function(angle, img, vscale, hscale){
-      if(Nehan.Env.isTransformEnable){
-	this._setRotate(angle);
-	this.vscale = vscale;
-	this.hscale = hscale;
-	return;
-      }
-      this._setImg(img, vscale, hscale);
-    },
-    _setupRef : function(c1){
-      this.cnv = c1;
-      switch(c1){
-      case "&nbsp;":
-	this._setupNbsp();
-	break;
-      case "&thinsp;":
-	this.vscale = this.hscale = Display.spaceSizeRate.thinsp;
-	break;
-      case "&ensp;":
-	this.vscale = this.hscale = Display.spaceSizeRate.ensp;
-	break;
-      case "&emsp;":
-	this.vscale = this.hscale = Display.spaceSizeRate.emsp;
-	break;
-      case "&#09;":
-	this._setupTabSpace();
-	break;
-      case "&lt;":
-	this._setRotateOrImg(90, "kakko7", 0.5, 0.5);
-	break;
-      case "&gt;":
-	this._setRotateOrImg(90, "kakko8", 0.5, 0.5);
-	break;
-      }
-    },
-    _setupNbsp : function(){
-      this.vscale = this.hscale = Display.spaceSizeRate.nbsp;
-    },
-    _setupTabSpace : function(){
-      this.vscale = this.hscale = Math.floor(Display.tabCount / 2);
-    },
-    _setupNormal : function(code){
-      // for half-size char, rotate 90 and half-scale in horizontal by default.
-      if(this.isHankaku()){
-	this.hscale = 0.5;
-	this._setRotate(90);
-      }
-      switch(code){
-      case 9: // tab space char
-	this._setupTabSpace(); break;
-	break;
-      case 32: // half scape char
-	this._setupNbsp(); break;
-      case 12300:
-	this._setImg("kakko1", 0.5, 0.5); break;
-      case 65378:
-	this._setImg("kakko1", 0.5, 0.5); break;
-      case 12301:
-	this._setImg("kakko2", 0.5, 0.5); break;
-      case 65379:
-	this._setImg("kakko2", 0.5, 0.5); break;
-      case 12302:
-	this._setImg("kakko3", 0.5, 0.5); break;
-      case 12303:
-	this._setImg("kakko4", 0.5, 0.5); break;
-      case 65288:
-	this._setImg("kakko5", 0.5, 0.5); break;
-      case 40:
-	this._setImg("kakko5", 0.5, 0.5); break;
-      case 65371:
-	this._setImg("kakko5", 0.5, 0.5); break;
-      case 123:
-	this._setImg("kakko5", 0.5, 0.5); break;
-      case 65289:
-	this._setImg("kakko6", 0.5, 0.5); break;
-      case 41:
-	this._setImg("kakko6", 0.5, 0.5); break;
-      case 65373:
-	this._setImg("kakko6", 0.5, 0.5); break;
-      case 125:
-	this._setImg("kakko6", 0.5, 0.5); break;
-      case 65308:
-	this._setImg("kakko7", 0.5, 0.5); break;
-      case 12296:
-	this._setImg("kakko7", 0.5, 0.5); break;
-      case 65310:
-	this._setImg("kakko8", 0.5, 0.5); break;
-      case 12297:
-	this._setImg("kakko8", 0.5, 0.5); break;
-      case 12298:
-	this._setImg("kakko9", 0.5, 0.5); break;
-      case 8810:
-	this._setImg("kakko9", 0.5, 0.5); break;
-      case 12299:
-	this._setImg("kakko10", 0.5, 0.5); break;
-      case 8811:
-	this._setImg("kakko10", 0.5, 0.5); break;
-      case 65339:
-	this._setImg("kakko11", 0.5, 0.5); break;
-      case 12308:
-	this._setImg("kakko11", 0.5, 0.5); break;
-      case 91:
-	this._setImg("kakko11", 0.5, 0.5); break;
-      case 65341:
-	this._setImg("kakko12", 0.5, 0.5); break;
-      case 12309:
-	this._setImg("kakko12", 0.5, 0.5); break;
-      case 93:
-	this._setImg("kakko12", 0.5, 0.5); break;
-      case 12304:
-	this._setImg("kakko17", 0.5, 0.5); break;
-      case 12305:
-	this._setImg("kakko18", 0.5, 0.5); break;
-      case 65306:
-	this._setImg("tenten", 1, 1); break;
-      case 58:
-	this._setImg("tenten", 1, 1); break;
-      case 12290:
-	this._setImg("kuten", 0.5, 0.5); break;
-      case 65377:
-	this._setImg("kuten", 0.5, 0.5); break;
-      case 65294:
-	this._setImg("period", 1, 1); break;
-      case 46:
-	this._setImg("period", 1, 1); break;
-      case 12289:
-	this._setImg("touten", 0.5, 0.5); break;
-      case 65380:
-	this._setImg("touten", 0.5, 0.5); break;
-      case 44:
-	this._setImg("touten", 0.5, 0.5); break;
-      case 65292:
-	this._setImg("touten", 0.5, 0.5); break;
-      case 65374:
-	this._setImg("kara", 1, 1); break;
-      case 12316:
-	this._setImg("kara", 1, 1); break;
-      case 8230:
-	this._setImg("mmm", 1, 1); break;
-      case 8229:
-	this._setImg("mm", 1, 1); break;
-      case 12317:
-	this._setImg("dmn1", 1, 1); break;
-      case 12319:
-	this._setImg("dmn2", 1, 1); break;
-      case 65309:
-	this._setImg("equal", 1, 1); break;
-      case 61:
-	this._setImg("equal", 1, 1); break;
-      case 8212: // Em dash
-      case 8221: // Right Double Quotation Mark
-	this._setRotate(90); break;
-      case 12540:
-	this._setImg("onbiki", 1, 1); break;
-      case 8213: // Horizontal bar(General Punctuation)
-      case 65293: // Halfwidth and Fullwidth Forms
-      case 9472: // Box drawings light horizontal(Box Drawing)
-	this._setCnv("&#8212;", 1, 1);
-	this._setRotate(90);
-	break;
-      case 8593: // up
-	this._setCnv("&#8594;", 1, 1); break;
-      case 8594: // right
-	this._setCnv("&#8595;", 1, 1); break;
-      case 8658: // right2
-	this._setCnv("&#8595;", 1, 1); break;
-      case 8595: // down
-	this._setCnv("&#8592;", 1, 1); break;
-      case 8592: // left
-	this._setCnv("&#8593;", 1, 1); break;
-      }
-    },
-    /**
-       @memberof Nehan.Char
-       @param ligature {String}
-    */
-    setLigature : function(ligature){
-      this.ligature = ligature;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isNewLine : function(){
-      return this.data === "\n";
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-    */
-    isNbsp : function(){
-      return (this.data === " " || this.cnv === "&nbsp;");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-    */
-    isThinsp : function(){
-      return this.cnv === "&thinsp;";
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-    */
-    isEnsp : function(){
-      return this.cnv === "&ensp;";
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-    */
-    isEmsp : function(){
-      return this.cnv === "&emsp;";
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isTabSpace : function(){
-      return (this.data === "\t" || this.cnv === "&#09;");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isSpace : function(){
-      return this.isNbsp() || this.isTabSpace() || this.isThinsp() || this.isEnsp() || this.isEmsp();
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isWhiteSpace : function(){
-      return this.isNewLine() || this.isSpace();
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isImgChar : function(){
-      return (typeof this.img != "undefined");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isCnvChar : function(){
-      return (typeof this.cnv != "undefined");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isRotateChar : function(){
-      return (typeof this.rotate != "undefined");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isCharRef : function(){
-      return this.isRef;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isKerningChar : function(){
-      return this.isZenkaku() && (this.isKutenTouten() || this.isKakko());
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-    */
-    isDash : function(){
-      return this.cnv === "&#8212;";
-    },
-    /**
-       @memberof Nehan.Char
-       @return {string}
-     */
-    getImgSrc : function(color){
-      return [Display.fontImgRoot, this.img, color + ".png"].join("/");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isPaddingEnable : function(){
-      return (typeof this.paddingStart != "undefined" || typeof this.paddingEnd != "undefined");
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isVertGlyphEnable : function(){
-      return Config.useVerticalGlyphIfEnable && Nehan.Env.isVerticalGlyphEnable;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isTenten : function(){
-      return this.img && this.img === "tenten";
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isHeadNg : function(){
-      return Nehan.List.mem(__head_ng, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isTailNg : function(){
-      return Nehan.List.mem(__tail_ng, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isSmallKana : function(){
-      return Nehan.List.mem(__small_kana, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isSingleHalfChar : function(){
-      return this.data.length === 1 && __rex_half_char.test(this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isKakkoStart : function(){
-      return Nehan.List.mem(__kakko_start, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isKakkoEnd : function(){
-      return Nehan.List.mem(__kakko_end, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isKakko : function(){
-      return this.isKakkoStart() || this.isKakkoEnd();
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isKuten : function(){
-      return Nehan.List.mem(__kuten, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isTouten : function(){
-      return Nehan.List.mem(__touten, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isKutenTouten : function(){
-      return this.isKuten() || this.isTouten();
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isZenkaku : function(){
-      return escape(this.data).charAt(1) === "u";
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isHankaku : function(){
-      return !this.isZenkaku(this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isHalfKana : function(){
-      return __rex_half_kana.test(this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isHalfKanaSmall : function(){
-      return __rex_half_kana_small.test(this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    isLigature : function(){
-      return Nehan.List.mem(__voiced_mark, this.data);
-    },
-    /**
-       @memberof Nehan.Char
-       @return {boolean}
-     */
-    hasLigature : function(){
-      return (typeof this.ligature !== "undefined");
-    }
-  };
-
-  return Char;
-})();
-
-var Word = (function(){
-
-  var __cut_word_by_metrics = function(word, font, measure){
-    for(var i = word.data.length - 1; i >= 1; i--){
-      var head_part = word.data.substring(0, i);
-      var part_measure = Math.ceil(TextMetrics.getMeasure(font, head_part));
-      //console.log("head_part:%s(%d) for %d", head_part, part_measure, measure);
-      if(part_measure <= measure){
-	var head_word = new Word(head_part, true);
-	head_word.bodySize = measure;
-	return head_word;
-      }
-    }
-    return word;
-  };
-
-  var __cut_word_rough = function(word, font, measure){
-    var half_size = Math.round(font.size / 2);
-    var head_count = Math.round(measure / half_size);
-    var head_word = new Word(word.data.substring(0, head_count), true);
-    head_word.bodySize = measure;
-    return head_word
-  };
-
-  var __cut_word = function(word, font, measure){
-    if(TextMetrics.isEnable()){
-      return __cut_word_by_metrics(word, font, measure);
-    }
-    return __cut_word_rough(word, font, measure);
-  };
-
-  /**
-     @memberof Nehan
-     @class Word
-     @classdesc abstraction of alphabetical phrase.
-     @constructor
-     @param word {String}
-     @param divided {boolean} - true if word is divided by too long phrase and overflow inline.
-  */
-  function Word(word, divided){
-    this.data = word;
-    this._type = "word";
-    this._divided = divided || false;
-  }
-
-  Word.prototype = {
-    /**
-       @memberof Nehan.Word
-       @return {bool}
-    */
-    isHeadNg: function(){
-      return false; // TODO
-    },
-    /**
-       @memberof Nehan.Word
-       @return {bool}
-    */
-    isTailNg: function(){
-      return false; // TODO
-    },
-    /**
-       @memberof Nehan.Word
-       @return {string}
-     */
-    getData : function(){
-      return this.data;
-    },
-    /**
-       @memberof Nehan.Word
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssVertTrans : function(line){
-      var css = {};
-      if(line.style.letterSpacing){
-	css["letter-spacing"] = line.style.letterSpacing + "px";
-      }
-      css.width = line.style.getFontSize() + "px";
-      css.height = this.bodySize + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Word
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssVertTransBody : function(line){
-      var css = {};
-      return css;
-    },
-    /**
-       @memberof Nehan.Word
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssVertTransBodyTrident : function(line){
-      var css = {};
-      css.width = line.style.getFontSize() + "px";
-      css.height = this.bodySize + "px";
-      css["transform-origin"] = "50% 50%";
-
-      // force set line-height to measure(this.bodySize) before rotation,
-      // and fix offset by translate after rotatation.
-      css["line-height"] = this.bodySize + "px";
-      var trans = Math.floor((this.bodySize - line.style.getFontSize()) / 2);
-      if(trans > 0){
-	css.transform = "rotate(90deg) translate(-" + trans + "px, 0)";
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.Word
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssVertTransIE : function(line){
-      var css = {}, font_size = line.style.getFontSize();
-      css["css-float"] = "left";
-      css["writing-mode"] = "tb-rl";
-      css["letter-spacing"] = (line.style.letterSpacing || 0) + "px";
-      css["padding-left"] = Math.round(font_size / 2) + "px";
-      css["line-height"] = font_size + "px";
-      return css;
-    },
-    /**
-       @memberof Nehan.Word
-       @return {int}
-    */
-    getCharCount : function(){
-      return 1; // word is count by 1 character.
-    },
-    /**
-       @memberof Nehan.Word
-       @param flow {Nehan.BoxFlow}
-       @param letter_spacing {int}
-       @return {int}
-    */
-    getAdvance : function(flow, letter_spacing){
-      return Math.floor(this.bodySize + (letter_spacing || 0) * this.getLetterCount());
-    },
-    /**
-       @memberof Nehan.Word
-       @return {boolean}
-    */
-    hasMetrics : function(){
-      return (typeof this.bodySize !== "undefined");
-    },
-    /**
-       @memberof Nehan.Word
-       @return {int}
-    */
-    countUpper : function(){
-      var count = 0;
-      for(var i = 0; i < this.data.length; i++){
-	if(/[A-Z]/.test(this.data.charAt(i))){
-	  count++;
-	}
-      }
-      return count;
-    },
-    /**
-       @memberof Nehan.Word
-       @param flow {Nehan.BoxFlow}
-       @param font {Nehan.Font}
-    */
-    setMetrics : function(flow, font){
-      var rough_measure = Math.ceil(this.data.length * font.size * 0.5);
-      if(Config.useStrictWordMetrics && TextMetrics.isEnable()){
-	var text_measure = Math.ceil(TextMetrics.getMeasure(font, this.data));
-	//console.log("[%s]:%d(rough = %d)", this.data, text_measure, rough_measure);
-	this.bodySize = Math.max(text_measure, rough_measure); // use longer one
-	return;
-      }
-      this.bodySize = rough_measure;
-      if(font.isBold()){
-	this.bodySize += Math.floor(Display.boldRate * this.bodySize);
-      }
-    },
-    /**
-       @memberof Nehan.Word
-       @return {int}
-    */
-    getLetterCount : function(){
-      return this.data.length;
-    },
-    /**
-       @memberof Nehan.Word
-       @param enable {boolean}
-    */
-    setDivided : function(enable){
-      this._divided = enable;
-    },
-    /**
-       @memberof Nehan.Word
-       @param enable {boolean}
-    */
-    isDivided : function(){
-      return this._divided;
-    },
-    /**
-       devide word by [measure] size and return first half of word.
-
-       @memberof Nehan.Word
-       @param font_size {int}
-       @param measure {int}
-       @return {Nehan.Word}
-    */
-    cutMeasure : function(flow, font, measure){
-      var head_word = __cut_word(this, font, measure);
-      var rest_str = this.data.slice(head_word.data.length);
-      if(rest_str === ""){
-	return this;
-      }
-      this.data = rest_str;
-      this.setDivided(true);
-      this.setMetrics(flow, font); // update bodySize
-      return head_word;
-    }
-  };
-  
-  return Word;
-})();
-
-
-var Tcy = (function(){
-  /**
-     @memberof Nehan
-     @class Tcy
-     @classdesc abstraction of tcy(tate-chu-yoko) character.
-     @constructor
-     @param tcy {String}
-  */
-  function Tcy(tcy){
-    this.data = tcy;
-    this._type = "tcy";
-  }
-
-  Tcy.prototype = {
-    /**
-       @memberof Nehan.Tcy
-       @return {bool}
-    */
-    isHeadNg: function(){
-      return false; // TODO
-    },
-    /**
-       @memberof Nehan.Tcy
-       @return {bool}
-    */
-    isTailNg: function(){
-      return false; // TODO
-    },
-    /**
-       @memberof Nehan.Tcy
-       @return {string}
-     */
-    getData : function(){
-      return this.data;
-    },
-    /**
-       @memberof Nehan.Tcy
-       @return {int}
-    */
-    getCharCount : function(){
-      return 1;
-    },
-    /**
-       @memberof Nehan.Tcy
-       @return {int}
-    */
-    getAdvance : function(flow, letter_spacing){
-      return this.bodySize + letter_spacing;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssVert : function(line){
-      var css = {};
-      css["text-align"] = "center";
-      css["font-family"] = "monospace";
-      css["font-weight"] = "normal";
-      return css;
-    },
-    /**
-       @memberof Nehan.Char
-       @return {Object}
-    */
-    getCssHori : function(line){
-      var css = {};
-      if(this.data.length === 1){
-	css.display = "inline-block";
-	css.width = "1em";
-	css["text-align"] = "center";
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.Tcy
-       @return {boolean}
-    */
-    hasMetrics : function(){
-      return (typeof this.bodySize != "undefined");
-    },
-    /**
-       @memberof Nehan.Tcy
-       @param flow {Nehan.BoxFlow}
-       @param font {Nehan.Font}
-    */
-    setMetrics : function(flow, font){
-      if(flow.isTextVertical()){
-	this.bodySize = font.size;
-      } else {
-	this.bodySize = (this.data.length <= 1)? font.size : Math.floor(1.2 * font.size);
-      }
-    }
-  };
-
-  return Tcy;
-})();
-
-
-var Ruby = (function(){
-  /**
-     @memberof Nehan
-     @class Ruby
-     @classdesc abstraction of ruby text.
-     @constructor
-     @param rbs {Array<Nehan.Char>} - characters of &lt;rb&gt; tag.
-     @param rt {Nehan.Tag}
-  */
-  function Ruby(rbs, rt){
-    this._type = "ruby";
-    this.rbs = rbs;
-    this.rt = rt;
-  }
-
-  Ruby.prototype = {
-    /**
-       @memberof Nehan.Ruby
-       @return {boolean}
-    */
-    hasMetrics : function(){
-      return (typeof this.advanceSize !== "undefined");
-    },
-    /**
-       @memberof Nehan.Ruby
-       @return {int}
-    */
-    getCharCount : function(){
-      return this.rbs? this.rbs.length : 0;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @return {int}
-    */
-    getAdvance : function(flow){
-      return this.advanceSize;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @return {Array<Nehan.Char>}
-    */
-    getRbs : function(){
-      return this.rbs;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @return {String}
-    */
-    getRbString : function(){
-      return Nehan.List.map(this.rbs, function(rb){
-	return rb.data || "";
-      }).join("");
-    },
-    /**
-       @memberof Nehan.Ruby
-       @return {String}
-    */
-    getRtString : function(){
-      return this.rt? this.rt.getContent() : "";
-    },
-    /**
-       @memberof Nehan.Ruby
-       @return {int}
-    */
-    getRtFontSize : function(){
-      return this.rtFontSize;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssVertRt : function(line){
-      var css = {};
-      css["css-float"] = "left";
-      return css;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssHoriRt : function(line){
-      var css = {};
-      var offset = Math.floor((line.style.getFontSize() - this.getRtFontSize()) / 3);
-      css["font-size"] = this.getRtFontSize() + "px";
-      css["line-height"] = "1em";
-      return css;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssVertRb : function(line){
-      var css = {};
-      css["css-float"] = "left";
-      if(this.padding){
-	Nehan.Args.copy(css, this.padding.getCss());
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @param line {Nehan.Box}
-       @return {Object}
-    */
-    getCssHoriRb : function(line){
-      var css = {};
-      if(this.padding){
-	Nehan.Args.copy(css, this.padding.getCss());
-      }
-      css["text-align"] = "center";
-      css["line-height"] = "1em";
-      return css;
-    },
-    /**
-       @memberof Nehan.Ruby
-       @param flow {Nehan.BoxFlow}
-       @param font {Nehan.Font}
-       @param letter_spacing {int}
-    */
-    setMetrics : function(flow, font, letter_spacing){
-      this.rtFontSize = Display.getRtFontSize(font.size);
-      var advance_rbs = Nehan.List.fold(this.rbs, 0, function(ret, rb){
-	rb.setMetrics(flow, font);
-	return ret + rb.getAdvance(flow, letter_spacing);
-      });
-      var advance_rt = this.rtFontSize * this.getRtString().length;
-      this.advanceSize = advance_rbs;
-      if(advance_rt > advance_rbs){
-	var ctx_space = Math.ceil((advance_rt - advance_rbs) / 2);
-	if(this.rbs.length > 0){
-	  this.padding = new Nehan.Padding();
-	  this.padding.setStart(flow, ctx_space);
-	  this.padding.setEnd(flow, ctx_space);
-	}
-	this.advanceSize += ctx_space + ctx_space;
-      }
-    }
-  };
-
-  return Ruby;
-})();
-
-
-/**
-   utility module to get more strict metrics using canvas.
-
-   @namespace Nehan.TextMetrics
-*/
-var TextMetrics = (function(){
-  var __canvas = document.createElement("canvas");
-  __canvas.style.width = Math.max(Display.width, Display.height) + "px";
-  __canvas.style.height = Display.maxFontSize + "px";
-
-  var __canvas_context;
-  if(__canvas.getContext){
-    __canvas_context = __canvas.getContext("2d");
-    __canvas_context.textAlign = "left";
-  }
-
-  return {
-    /**
-       check if client browser is supported.
-
-       @memberof Nehan.TextMetrics
-       @return {boolean}
-    */
-    isEnable : function(){
-      return __canvas_context && (typeof __canvas_context.measureText !== "undefined");
-    },
-    /**
-       @memberof Nehan.TextMetrics
-       @param font {Nehan.Font}
-       @param text {String}
-       @return {Object} - {width:xxx, height:yyy}
-    */
-    getMetrics : function(font, text){
-      __canvas_context.font = font.toString(); // to get accurate metrics, font info is required.
-      // caution: this metrics is not always correct(especially webkit), but firefox is well done.
-      var metrics = __canvas_context.measureText(text);
-      return metrics;
-    },
-    /**
-       @memberof Nehan.TextMetrics
-       @param font {Nehan.Font}
-       @param text {String}
-       @return {int}
-    */
-    getMeasure : function(font, text){
-      var metrics = this.getMetrics(font, text);
-      //console.log("[%s] - %f", text, metrics.width);
-      return metrics.width;
-    }
-  };
-})();
-
-
-var ListStyleType = (function(){
-  /**
-     @memberof Nehan
-     @class ListStyleType
-     @classdesc abstraction of list-style-type.
-     @constructor
-     @param pos {String} - "disc", "circle", "square", "lower-alpha" .. etc
-  */
-  function ListStyleType(type){
-    this.type = type;
-  }
-
-  var __marker_text = {
-    "disc": "&#x2022;",
-    "circle":"&#x25CB;",
-    "square":"&#x25A0;"
-  };
-
-  ListStyleType.prototype = {
-    /**
-       @memberof Nehan.ListStyleType
-       @return {boolean}
-    */
-    isDecimalList : function(){
-      return (this.type === "decimal" || this.type === "decimal-leading-zero");
-    },
-    /**
-       @memberof Nehan.ListStyleType
-       @return {boolean}
-    */
-    isNoneList : function(){
-      return this.type === "none";
-    },
-    /**
-       @memberof Nehan.ListStyleType
-       @return {boolean}
-    */
-    isMarkList : function(){
-      return (this.type === "disc" ||
-	      this.type === "circle" ||
-	      this.type === "square");
-    },
-    /**
-       @memberof Nehan.ListStyleType
-       @return {boolean}
-    */
-    isCountableList : function(){
-      return (!this.isNoneList() && !this.isMarkList());
-    },
-    /**
-       @memberof Nehan.ListStyleType
-       @return {boolean}
-    */
-    isHankaku : function(){
-      return (this.type === "lower-alpha" || this.type === "upper-alpha" ||
-	      this.type === "lower-roman" || this.type === "upper-roman" ||
-	      this.isDecimalList());
-    },
-    /**
-       @memberof Nehan.ListStyleType
-       @return {boolean}
-    */
-    isZenkaku : function(){
-      return !this.isHankaku();
-    },
-    _getMarkerDigitString : function(decimal){
-      if(this.type === "decimal"){
-	return decimal.toString(10);
-      }
-      if(this.type === "decimal-leading-zero"){
-	if(decimal < 10){
-	  return "0" + decimal.toString(10);
-	}
-	return decimal.toString(10);
-      }
-      return Nehan.Cardinal.getStringByName(this.type, decimal);
-    },
-    /**
-       @memberof Nehan.ListStyleType
-       @return {String}
-    */
-    getMarkerHtml : function(count){
-      var text = this.getMarkerText(count);
-      if(this.isZenkaku()){
-	return Nehan.Html.tagWrap("span", text, {
-	  "class":"nehan-tcy"
-	});
-      }
-      return text;
-    },
-    /**
-       @memberof Nehan.ListStyleType
-       @return {String}
-    */
-    getMarkerText : function(count){
-      if(this.isNoneList()){
-	return Nehan.Const.space;
-      }
-      if(this.isMarkList()){
-	return __marker_text[this.type] || "";
-      }
-      var digit = this._getMarkerDigitString(count);
-      return digit + "."; // add period as postfix.
-    }
-  };
-
-  return ListStyleType;
-})();
-
-
-var ListStylePos = (function(){
-  /**
-     @memberof Nehan
-     @class ListStylePos
-     @classdesc abstraction of list-style-pos.
-     @constructor
-     @param pos {String} - "outside" or "inside"
-  */
-  function ListStylePos(pos){
-    this.pos = pos;
-  }
-
-  ListStylePos.prototype = {
-    /**
-       @memberof Nehan.ListStylePos
-       @return {boolean}
-    */
-    isOutside : function(){
-      return this.pos === "outside";
-    },
-    /**
-       @memberof Nehan.ListStylePos
-       @return {boolean}
-    */
-    isInside : function(){
-      return this.pos === "inside";
-    }
-  };
-
-  return ListStylePos;
-})();
-
-
-var ListStyleImage = (function(){
-  /**
-     @memberof Nehan
-     @class ListStyleImage
-     @classdesc abstraction of list-style-image.
-     @constructor
-     @param image {Object}
-     @param image.width {Int} - if undefined, use {@link Nehan.Display}.fontSize
-     @param image.height {Int} - if undefined, use {@link Nehan.Display}.fontSize
-     @param image.url {String}
-  */
-  function ListStyleImage(image){
-    this.image = image;
-  }
-
-  ListStyleImage.prototype = {
-    /**
-       @memberof Nehan.ListStyleImage
-       @param count {int}
-       @return {string}
-    */
-    getMarkerHtml : function(count){
-      var url = this.image.url;
-      var width = this.image.width || Display.fontSize;
-      var height = this.image.height || Display.fontSize;
-      return Nehan.Html.tagSingle("img", {
-	"src":url,
-	"class":"nehan-list-image",
-	"width":width,
-	"height":height
-      });
-    }
-  };
-
-  return ListStyleImage;
-})();
-
-
-var ListStyle = (function(){
-  /**
-     @memberof Nehan
-     @class ListStyle
-     @classdesc abstraction of list-style.
-     @constructor
-     @param opt {Object}
-     @param opt.type {Nehan.ListStyleType}
-     @param opt.position {Nehan.ListStylePos}
-     @param opt.image {Nehan.ListStyleImage}
-  */
-  function ListStyle(opt){
-    this.type = new ListStyleType(opt.type || "none");
-    this.position = new ListStylePos(opt.position || "outside");
-    this.image = (opt.image !== "none")? new ListStyleImage(opt.image) : null;
-  }
-
-  ListStyle.prototype = {
-    /**
-       @memberof Nehan.ListStyle
-       @return {boolean}
-    */
-    isMultiCol : function(){
-      return this.position.isOutside();
-    },
-    /**
-       @memberof Nehan.ListStyle
-       @return {boolean}
-    */
-    isInside : function(){
-      return this.position.isInside();
-    },
-    /**
-       @memberof Nehan.ListStyle
-       @return {boolean}
-    */
-    isImageList : function(){
-      return (this.image !== null);
-    },
-    /**
-       @memberof Nehan.ListStyle
-       @param count {int}
-       @return {String}
-    */
-    getMarkerHtml : function(count){
-      if(this.image !== null){
-	return this.image.getMarkerHtml(count);
-      }
-      return this.type.getMarkerHtml(count);
-    }
-  };
-
-  return ListStyle;
-})();
-
-var BlockFlow = (function(){
-  /**
-     @memberof Nehan
-     @class BlockFlow
-     @classdesc flow direction at block level.
-     @constructor
-     @param dir {string} - "lr" or "rl" or "tb"
-     @extends Nehan.Flow
-     @example
-     * var bf = new BlockFlow("tb");
-  */
-  function BlockFlow(dir){
-    Nehan.Flow.call(this, dir);
-  }
-
-  Nehan.Class.extend(BlockFlow, Nehan.Flow);
-
-  /**
-     get flipped block direction. If direction is "tb", nothing happend.
-
-     @memberof Nehan.BlockFlow
-     @method flip
-     @return {string} fliped block direction
-     @example
-     * new BlockFlow("tb").flip(); // => "lr" or "rl"(nothing happened)
-     * new BlockFlow("lr").flip(); // => "tb"
-     * new BlockFlow("rl").flip(); // => "tb"
-  */
-  BlockFlow.prototype.flip = function(){
-    switch(this.dir){
-    case "lr": case "rl": return "tb";
-    case "tb": return Display.getVertBlockdir();
-    default: return "";
-    }
-  };
-
-  /**
-     get physical directional property of logical before.
-
-     @memberof Nehan.BlockFlow
-     @method getPropBefore
-     @return {string}
-     @example
-     * new BlockFlow("tb").getPropBefore(); // => "top"
-     * new BlockFlow("lr").getPropBefore(); // => "left"
-     * new BlockFlow("rl").getPropBefore(); // => "right"
-  */
-  BlockFlow.prototype.getPropBefore = function(){
-    switch(this.dir){
-    case "lr": return "left";
-    case "rl": return "right";
-    case "tb": return "top";
-    default: return "";
-    }
-  };
-
-  /**
-     get physical directional property of logical before.
-
-     @memberof Nehan.BlockFlow
-     @method getPropAfter
-     @return {string}
-     @example
-     * new BlockFlow("tb").getPropAfter(); // => "bottom"
-     * new BlockFlow("lr").getPropAfter(); // => "right"
-     * new BlockFlow("rl").getPropAfter(); // => "left"
-  */
-  BlockFlow.prototype.getPropAfter = function(){
-    switch(this.dir){
-    case "lr": return "right";
-    case "rl": return "left";
-    case "tb": return "bottom";
-    default: return "";
-    }
-  };
-
-  return BlockFlow;
-})();
-
-
-var InlineFlow = (function(){
-  /**
-     @memberof Nehan
-     @class InlineFlow
-     @classdesc flow abstraction at inline level.
-     @constructor
-     @extends {Nehan.Flow}
-     @param dir {String} - "lr" or "rl"(but not supported) or "tb"
-   */
-  function InlineFlow(dir){
-    Nehan.Flow.call(this, dir);
-  }
-  Nehan.Class.extend(InlineFlow, Nehan.Flow);
-
-  /**
-     @memberof Nehan.InlineFlow
-     @return {String}
-     @example
-     * new InlineFlow("lr").getPropStart(); // "left"
-     * new InlineFlow("rl").getPropStart(); // "right"
-     * new InlineFlow("tb").getPropStart(); // "top"
-  */
-  InlineFlow.prototype.getPropStart = function(){
-    switch(this.dir){
-    case "lr": return "left";
-    case "rl": return "right";
-    case "tb": return "top";
-    default: return "";
-    }
-  };
-
-  /**
-     @memberof Nehan.InlineFlow
-     @return {String}
-     @example
-     * new InlineFlow("lr").getPropEnd(); // "right"
-     * new InlineFlow("rl").getPropEnd(); // "left"
-     * new InlineFlow("tb").getPropEnd(); // "bottom"
-  */
-  InlineFlow.prototype.getPropEnd = function(){
-    switch(this.dir){
-    case "lr": return "right";
-    case "rl": return "left";
-    case "tb": return "bottom";
-    default: return "";
-    }
-  };
-
-  return InlineFlow;
-})();
-
-
-var BoxFlow = (function(){
-  /**
-     @memberof Nehan
-     @class BoxFlow
-     @classdesc abstract inline and block direction
-     @constructor
-     @param indir {string} - "lr" or "tb"("rl" not supported yet)
-     @param blockdir {string} - "tb" or "lr" or "rl"
-  */
-  function BoxFlow(indir, blockdir){
-    this.inflow = new InlineFlow(indir);
-    this.blockflow = new BlockFlow(blockdir);
-  }
-
-  BoxFlow.prototype = {
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isTextLineFirst : function(){
-      if(this.isTextVertical() && this.blockflow.isLeftToRight()){
-	return true;
-      }
-      return false;
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isBlockflowVertical : function(){
-      return this.blockflow.isVertical();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isTextVertical : function(){
-      return this.inflow.isVertical();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isTextHorizontal : function(){
-      return this.inflow.isHorizontal();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isTextLeftToRight : function(){
-      return this.inflow.isLeftToRight();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isTextRightToLeft : function(){
-      return this.inflow.isRightToLeft();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isBlockLeftToRight : function(){
-      return this.blockflow.isLeftToRight();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {boolean}
-    */
-    isBlockRightToLeft : function(){
-      return this.blockflow.isRightToLeft();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {Object}
-    */
-    getCss : function(){
-      var css = {};
-
-      // notice that "float" property is converted into "cssFloat" in evaluation time.
-      if(this.isTextVertical()){
-	css["css-float"] = this.isBlockLeftToRight()? "left" : "right";
-      } else {
-	css["css-float"] = this.isTextLeftToRight()? "left" : "right";
-      }
-      return css;
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-       @example
-       * new BlockFlow("tb", "rl").getName(); // "tb-rl"
-       * new BlockFlow("lr", "tb").getName(); // "lr-tb"
-    */
-    getName : function(){
-      return [this.inflow.dir, this.blockflow.dir].join("-");
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {String}
-       @example
-       * new BlockFlow("tb", "rl").getTextHorizontalDir(); // "rl"
-       * new BlockFlow("tb", "lr").getTextHorizontalDir(); // "lr"
-       * new BlockFlow("lr", "tb").getTextHorizontalDir(); // "" (empty)
-    */
-    getTextHorizontalDir : function(){
-      if(this.isTextHorizontal()){
-	return this.inflow.dir;
-      }
-      return "";
-    },
-    /**
-       get physical property name from logical property.
-       @memberof Nehan.BoxFlow
-       @param prop {string} - logical direction name
-       @return {string}
-       @example
-       * new BlockFlow("tb", "rl").getProp("start"); // "top"
-       * new BlockFlow("lr", "tb").getProp("end"); // "right"
-    */
-    getProp : function(prop){
-      switch(prop){
-      case "start":
-	return this.getPropStart();
-      case "end":
-	return this.getPropEnd();
-      case "before":
-	return this.getPropBefore();
-      case "after":
-	return this.getPropAfter();
-      }
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropStart : function(){
-      return this.inflow.getPropStart();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropEnd : function(){
-      return this.inflow.getPropEnd();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropBefore : function(){
-      return this.blockflow.getPropBefore();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropAfter : function(){
-      return this.blockflow.getPropAfter();
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropExtent : function(){
-      return this.isTextVertical()? "width" : "height";
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropMeasure : function(){
-      return this.isTextVertical()? "height" : "width";
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropWidth : function(){
-      return this.isTextVertical()? "extent" : "measure";
-    },
-    /**
-       @memberof Nehan.BoxFlow
-       @return {string}
-    */
-    getPropHeight : function(){
-      return this.isTextVertical()? "measure" : "extent";
-    },
-    /**
-       get flipped box flow, but result depends on setting of Display.boxFlow.
-
-       @memberof Nehan.BoxFlow
-       @return {Nehan.BoxFlow}
-       @example
-       * // if  Display.boxFlow.hori = "lr-tb"
-       * // and Display.boxFlow.vert = "tb-rl"
-       * new BlockFlow("tb", "rl").getFlipFlow(); // BoxFlow("lr", "tb")
-       * new BlockFlow("lr", "tb").getFlipFlow(); // BoxFlow("tb", "rl")
-    */
-    getFlipFlow : function(){
-      return this.isTextVertical()? Display.getStdHoriFlow() : Display.getStdVertFlow();
-    },
-    /**
-       get physical box size interpreted by this box flow.
-
-       @memberof Nehan.BoxFlow
-       @param measure {int}
-       @param extent {int}
-       @return {Nehan.BoxSize}
-       @example
-       * new BoxFlow("lr", "tb").getBoxSize(100, 200); // BoxSize(100, 200)
-       * new BoxFlow("tb", "rl").getBoxSize(100, 200); // BoxSize(200, 100)
-       * new BoxFlow("tb", "lr").getBoxSize(100, 200); // BoxSize(200, 100)
-     */
-    getBoxSize : function(measure, extent){
-      var size = new Nehan.BoxSize(0, 0);
-      size[this.getPropMeasure()] = measure;
-      size[this.getPropExtent()] = extent;
-      return size;
-    }
-  };
-
-  return BoxFlow;
-})();
-
-
-/**
-   pre defined box flow collection.
-   @namespace Nehan.BoxFlows
-*/
-var BoxFlows = {
-  "tb-rl":(new BoxFlow("tb", "rl")),
-  "tb-lr":(new BoxFlow("tb", "lr")),
-  "lr-tb":(new BoxFlow("lr", "tb")),
-  "rl-tb":(new BoxFlow("rl", "tb")),
-  /**
-     get box flow by inflow and blockflow.
-
-     @memberof Nehan.BoxFlows
-     @param inflow {string} - "tb" or "lr"
-     @param blockflow {string} - "tb" or "lr" or "rl"
-     @return {Nehan.BoxFlow}
-  */
-  get: function(inflow, blockflow){
-    return this.getByName([inflow, blockflow].join("-"));
-  },
-  /**
-     get box flow by flow-name.
-
-     @memberof Nehan.BoxFlows
-     @param name {string} - "lr-tb" or "tb-rl" or "tb-lr"
-     @return {Nehan.BoxFlow}
-  */
-  getByName : function(name){
-    return this[name] || null;
-  }
-};
-
-var TextEmphaStyle = (function(){
-  var __default_empha_style = "filled dot";
-  var __empha_marks = {
-    // dot
-    "filled dot":"&#x2022;",
-    "open dot":"&#x25e6;",
-
-    // circle
-    "filled circle":"&#x25cf;",
-    "open circle":"&#x25cb;",
-
-    // double-circle
-    "filled double-circle":"&#x25c9;",
-    "open double-circle":"&#x25ce;",
-
-    // triangle
-    "filled triangle":"&#x25b2;",
-    "open triangle":"&#x25b3;",
-
-    // sesame
-    "filled sesame":"&#xfe45;",
-    "open sesame":"&#xfe46;"
-  };
-
-  /**
-     @memberof Nehan
-     @class TextEmphaStyle
-     @classdesc abstraction of text-empha-position.
-     @constructor
-     @param value {String} - style name. default "none".
-     @example
-     * new TextEmphaStyle().getText(); // ""
-     * new TextEmphaStyle().getText("none"); // ""
-     * new TextEmphaStyle("filled dot").getText(); // "&#x2022";
-     * new TextEmphaStyle("foo").getText(); // "foo";
-  */
-  function TextEmphaStyle(value){
-    this.value = value || "none";
-  }
-
-  TextEmphaStyle.prototype = {
-    /**
-       @memberof Nehan.TextEmphaStyle
-       @return {bool}
-    */
-    isEnable : function(){
-      return this.value != "none";
-    },
-    /**
-       @memberof Nehan.TextEmphaStyle
-       @param value {String} - empha style name
-    */
-    setValue : function(value){
-      this.value = value;
-    },
-    /**
-       @memberof Nehan.TextEmphaStyle
-       @return {String}
-    */
-    getText : function(){
-      if(!this.isEnable()){
-	return "";
-      }
-      return __empha_marks[this.value] || this.value || __empha_marks[__default_empha_style];
-    },
-    /**
-       @memberof Nehan.TextEmphaStyle
-       @return {Object}
-    */
-    getCss : function(){
-      var css = {};
-      //return css["text-emphasis-style"] = this.value;
-      return css;
-    }
-  };
-
-  return TextEmphaStyle;
-})();
-
-
-var TextEmphaPos = (function(){
-  /**
-     @memberof Nehan
-     @class TextEmphaPos
-     @classdesc abstraction of text-empha-position, but not impremented yet.
-     @constructor
-     @param opt {Object}
-     @param opt.hori {String} - horizontal empha pos, default "over"
-     @param opt.vert {String} - vertical empha pos, default "right"
-  */
-  function TextEmphaPos(opt){
-    Nehan.Args.merge(this, {
-      hori:"over",
-      vert:"right"
-    }, opt || {});
-  }
-
-  TextEmphaPos.prototype = {
-    /**
-       not implemented yet.
-
-       @memberof Nehan.TextEmphaPos
-       @return {Object}
-    */
-    getCss : function(line){
-      var css = {};
-      return css;
-    }
-  };
-
-  return TextEmphaPos;
-})();
-
-
-var TextEmpha = (function(){
-  /**
-     @memberof Nehan
-     @class TextEmpha
-     @classdesc abstraction of text emphasis.
-     @constructor
-     @param opt {Object}
-     @param opt.style {Nehan.TextEmphaStyle}
-     @param opt.pos {Nehan.TextEmphaPos}
-     @param opt.color {Nehan.Color}
-  */
-  function TextEmpha(opt){
-    opt = opt || {};
-    this.style = opt.style || new TextEmphaStyle();
-    this.pos = opt.pos || new TextEmphaPos();
-    this.color = opt.color || new Nehan.Color(Display.fontColor);
-  }
-
-  TextEmpha.prototype = {
-    /**
-       @memberof Nehan.TextEmpha
-       @return {boolean}
-    */
-    isEnable : function(){
-      return this.style && this.style.isEnable();
-    },
-    /**
-       get text of empha style, see {@link Nehan.TextEmphaStyle}.
-
-       @memberof Nehan.TextEmpha
-       @return {String}
-    */
-    getText : function(){
-      return this.style? this.style.getText() : "";
-    },
-    /**
-       @memberof Nehan.TextEmpha
-       @return {int}
-    */
-    getExtent : function(font_size){
-      return font_size * 3;
-    },
-    /**
-       @memberof Nehan.TextEmpha
-       @param line {Nehan.Box}
-       @param chr {Nehan.Char}
-       @return {Object}
-    */
-    getCssVertEmphaWrap : function(line, chr){
-      var css = {}, font_size = line.style.getFontSize();
-      css["text-align"] = "left";
-      css.width = this.getExtent(font_size) + "px";
-      css.height = chr.getAdvance(line.style.flow, line.style.letterSpacing || 0) + "px";
-      css.position = "relative";
-      return css;
-    },
-    /**
-       @memberof Nehan.TextEmpha
-       @param line {Nehan.Box}
-       @param chr {Nehan.Char}
-       @return {Object}
-    */
-    getCssHoriEmphaWrap : function(line, chr){
-      var css = {}, font_size = line.style.getFontSize();
-      css.display = "inline-block";
-      css.width = chr.getAdvance(line.style.flow, line.style.letterSpacing) + "px";
-      css.height = this.getExtent(font_size) + "px";
-      return css;
-    }
-  };
-
-  return TextEmpha;
-})();
-
-
 var Box = (function(){
   /**
      @memberof Nehan
@@ -9529,7 +9751,7 @@ var Box = (function(){
     toString : function(){
       var texts = __filter_text(this.elements || []);
       return Nehan.List.fold(texts, "", function(ret, text){
-	var str = (text instanceof Ruby)? text.getRbString() : (text.data || "");
+	var str = (text instanceof Nehan.Ruby)? text.getRbString() : (text.data || "");
 	return ret + str;
       });
     },
@@ -9863,13 +10085,13 @@ var HtmlLexer = (function (){
       match = this.buff.match(__rex_tag);
       if(match === null){
 	content = this._stepBuff(this.buff.length);
-	return new Text(content);
+	return new Nehan.Text(content);
       }
       if(match.index === 0){
 	return this._parseTag(match[0]);
       }
       content = this._stepBuff(match.index);
-      return new Text(content);
+      return new Nehan.Text(content);
     },
     _getTagContent : function(tag_name){
       // why we added [\\s|>] for open_tag_rex?
@@ -9950,20 +10172,20 @@ var TextLexer = (function (){
     if(str){
       if(str.length === 1){
 	if(__rex_half_single_tcy.test(str)){
-	  return new Tcy(this._stepBuff(1));
+	  return new Nehan.Tcy(this._stepBuff(1));
 	}
-	return new Char(this._stepBuff(1), false);
+	return new Nehan.Char(this._stepBuff(1), false);
       } else if(str.length === 2 && str.match(__rex_tcy)){
-	return new Tcy(this._stepBuff(str.length));
+	return new Nehan.Tcy(this._stepBuff(str.length));
       }
-      return new Word(this._stepBuff(str.length));
+      return new Nehan.Word(this._stepBuff(str.length));
     }
     str = this._getByRex(__rex_char_ref);
     if(str){
-      return new Char(this._stepBuff(str.length), true);
+      return new Nehan.Char(this._stepBuff(str.length), true);
     }
     str = this.buff.substring(0, 1);
-    return new Char(this._stepBuff(1), false);
+    return new Nehan.Char(this._stepBuff(1), false);
   };
 
   TextLexer.prototype._getByRex = function(rex){
@@ -10391,9 +10613,9 @@ var TokenStream = (function(){
 	if(token === null){
 	  break;
 	}
-	if(token instanceof Char && token.isLigature()){
+	if(token instanceof Nehan.Char && token.isLigature()){
 	  var last = Nehan.List.last(this.tokens);
-	  if(last instanceof Char){
+	  if(last instanceof Nehan.Char){
 	    last.setLigature(token.data);
 	    continue;
 	  }
@@ -10470,18 +10692,18 @@ var RubyTokenStream = (function(){
       if(token === null){
 	break;
       }
-      if(Token.isTag(token) && token.getName() === "rt"){
+      if(Nehan.Token.isTag(token) && token.getName() === "rt"){
 	rt = token;
 	break;
       }
-      if(Token.isTag(token) && token.getName() === "rb"){
+      if(Nehan.Token.isTag(token) && token.getName() === "rb"){
 	rbs = this._parseRb(token.getContent())
       }
-      if(token instanceof Text){
+      if(token instanceof Nehan.Text){
 	rbs = this._parseRb(token.getContent());
       }
     }
-    return new Ruby(rbs, rt);
+    return new Nehan.Ruby(rbs, rt);
   };
 
   RubyTokenStream.prototype._parseRb = function(content){
@@ -10507,7 +10729,9 @@ var PageEvaluator = (function(){
 
   PageEvaluator.prototype = {
     _getEvaluator : function(){
-      return (Display.direction === "vert")? new VertEvaluator() : new HoriEvaluator();
+      var body_selector = Selectors.get("body") || new Selector("body", {flow:Nehan.Display.flow});
+      var flow = body_selector.getValue().flow || Nehan.Display.flow;
+      return (flow === "tb-rl" || flow === "tb-lr")? new VertEvaluator() : new HoriEvaluator();
     },
     /**
        evaluate {@link Nehan.Box}, output {@link Nehan.Page}.
@@ -10529,6 +10753,24 @@ var PageEvaluator = (function(){
   };
 
   return PageEvaluator;
+})();
+
+
+/**
+   requestAnimationFrame wrapper function
+   @namespace Nehan
+   @function reqAnimationFrame
+*/
+var reqAnimationFrame = (function(){
+  var default_wait = 1000 / 60;
+  return window.requestAnimationFrame  ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame    ||
+    window.msRequestAnimationFrame     ||
+    function(callback, wait){
+      var _wait = (typeof wait === "undefined")? default_wait : wait;
+      window.setTimeout(callback, _wait);
+    };
 })();
 
 
@@ -10730,7 +10972,7 @@ var PageStream = (function(){
 	.replace(/<rt><\/rt>/gi, ""); // discard empty rt
     },
     _createGenerator : function(text){
-      switch(Display.root){
+      switch(Nehan.Display.root){
       case "document":
 	return new DocumentGenerator(text);
       case "html":
@@ -10745,273 +10987,6 @@ var PageStream = (function(){
   };
 
   return PageStream;
-})();
-
-
-/**
- * kerning utility module<br>
- * Note that charactors that can be kerned are already kerned in nehan.js.<br>
- * So this module only 'add' the space to start/end direction.
-
- @namespace Nehan.Kerning
-*/
-var Kerning = {
-  /**
-     @memberof Nehan.Kerning
-     @param cur_char(zenkaku) {Nehan.Char}
-     @param prev_text {Nehan.Char | Nehan.Word | Nehan.Tcy}
-     @param next_text {Nehan.Char | Nehan.Word | Nehan.Tcy}
-  */
-  set : function(cur_char, prev_text, next_text){
-    if(cur_char.isKakkoStart()){
-      this._setKerningStart(cur_char, prev_text);
-    } else if(cur_char.isKakkoEnd() || cur_char.isKutenTouten()){
-      this._setKerningEnd(cur_char, next_text);
-    }
-  },
-  _setKerningStart : function(cur_char, prev_text){
-    var space_rate = this._getTextSpaceStart(cur_char, prev_text);
-    if(space_rate > 0){
-      cur_char.spaceRateStart = space_rate;
-    }
-  },
-  _setKerningEnd : function(cur_char, next_text){
-    var space_rate = this._getTextSpaceEnd(cur_char, next_text);
-    if(space_rate > 0){
-      cur_char.spaceRateEnd = space_rate;
-    }
-  },
-  // if previous text is not exists or previous text is not left brace(or paren etc),
-  // add space to start direction.
-  //
-  // [example:add space]
-  //   (  => [SPACE](
-  //   a( => a[SPACE](
-  //
-  // [example:do nothing]
-  //   (( => ((
-  //   {( => {(
-  _getTextSpaceStart : function(cur_char, prev_text){
-    if(prev_text === null){
-      return 0.5;
-    }
-    if(prev_text instanceof Char && prev_text.isKakkoStart()){
-      return 0;
-    }
-    return 0.5;
-  },
-  // if next text is not exists or next text is not right brace(or paren etc),
-  // add space to end direction.
-  //
-  // [example:add space]
-  //   )  => )[SPACE]
-  //   )a => )[SPACE]a
-  //
-  // [example:do nothing]
-  //   )) => ))
-  //   )} => )}
-  //   ,( => ,(
-  _getTextSpaceEnd : function(cur_char, next_text){
-    if(next_text === null){
-      return 0.5;
-    }
-    if(next_text instanceof Char && (cur_char.isKutenTouten() && next_text.isKakkoStart())){
-      return 0;
-    }
-    if(next_text instanceof Char && (next_text.isKakkoEnd() || next_text.isKutenTouten())){
-      return 0;
-    }
-    return 0.5;
-  }
-};
-
-var PartitionUnit = (function(){
-  /**
-     @memberof Nehan
-     @class PartitionUnit
-     @classdesc abstraction for unit size of partition.
-     @constructor
-     @param opt {Object}
-     @param opt.weight {int} - partition weight, larger one gets more measure.
-     @param opt.isStatic {boolean} - if true, size is fixed.
-  */
-  function PartitionUnit(opt){
-    this.weight = opt.weight || 0;
-    this.isStatic = opt.isStatic || false;
-  }
-
-  PartitionUnit.prototype = {
-    /**
-       get unit size in px.
-
-       @memberof Nehan.PartitionUnit
-       @param measure {int}
-       @param total_weight {int}
-       @return {int} size in px
-    */
-    getSize : function(measure, total_weight){
-      return Math.floor(measure * this.weight / total_weight);
-    },
-    /**
-       @memberof Nehan.PartitionUnit
-       @param punit {Nehan.ParitionUnit}
-       @return {Nehan.PartitionUnit}
-    */
-    mergeTo : function(punit){
-      if(this.isStatic && !punit.isStatic){
-	return this;
-      }
-      if(!this.isStatic && punit.isStatic){
-	return punit;
-      }
-      return (this.weight > punit.weight)? this : punit;
-    }
-  };
-
-  return PartitionUnit;
-})();
-
-
-var Partition = (function(){
-  /**
-     @memberof Nehan
-     @class Partition
-     @classdesc abstraction for partition of measure size.
-     @constructor
-     @param punits {Array.<PartitionUnit>}
-  */
-  function Partition(punits){
-    this._punits = punits || []; // partition units
-  }
-
-  var __levelize = function(sizes, min_size){
-    // filter parts that is smaller than min_size.
-    var smaller_parts = Nehan.List.filter(sizes, function(size){ return size < min_size; });
-
-    // if all elements has enough space for min_size, nothing to do.
-    if(smaller_parts.length === 0){
-      return sizes;
-    }
-
-    // total size that must be added to small parts.
-    var delta_plus_total = Nehan.List.fold(smaller_parts, 0, function(ret, size){ return ret + (min_size - size); });
-
-    // filter parts that has enough space.
-    var larger_parts = Nehan.List.filter(sizes, function(size){
-      return size - min_size >= min_size; // check if size is more than min_size and over even if min_size is subtracted.
-    });
-
-    // if there are no enough rest space, nothing to do.
-    if(larger_parts.length === 0){
-      return sizes;
-    }
-
-    var delta_minus_avg = Math.floor(delta_plus_total / larger_parts.length);
-    return Nehan.List.map(sizes, function(size){
-      return (size < min_size)? min_size : ((size - min_size >= min_size)? size - delta_minus_avg : size);
-    });
-  };
-
-  Partition.prototype = {
-    /**
-       @memberof Nehan.Partition
-       @param index {int}
-       @return {Nehan.PartitionUnit}
-    */
-    get : function(index){
-      return this._punits[index] || null;
-    },
-    /**
-       @memberof Nehan.Partition
-       @return {int}
-    */
-    getLength : function(){
-      return this._punits.length;
-    },
-    /**
-       @memberof Nehan.Partition
-       @return {int}
-    */
-    getTotalWeight : function(){
-      return Nehan.List.fold(this._punits, 0, function(ret, punit){
-	return ret + punit.weight;
-      });
-    },
-    /**
-       @memberof Nehan.Partition
-       @param partition {Nehan.Partition}
-       @return {Nehan.Partition}
-    */
-    mergeTo : function(partition){
-      if(this.getLength() !== partition.getLength()){
-	throw "Partition::mergeTo, invalid merge target(length not same)";
-      }
-      // merge(this._punits[0], partition._punits[0]),
-      // merge(this._punits[1], partition._punits[1]),
-      // ...
-      // merge(this._punits[n-1], partition._punits[n-1])
-      var merged_punits =  Nehan.List.mapi(this._punits, function(i, punit){
-	return punit.mergeTo(partition.get(i));
-      });
-      return new Partition(merged_punits);
-    },
-    /**
-       @memberof Nehan.Partition
-       @param measure {int} - max measure size in px
-       @return {Array<int>} - divided size array
-    */
-    mapMeasure : function(measure){
-      var total_weight = this.getTotalWeight();
-      var sizes =  Nehan.List.map(this._punits, function(punit){
-	return punit.getSize(measure, total_weight);
-      });
-      return __levelize(sizes, Display.minTableCellSize);
-    }
-  };
-
-  return Partition;
-})();
-
-
-// key : partition count
-// value : Partition
-var PartitionHashSet = (function(){
-  /**
-     @memberof Nehan
-     @class PartitionHashSet
-     @classdesc hash set to manage partitioning of layout. key = partition_count, value = {@link Nehan.Partition}.
-     @extends {Nehan.HashSet}
-   */
-  function PartitionHashSet(){
-    Nehan.HashSet.call(this);
-  }
-  Nehan.Class.extend(PartitionHashSet, Nehan.HashSet);
-
-  /**
-     @memberof Nehan.PartitionHashSet
-     @param old_part {Nehan.Partition}
-     @param new_part {Nehan.Partition}
-     @return {Nehan.Partition}
-  */
-  PartitionHashSet.prototype.merge = function(old_part, new_part){
-    return old_part.mergeTo(new_part);
-  };
-
-  /**
-     get partition size(in px) array.
-
-     @memberof Nehan.PartitionHashSet
-     @param opt {Object}
-     @param opt.partitionCount {int}
-     @param opt.measure {int}
-     @return {Array.<int>}
-  */
-  PartitionHashSet.prototype.getSizes = function(opt){
-    var partition = this.get(opt.partitionCount);
-    return partition.mapMeasure(opt.measure);
-  };
-
-  return PartitionHashSet;
 })();
 
 
@@ -11050,7 +11025,7 @@ var SelectorPropContext = (function(){
     */
     getParentFlow : function(){
       var parent = this.getParentStyleContext();
-      return parent? parent.flow : Display.getStdBoxFlow();
+      return parent? parent.flow : Nehan.Display.getStdBoxFlow();
     },
     /**
        @memberof Nehan.SelectorPropContext
@@ -11179,7 +11154,7 @@ var SelectorContext = (function(){
     // so this._style.flow is not ready at this time, that is, we need to get the box-flow in manual.
     var parent_flow = this.getParentFlow();
     var flow_name = this.getCssAttr("flow", parent_flow.getName());
-    var flow = BoxFlows.getByName(flow_name);
+    var flow = Nehan.BoxFlows.getByName(flow_name);
     return (flow && flow.isTextVertical())? true : false;
   };
 
@@ -11545,7 +11520,7 @@ var StyleContext = (function(){
        @param measure {int}
     */
     initContextMeasure : function(measure){
-      this.outerMeasure = measure  || (this.parent? this.parent.contentMeasure : Display.getMeasure(this.flow));
+      this.outerMeasure = measure  || (this.parent? this.parent.contentMeasure : Nehan.Display.getMeasure(this.flow));
       this.contentMeasure = this._computeContentMeasure(this.outerMeasure);
     },
     /**
@@ -11556,7 +11531,7 @@ var StyleContext = (function(){
        @param extent {int}
     */
     initContextExtent : function(extent){
-      this.outerExtent = extent || (this.parent? this.parent.contentExtent : Display.getExtent(this.flow));
+      this.outerExtent = extent || (this.parent? this.parent.contentExtent : Nehan.Display.getExtent(this.flow));
       this.contentExtent = this._computeContentExtent(this.outerExtent);
     },
     /**
@@ -12337,7 +12312,7 @@ var StyleContext = (function(){
        @return {Nehan.Font}
     */
     getFont : function(){
-      return this.font || (this.parent? this.parent.getFont() : Display.getStdFont());
+      return this.font || (this.parent? this.parent.getFont() : Nehan.Display.getStdFont());
     },
     /**
        @memberof Nehan.StyleContext
@@ -12401,7 +12376,7 @@ var StyleContext = (function(){
        @return {Nehan.Color}
     */
     getColor : function(){
-      return this.color || (this.parent? this.parent.getColor() : new Nehan.Color(Display.fontColor));
+      return this.color || (this.parent? this.parent.getColor() : new Nehan.Color(Nehan.Display.fontColor));
     },
     /**
        @memberof Nehan.StyleContext
@@ -12491,21 +12466,21 @@ var StyleContext = (function(){
        @return {int}
     */
     getParentFontSize : function(){
-      return this.parent? this.parent.getFontSize() : Display.fontSize;
+      return this.parent? this.parent.getFontSize() : Nehan.Display.fontSize;
     },
     /**
        @memberof Nehan.StyleContext
        @return {int}
     */
     getParentContentMeasure : function(){
-      return this.parent? this.parent.contentMeasure : Display.getMeasure(this.flow);
+      return this.parent? this.parent.contentMeasure : Nehan.Display.getMeasure(this.flow);
     },
     /**
        @memberof Nehan.StyleContext
        @return {int}
     */
     getParentContentExtent : function(){
-      return this.parent? this.parent.contentExtent : Display.getExtent(this.flow);
+      return this.parent? this.parent.contentExtent : Nehan.Display.getExtent(this.flow);
     },
     /**
        @memberof Nehan.StyleContext
@@ -12519,7 +12494,7 @@ var StyleContext = (function(){
        @return {float | int}
     */
     getLineHeight : function(){
-      return this.lineHeight || Display.lineHeight || 2;
+      return this.lineHeight || Nehan.Display.lineHeight || 2;
     },
     /**
        @memberof Nehan.StyleContext
@@ -12534,7 +12509,7 @@ var StyleContext = (function(){
     */
     getRubyTextBlockExtent : function(){
       var base_font_size = this.getFontSize();
-      var extent = Math.floor(base_font_size * (1 + Display.rubyRate));
+      var extent = Math.floor(base_font_size * (1 + Nehan.Display.rubyRate));
       return (base_font_size % 2 === 0)? extent : extent + 1;
     },
     /**
@@ -12748,16 +12723,16 @@ var StyleContext = (function(){
     },
     _computeFontSize : function(val, unit_size){
       var str = String(val).replace(/\/.+$/, ""); // remove line-height value like 'large/150%"'
-      var size = Display.fontSizeNames[str] || str;
+      var size = Nehan.Display.fontSizeNames[str] || str;
       var max_size = this.getParentFontSize();
       var font_size = this._computeUnitSize(size, unit_size, max_size);
-      return Math.min(font_size, Display.maxFontSize);
+      return Math.min(font_size, Nehan.Display.maxFontSize);
     },
     _computeUnitSize : function(val, unit_size, max_size){
       var str = String(val);
       if(str.indexOf("rem") > 0){
 	var rem_scale = parseFloat(str.replace("rem",""));
-	return Math.round(Display.fontSize * rem_scale); // use root font-size
+	return Math.round(Nehan.Display.fontSize * rem_scale); // use root font-size
       }
       if(str.indexOf("em") > 0){
 	var em_scale = parseFloat(str.replace("em",""));
@@ -12911,14 +12886,14 @@ var StyleContext = (function(){
     },
     _loadFlow : function(){
       var value = this.getCssAttr("flow", "inherit");
-      var parent_flow = this.parent? this.parent.flow : Display.getStdBoxFlow();
+      var parent_flow = this.parent? this.parent.flow : Nehan.Display.getStdBoxFlow();
       if(value === "inherit"){
 	return parent_flow;
       }
       if(value === "flip"){
 	return parent_flow.getFlipFlow();
       }
-      return BoxFlows.getByName(value);
+      return Nehan.BoxFlows.getByName(value);
     },
     _loadPosition : function(){
       var value = this.getCssAttr("position", "static");
@@ -13278,7 +13253,7 @@ var StyleContext = (function(){
       if(value === "inherit" && this.parent && this.parent.lineHeight){
 	return this.parent.lineHeight;
       }
-      return parseFloat(value || Display.lineHeight);
+      return parseFloat(value || Nehan.Display.lineHeight);
     },
     _loadTextAlign : function(){
       var value = this.getCssAttr("text-align", "inherit");
@@ -13294,9 +13269,9 @@ var StyleContext = (function(){
       }
       var empha_pos = this.getCssAttr("text-emphasis-position", {hori:"over", vert:"right"});
       var empha_color = this.getCssAttr("text-emphasis-color");
-      return new TextEmpha({
-	style:new TextEmphaStyle(empha_style),
-	pos:new TextEmphaPos(empha_pos),
+      return new Nehan.TextEmpha({
+	style:new Nehan.TextEmphaStyle(empha_style),
+	pos:new Nehan.TextEmphaPos(empha_pos),
 	color:(empha_color? new Nehan.Color(empha_color) : this.getColor())
       });
     },
@@ -13340,7 +13315,7 @@ var StyleContext = (function(){
       if(list_style_type === "none"){
 	return null;
       }
-      return new ListStyle({
+      return new Nehan.ListStyle({
 	type:list_style_type,
 	position:this.getCssAttr("list-style-position", "outside"),
 	image:this.getCssAttr("list-style-image", "none")
@@ -13370,185 +13345,185 @@ var StyleContext = (function(){
 })();
 
 
-var EvalContext = (function(){
+var DomCreateContext = (function(){
   /**
      @memberof Nehan
-     @class EvalContext
+     @class DomCreateContext
      @classdesc context object that is passed to "oncreate" callback.
      "oncreate" is called when document of target selector is converted into dom element.
      @constructor
      @param dom {HTMLElement}
      @param box {Nehan.Box}
   */
-  function EvalContext(dom, box){
+  function DomCreateContext(dom, box){
     this.dom = dom;
     this.box = box;
   }
 
-  EvalContext.prototype = {
+  DomCreateContext.prototype = {
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {HTMLElement}
     */
     getElement : function(){
       return this.dom;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {int}
     */
     getRestMeasure : function(){
       return this.box.restMeasure || 0;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {int}
     */
     getRestExtent : function(){
       return this.box.resteExtent || 0;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.Box}
     */
     getBox : function(){
       return this.box;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.Box}
     */
     getParentBox : function(){
       return this.box.parent;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.BoxSize}
     */
     getBoxSize : function(){
       return this.box.size;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.BoxSize}
     */
     getParentBoxSize : function(){
       return this.box.parent.size;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.StyleContext}
     */
     getStyleContext : function(){
       return this.box.style;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.StyleContext}
     */
     getParentStyleContext : function(){
       return this.box.style.parent;
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.Tag}
     */
     getMarkup : function(){
       return this.getStyleContext().getMarkup();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {Nehan.Tag}
     */
     getParentMarkup : function(){
       return this.getParentStyleContext().getMarkup();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {int}
     */
     getChildCount : function(){
       return this.getStyleContext().getChildCount();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {int}
     */
     getParentChildCount : function(){
       return this.getParentStyleContext().getChildCount();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {int}
     */
     getChildIndex : function(){
       return this.getStyleContext().getChildIndex();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {int}
     */
     getChildIndexOfType : function(){
       return this.getStyleContext().getChildIndexOfType();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isTextVertical : function(){
       return this.getStyleContext().isTextVertical();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isTextHorizontal : function(){
       return this.getStyleContext().isTextHorizontal();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isMarkupEmpty : function(){
       return this.getStyleContext().isMarkupEmpty();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isFirstChild : function(){
       return this.getStyleContext().isFirstChild();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isFirstOfType : function(){
       return this.getStyleContext().isFirstChild();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isOnlyChild : function(){
       return this.getStyleContext().isFirstOfType();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isOnlyOfType : function(){
       return this.getStyleContext().isOnlyOfType();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isLastChild : function(){
       return this.getStyleContext().isLastChild();
     },
     /**
-       @memberof Nehan.EvalContext
+       @memberof Nehan.DomCreateContext
        @return {bool}
     */
     isLastOfType : function(){
@@ -13556,7 +13531,7 @@ var EvalContext = (function(){
     }
   };
 
-  return EvalContext;
+  return DomCreateContext;
 })();
 
 var CursorContext = (function(){
@@ -14135,7 +14110,7 @@ var InlineContext = (function(){
       //    [char][word]<br>[char(head_ng)]
       // => [char][word1]<br>[word2][char(head_ng)]
       // so nothing to justify.
-      if(tail && tail instanceof Word && tail.isDivided()){
+      if(tail && tail instanceof Nehan.Word && tail.isDivided()){
 	return null;
       }
 
@@ -14170,10 +14145,10 @@ var InlineContext = (function(){
        @return {bool}
     */
     justifyDangling : function(head, head_next){
-      if(!(head instanceof Char) || !head.isHeadNg()){
+      if(!(head instanceof Nehan.Char) || !head.isHeadNg()){
 	return false;
       }
-      if(head_next instanceof Char && head_next.isHeadNg()){
+      if(head_next instanceof Nehan.Char && head_next.isHeadNg()){
 	return false;
       }
       return true;
@@ -14415,13 +14390,13 @@ var LayoutGenerator = (function(){
     var markup_content = style.getMarkupContent();
     if(style.getTextCombine() === "horizontal" || markup_name === "tcy"){
       return new TokenStream(markup_content, {
-	tokens:[new Tcy(markup_content)]
+	tokens:[new Nehan.Tcy(markup_content)]
       });
     }
     switch(markup_name){
     case "word":
       return new TokenStream(markup_content, {
-	tokens:[new Word(markup_content)]
+	tokens:[new Nehan.Word(markup_content)]
       });
     case "ruby":
       return new RubyTokenStream(markup_content);
@@ -14441,10 +14416,10 @@ var LayoutGenerator = (function(){
     var self = this, parent_style = this.style;
     var floated_generators = [first_float_gen];
     var tokens = this.stream.iterWhile(function(token){
-      if(token instanceof Text && token.isWhiteSpaceOnly()){
+      if(token instanceof Nehan.Text && token.isWhiteSpaceOnly()){
 	return true;
       }
-      if(!Token.isTag(token)){
+      if(!Nehan.Token.isTag(token)){
 	return false;
       }
       var child_style = new StyleContext(token, parent_style, {cursorContext:context});
@@ -14529,7 +14504,7 @@ var LayoutGenerator = (function(){
   };
 
   LayoutGenerator.prototype._createTextGenerator = function(style, text){
-    if(text instanceof Tcy || text instanceof Word){
+    if(text instanceof Nehan.Tcy || text instanceof Nehan.Word){
       return new TextGenerator(this.style, new TokenStream(text.getData(), {
 	tokens:[text]
       }));
@@ -14670,7 +14645,7 @@ var BlockGenerator = (function(){
     //console.log("block token:%o", token);
 
     // text block
-    if(token instanceof Text){
+    if(token instanceof Nehan.Text){
       if(token.isWhiteSpaceOnly()){
 	return this._getNext(context);
       }
@@ -14907,7 +14882,7 @@ var InlineGenerator = (function(){
     //console.log("inline token:%o", token);
 
     // text block
-    if(token instanceof Text || token instanceof Tcy || token instanceof Word){
+    if(token instanceof Nehan.Text || token instanceof Nehan.Tcy || token instanceof Nehan.Word){
       this.setChildLayout(this._createTextGenerator(this.style, token));
       return this.yieldChildLayout(context);
     }
@@ -14945,7 +14920,7 @@ var InlineGenerator = (function(){
       context.setLineBreak(true);
       if(!this.style.isPre()){
 	this.stream.skipUntil(function(token){
-	  return (token instanceof Text && token.isWhiteSpaceOnly());
+	  return (token instanceof Nehan.Text && token.isWhiteSpaceOnly());
 	});
       }
       return null;
@@ -15064,16 +15039,16 @@ var TextGenerator = (function(){
 	break;
       }
       // skip head space for first word element if not 'white-space:pre'
-      if(is_head_output && context.getInlineCurMeasure() === 0 && element instanceof Char && element.isWhiteSpace() && !this.style.isPre()){
+      if(is_head_output && context.getInlineCurMeasure() === 0 && element instanceof Nehan.Char && element.isWhiteSpace() && !this.style.isPre()){
 	var next = this.stream.peek();
-	if(next && next instanceof Word){
+	if(next && next instanceof Nehan.Word){
 	  continue; // skip head space
 	}
       }
       // if token is last one and maybe tail text, check tail/head NG between two inline generators.
       if(Config.justify && !this.stream.hasNext() && !context.hasInlineSpaceFor(measure + next_head_measure)){
 	// avoid tail/head NG between two generators
-	if(element instanceof Char && element.isTailNg() || is_next_head_ng){
+	if(element instanceof Nehan.Char && element.isTailNg() || is_next_head_ng){
 	  context.setLineBreak(true);
 	  context.setJustified(true);
 	  //console.log("justified at %o:type:%s", (element.data || ""), (is_next_head_ng? "head" : "tail"));
@@ -15155,15 +15130,15 @@ var TextGenerator = (function(){
   };
 
   TextGenerator.prototype._peekParentNextHeadChar = function(token){
-    if(token instanceof Text){
+    if(token instanceof Nehan.Text){
       var head_c1 = token.getContent().substring(0,1);
-      return new Char(head_c1);
+      return new Nehan.Char(head_c1);
     } else if(token instanceof Nehan.Tag){
       if(token.name === "ruby"){
 	return null; // generally, ruby is not both tail-NG and head-NG.
       }
       var head_c1 = token.getContent().replace(/^[\s]*<.+?>/, "").substring(0,1);
-      return new Char(head_c1);
+      return new Nehan.Char(head_c1);
     }
     return null;
   };
@@ -15230,7 +15205,7 @@ var TextGenerator = (function(){
     //console.log("text token:%o", token);
 
     // if white-space
-    if(Token.isWhiteSpace(token)){
+    if(Nehan.Token.isWhiteSpace(token)){
       return this._getWhiteSpace(context, token);
     }
 
@@ -15254,18 +15229,18 @@ var TextGenerator = (function(){
       return this._getWhiteSpacePre(context, token);
     }
     // skip continuous white-spaces.
-    this.stream.skipUntil(Token.isWhiteSpace);
+    this.stream.skipUntil(Nehan.Token.isWhiteSpace);
 
     // first new-line and tab are treated as single half space.
     if(token.isNewLine() || token.isTabSpace()){
-      Char.call(token, " "); // update by half-space
+      Nehan.Char.call(token, " "); // update by half-space
     }
     // if white-space is not new-line, use first one.
     return this._getText(context, token);
   };
 
   TextGenerator.prototype._getWhiteSpacePre = function(context, token){
-    if(Token.isNewLine(token)){
+    if(Nehan.Token.isNewLine(token)){
       context.setLineBreak(true);
       return null;
     }
@@ -15289,7 +15264,7 @@ var TextGenerator = (function(){
   TextGenerator.prototype._setTextMetrics = function(context, token){
     // if charactor token, set kerning before setting metrics.
     // because some additional space is added if kerning is enabled or not.
-    if(token instanceof Char && token.isKerningChar() && Config.kerning){
+    if(token instanceof Nehan.Char && token.isKerningChar() && Config.kerning){
       this._setCharKerning(context, token);
     }
     token.setMetrics(this.style.flow, this.style.getFont());
@@ -15298,8 +15273,8 @@ var TextGenerator = (function(){
   TextGenerator.prototype._setCharKerning = function(context, char_token){
     var next_token = this.stream.peek();
     var prev_text = context.getInlineLastElement();
-    var next_text = next_token && Token.isText(next_token)? next_token : null;
-    Kerning.set(char_token, prev_text, next_text);
+    var next_text = next_token && Nehan.Token.isText(next_token)? next_token : null;
+    Nehan.Kerning.set(char_token, prev_text, next_text);
   };
 
   TextGenerator.prototype._getWord = function(context, token){
@@ -16088,13 +16063,13 @@ var TableGenerator = (function(){
   Nehan.Class.extend(TableGenerator, BlockGenerator);
 
   TableGenerator.prototype._createAutoPartition = function(stream){
-    var pset = new PartitionHashSet();
+    var pset = new Nehan.PartitionHashSet();
     while(stream.hasNext()){
       var token = stream.get();
       if(token === null){
 	break;
       }
-      if(!Token.isTag(token)){
+      if(!Nehan.Token.isTag(token)){
 	continue;
       }
       switch(token.getName()){
@@ -16123,13 +16098,13 @@ var TableGenerator = (function(){
     var partition_units = Nehan.List.map(cell_tags, function(cell_tag){
       return this._getPartitionUnit(cell_tag, partition_count);
     }.bind(this));
-    return new Partition(partition_units);
+    return new Nehan.Partition(partition_units);
   };
 
   TableGenerator.prototype._getPartitionUnit = function(cell_tag, partition_count){
     var measure = cell_tag.getAttr("measure") || cell_tag.getAttr("width") || null;
     if(measure){
-      return new PartitionUnit({weight:measure, isStatic:true});
+      return new Nehan.PartitionUnit({weight:measure, isStatic:true});
     }
     var content = cell_tag.getContent();
     var lines = cell_tag.getContent().replace(/<br \/>/g, "\n").replace(/<br>/g, "\n").split("\n");
@@ -16144,7 +16119,7 @@ var TableGenerator = (function(){
 
     // but confirm that weight is more than single font size of parent style.
     weight = Math.max(this.style.getFontSize(), weight);
-    return new PartitionUnit({weight:weight, isStatic:false});
+    return new Nehan.PartitionUnit({weight:weight, isStatic:false});
   };
 
   return TableGenerator;
@@ -16579,7 +16554,7 @@ var LayoutEvaluator = (function(){
       }.bind(this));
       var oncreate = tree.getOnCreate();
       if(oncreate){
-	oncreate(new EvalContext(dom, tree));
+	oncreate(new DomCreateContext(dom, tree));
       }
       return dom;
     },
@@ -16631,7 +16606,7 @@ var LayoutEvaluator = (function(){
       return this._evaluate(element);
     },
     _evalInlineChildText : function(parent, element){
-      if(parent.style.isTextEmphaEnable() && Token.isEmphaTargetable(element)){
+      if(parent.style.isTextEmphaEnable() && Nehan.Token.isEmphaTargetable(element)){
 	return this._evalEmpha(parent, element);
       }
       return this._evalTextElement(parent, element);
@@ -16686,6 +16661,8 @@ var VertEvaluator = (function(){
     LayoutEvaluator.call(this, "vert");
   }
   Nehan.Class.extend(VertEvaluator, LayoutEvaluator);
+
+  var __is_vert_glyph_enable = Config.useVerticalGlyphIfEnable && Nehan.Env.isVerticalGlyphEnable;
 
   VertEvaluator.prototype._evalLinkElement = function(line, link){
     return this._evaluate(link, {
@@ -16804,7 +16781,7 @@ var VertEvaluator = (function(){
 
   VertEvaluator.prototype._evalChar = function(line, chr){
     if(chr.isImgChar()){
-      if(chr.isVertGlyphEnable()){
+      if(__is_vert_glyph_enable){
 	return this._evalVerticalGlyph(line, chr);
       }
       return this._evalImgChar(line, chr);
@@ -16813,7 +16790,7 @@ var VertEvaluator = (function(){
     } else if(chr.isTabSpace()){
       return this._evalTabChar(line, chr);
     } else if(chr.isRotateChar()){
-      if(chr.isVertGlyphEnable()){
+      if(__is_vert_glyph_enable){
 	return this._evalVerticalGlyph(line, chr);
       }
       return this._evalRotateChar(line, chr);
@@ -16893,7 +16870,7 @@ var VertEvaluator = (function(){
   };
 
   VertEvaluator.prototype._evalImgChar = function(line, chr){
-    var color = line.color || new Nehan.Color(Display.fontColor);
+    var color = line.color || new Nehan.Color(Nehan.Display.fontColor);
     var font_rgb = color.getRgb();
     var palette_color = Nehan.Palette.getColor(font_rgb).toUpperCase();
     return this._createElement("img", {
@@ -17110,7 +17087,7 @@ var HoriEvaluator = (function(){
 
 // set engine args
 Nehan.Args.copy(Config, __engine_args.config || {});
-Nehan.Args.copy2(Display, __engine_args.display || {});
+Nehan.Args.copy2(Nehan.Display, __engine_args.display || {});
 
 Selectors.setValues(Nehan.globalStyle || {}); // set global style.
 Selectors.setValues(__engine_args.style || {}); // set local style
