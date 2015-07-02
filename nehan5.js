@@ -35,6 +35,112 @@ var Nehan = Nehan || {};
 Nehan.version = "5.1.1";
 
 /**
+   system configuration
+   @namespace Nehan.Config
+*/
+Nehan.Config = {
+  /**
+     language setting
+     @memberof Nehan.Config
+     @type {string}
+     @default "ja-JP"
+  */
+  lang:"ja-JP",
+
+  /**
+     is debug mode?
+     @memberof Nehan.Config
+     @type {boolean}
+     @default false
+  */
+  debug:false,
+
+  /**
+     is kerning enabled?
+     @memberof Nehan.Config
+     @type {boolean}
+     @default true
+  */
+  kerning:true,
+
+  /**
+     is justify enabled?
+     @memberof Nehan.Config
+     @type {boolean}
+     @default true
+  */
+  justify:true,
+
+  /**
+     is dangling justify enable?
+     Note that this property is enabled only when Nehan.Config.justify is enabled.
+     @memberof Nehan.Config
+     @type {boolean}
+     @default true
+  */
+  danglingJustify:true,
+
+  /**
+     max rety count when something troubles.
+     @memberof Nehan.Config
+     @type {int}
+     @default 20
+  */
+  maxRollbackCount:20,
+
+  /**
+     max yield count to block infinite loop.
+     @memberof Nehan.Config
+     @type {int}
+     @default 20000
+  */
+  maxYieldCount:20000,
+
+  /**
+     max available page count for each engine.
+     @memberof Nehan.Config
+     @type {int}
+     @default 5000
+  */
+  maxPageCount:5000,
+
+  /**
+     use vertical glyph if browser support 'writing-mode'.
+     @memberof Nehan.Config
+     @type {boolean}
+     @default true
+  */
+  useVerticalGlyphIfEnable:true,
+
+  /**
+     enable ommiting element by start tag.
+     @memberof Nehan.Config
+     @type {boolean}
+     @default false
+  */
+  enableAutoCloseTag:false,
+
+  /**
+     enable capturing text of each page.
+
+     @memberof Nehan.Config
+     @type {string}
+     @default false
+  */
+  capturePageText:false,
+
+  /**
+     allowed inline style properties.
+     allow all properties if not defined or list is empty.
+
+     @memberof Nehan.Config
+     @type {Array.<string>}
+     @default []
+  */
+  allowedInlineStyleProps:[]
+};
+
+/**
    standard page settings.
    @namespace Nehan.Display
 */
@@ -493,6 +599,68 @@ Nehan.Env = (function(){
     isVerticalGlyphEnable : __is_vertical_glyph_enable
   };
 })();
+
+/**
+   module of html lexing rule
+
+   @namespace Nehan.LexingRule
+*/
+Nehan.LexingRule = (function(){
+  var __single_tag_names__ = [
+    "br",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "wbr",
+    "?xml",
+    "!doctype",
+    "page-break",
+    "end-page",
+    "pbr"
+  ];
+
+  var __is_single_tag = function(tag_name){
+    return Nehan.List.exists(__single_tag_names__, Nehan.Closure.eq(tag_name));
+  };
+
+  return {
+    /**
+       @memberof Nehan.LexingRule
+       @return {Array.<String>}
+    */
+    getSingleTagNames : function(){
+      return __single_tag_names__;
+    },
+    /**
+       @memberof Nehan.LexingRule
+       @param tag_name {String}
+       @return {boolean}
+       @example
+       * Nehan.LexingRule.isSingleTag("img"); // true
+       * Nehan.LexingRule.isSingleTag("br"); // true
+       * Nehan.LexingRule.isSingleTag("div"); // false
+    */
+    isSingleTag : function(tag_name){
+      return __is_single_tag(tag_name) || false;
+    },
+    /**
+       @memberof Nehan.LexingRule
+       @param tag_name {String}
+       @example
+       * Nehan.LexingRule.addSingleTagByName("my-custom-single-tag");
+       * Nehan.LexingRule.isSingleTag("my-custom-single-tag"); // true
+    */
+    addSingleTagByName : function(tag_name){
+      tag_name = tag_name.toLowerCase();
+      if(!__is_single_tag(tag_name)){
+	__single_tag_names__.push(tag_name);
+      }
+    }
+  };
+})();
+
 
 /**
    @namespace Nehan.Class
@@ -1489,7 +1657,6 @@ Nehan.TagAttrLexer = (function(){
       this.buff = this.buff.substring(length);
     },
     _getSymbol : function(){
-      //var symbol = HtmlLexer.prototype._getByRex.call(this, __rex_symbol);
       var match = this.buff.match(__rex_symbol);
       var symbol = match? match[0] : null;
       if(symbol){
@@ -5975,6 +6142,7 @@ Nehan.Page = (function(){
      @constructor
      @param opt {Object}
      @param opt.element {DOMElement} - generated DOMElement.
+     @ramao opt.text {string} - text in page.
      @param opt.seekPos {int} - page seek position in literal string pos.
      @param opt.pageNo {int} - page index starts from 0.
      @param opt.charPos {int} - character position of this page from first page.
@@ -9145,14 +9313,602 @@ Nehan.InlineContext = (function(){
 })();
 
 
+Nehan.HtmlLexer = (function (){
+  var __rex_tag = /<[a-zA-Z][^>]*>/;
+
+  /*
+  var __close_abbr_tags = [
+    "li",
+    "dt",
+    "dd",
+    "p",
+    "tr",
+    "td",
+    "th",
+    "rt",
+    "rp",
+    "optgroup",
+    "option",
+    "thread",
+    "tfoot"
+  ];*/
+
+  var __find_close_pos = function(buff, tag_name, open_tag_rex, close_tag){
+    var close_pos = buff.indexOf(close_tag);
+    if(close_pos < 0){
+      return -1;
+    }
+    var recur_match = buff.match(open_tag_rex);
+    var recur_pos = recur_match? recur_match.index : -1;
+    if(recur_pos < 0 || close_pos < recur_pos){
+      return close_pos;
+    }
+    var restart_pos = recur_pos + tag_name.length + 2; // 2 = "<>".length
+    var close_pos2 = __find_close_pos(buff.substring(restart_pos), tag_name, open_tag_rex, close_tag);
+    if(close_pos2 < 0){
+      return -1;
+    }
+    var restart_pos2 = restart_pos + close_pos2 + tag_name.length + 3; // 3 = "</>".length
+    return restart_pos2 + __find_close_pos(buff.substring(restart_pos2), tag_name, open_tag_rex, close_tag);
+  };
+
+  /**
+     @memberof Nehan
+     @class HtmlLexer
+     @classdesc lexer of html tag elements.
+     @constructor
+     @param src {String}
+  */
+  function HtmlLexer(src){
+    this.pos = 0;
+    this.buff = this._normalize(src);
+    this.src = this.buff;
+  }
+
+  // discard close tags defined as single tag in LexingRule.
+  var __replace_single_close_tags = function(str){
+    return Nehan.List.fold(Nehan.LexingRule.getSingleTagNames(), str, function(ret, name){
+      return ret.replace(new RegExp("</" + name + ">", "g"), "");
+    });
+  };
+
+  HtmlLexer.prototype = {
+    _normalize : function(src){
+      var src = src.replace(/(<\/.+?>)/gm, function(str, p1){
+	  return p1.toLowerCase();
+      }); // convert close tag to lower case(for innerHTML of IE)
+      src = __replace_single_close_tags(src);
+      //src = src.replace(/“([^”]+)”/g, "〝$1〟") // convert double quote to double quotation mark
+      return src
+	.replace(/“(.*?)”/g, "”$1”")
+	.replace(/｢/g, "「") // half size left corner bracket -> full size left corner bracket
+	.replace(/｣/g, "」") // half size right corner bracket -> full size right corner bracket
+	.replace(/､/g, "、") // half size ideographic comma -> full size ideographic comma
+	.replace(/｡/g, "。") // half size ideographic full stop -> full size
+	//.replace(/^[\s]+/, "") // shorten head space
+	//.replace(/[\s]+$/, "") // discard tail space
+	.replace(/\r/g, ""); // discard CR
+    },
+    /**
+       @memberof Nehan.HtmlLexer
+       @return {boolean}
+    */
+    isEmpty : function(){
+      return this.src === "";
+    },
+    /**
+       get token and step cusor to next position.
+
+       @memberof Nehan.HtmlLexer
+       @return {Nehan.Token}
+    */
+    get : function(){
+      var token = this._getToken();
+      if(token){
+	token.spos = this.pos;
+      }
+      return token;
+    },
+    /**
+       get lexer source text
+
+       @memberof Nehan.HtmlLexer
+       @return {String}
+    */
+    getSrc : function(){
+      return this.src;
+    },
+    /**
+       get current pos in percentage format.
+
+       @memberof Nehan.HtmlLexer
+       @return {int}
+    */
+    getSeekPercent : function(seek_pos){
+      return Math.round(100 * seek_pos / this.src.length);
+    },
+    /**
+       @memberof Nehan.HtmlLexer
+       @param text {String}
+     */
+    addText : function(text){
+      this.buff = this.buff + this._normalize(text);
+    },
+    _stepBuff : function(count){
+      var part = this.buff.substring(0, count);
+      this.pos += count;
+      this.buff = this.buff.slice(count);
+      return part;
+    },
+    _getToken : function(){
+      if(this.buff === ""){
+	return null;
+      }
+      var match, content;
+      match = this.buff.match(__rex_tag);
+      if(match === null){
+	content = this._stepBuff(this.buff.length);
+	return new Nehan.Text(content);
+      }
+      if(match.index === 0){
+	return this._parseTag(match[0]);
+      }
+      content = this._stepBuff(match.index);
+      return new Nehan.Text(content);
+    },
+    _getTagContent : function(tag_name){
+      // why we added [\\s|>] for open_tag_rex?
+      // if tag_name is "p", 
+      // both "<p>" and "<p class='foo'" also must be matched.
+      var open_tag_rex = new RegExp("<" + tag_name + "[\\s|>]");
+      var close_tag = "</" + tag_name + ">"; // tag name is already lower-cased by preprocessor.
+      var close_pos = __find_close_pos(this.buff, tag_name, open_tag_rex, close_tag);
+
+      if(close_pos >= 0){
+	return {closed:true, content:this.buff.substring(0, close_pos)};
+      }
+
+      // if close pos not found and Nehan.Config.enableAutoClose is true,
+      // 1. return the text until next same start tag.
+      // 2. or else, return whole rest buff.
+      // (TODO): this is not strict lexing, especially when dt, dd, td, etc.
+      if(Nehan.Config.enableAutoCloseTag){
+	var next_open_match = this.buff.match(open_tag_rex);
+	if(next_open_match){
+	  return {closed:false, content:this.buff.substring(0, nexd_open_match.index)};
+	}
+      }
+
+      // all other case, return whole rest buffer.
+      return {closed:false, content:this.buff};
+    },
+    _parseTag : function(tagstr){
+      var tag = new Nehan.Tag(tagstr);
+      this._stepBuff(tagstr.length);
+      var tag_name = tag.getName();
+      if(Nehan.LexingRule.isSingleTag(tag_name)){
+	tag._single = true;
+	return tag;
+      }
+      return this._parseChildContentTag(tag);
+    },
+    _parseChildContentTag : function(tag){
+      var result = this._getTagContent(tag.name);
+      tag.setContent(result.content);
+      if(result.closed){
+	this._stepBuff(result.content.length + tag.name.length + 3); // 3 = "</>".length
+      } else {
+	this._stepBuff(result.content.length);
+      }
+      return tag;
+    }
+  };
+  return HtmlLexer;
+})();
+
+
+
+Nehan.TextLexer = (function (){
+  var __rex_tcy = /\d\d|!\?|!!|\?!|\?\?/;
+  var __rex_word = /^[a-zA-Z0-9.!?\/:$#;"',_%]+/;
+  var __rex_char_ref = /^&[^;\s]+;/;
+  var __rex_half_single_tcy = /[a-zA-Z0-9!?]/;
+
+  /**
+     @memberof Nehan
+     @class TextLexer
+     @classdesc lexer of html text elements.
+     @constructor
+     @param src {String}
+  */
+  function TextLexer(src){
+    Nehan.HtmlLexer.call(this, src);
+  }
+
+  Nehan.Class.extend(TextLexer, Nehan.HtmlLexer);
+
+  TextLexer.prototype._getToken = function(){
+    if(this.buff === ""){
+      return null;
+    }
+    var str = this._getByRex(__rex_word);
+    if(str){
+      if(str.length === 1){
+	if(__rex_half_single_tcy.test(str)){
+	  return new Nehan.Tcy(this._stepBuff(1));
+	}
+	return new Nehan.Char(this._stepBuff(1), false);
+      } else if(str.length === 2 && str.match(__rex_tcy)){
+	return new Nehan.Tcy(this._stepBuff(str.length));
+      }
+      return new Nehan.Word(this._stepBuff(str.length));
+    }
+    str = this._getByRex(__rex_char_ref);
+    if(str){
+      return new Nehan.Char(this._stepBuff(str.length), true);
+    }
+    str = this.buff.substring(0, 1);
+    return new Nehan.Char(this._stepBuff(1), false);
+  };
+
+  TextLexer.prototype._getByRex = function(rex){
+    var rex_result = this.buff.match(rex);
+    return rex_result? rex_result[0] : null;
+  };
+
+  return TextLexer;
+})();
+
+
+Nehan.TokenStream = (function(){
+  /**
+     @memberof Nehan
+     @class TokenStream
+     @classdesc abstraction of token stream
+     @constructor
+     @param src {String}
+     @param opt {Object}
+     @param opt.lexer {Lexer} - lexer class(optional)
+     @param opt.filter {Function} - token filter function(optional)
+  */
+  function TokenStream(src, opt){
+    opt = opt || {};
+    this.lexer = opt.lexer || this._createLexer(src);
+    this.tokens = opt.tokens || [];
+    this.pos = 0;
+    this._filter = opt.filter || null;
+    if(this.tokens.length === 0){
+      this._loadTokens(this._filter);
+    }
+  }
+
+  var __set_pseudo = function(tags){
+    tags[0].setFirstChild(true);
+    tags[0].setOnlyChild(tags.length === 1);
+    tags[tags.length - 1].setLastChild(true);
+  };
+
+  var __set_pseudo_of_type = function(tags){
+    tags[0].setFirstOfType(true);
+    tags[0].setOnlyOfType(tags.length === 1);
+    tags[tags.length - 1].setLastOfType(true);
+  };
+
+  TokenStream.prototype = {
+    /**
+       @memberof Nehan.TokenStream
+       @return {boolean}
+    */
+    hasNext : function(){
+      return (this.pos < this.tokens.length);
+    },
+    /**
+       @memberof Nehan.TokenStream
+       @return {boolean}
+    */
+    isEmptyLexer : function(){
+      return this.lexer.isEmpty();
+    },
+    /**
+       @memberof Nehan.TokenStream
+       @return {boolean}
+    */
+    isEmptyTokens : function(){
+      return this.tokens.length === 0;
+    },
+    /**
+       @memberof Nehan.TokenStream
+       @return {boolean}
+    */
+    isHead : function(){
+      return this.pos === 0;
+    },
+    /**
+       @memberof Nehan.TokenStream
+       @param text {String}
+    */
+    addText : function(text){
+      if(text !== ""){
+	this.lexer.addText(text);
+	this._loadTokens(this._filter);
+      }
+    },
+    /**
+       step backward current stream position.
+
+       @memberof Nehan.TokenStream
+    */
+    prev : function(){
+      this.pos = Math.max(0, this.pos - 1);
+    },
+    /**
+       set stream position directly.
+
+       @memberof Nehan.TokenStream
+       @param pos {int}
+    */
+    setPos : function(pos){
+      this.pos = pos;
+    },
+    /**
+       set current stream position to the beginning of stream.
+
+       @memberof Nehan.TokenStream
+    */
+    rewind : function(){
+      this.pos = 0;
+    },
+    /**
+       look current token but not step forward current position.
+
+       @memberof Nehan.TokenStream
+       @return {token}
+    */
+    peek : function(off){
+      var offset = off || 0;
+      var index = Math.max(0, this.pos + offset);
+      var token = this.tokens[index];
+      if(token){
+	token.pos = index;
+	return token;
+      }
+      return null;
+    },
+    /**
+       get current stream token and step forward current position.
+
+       @memberof Nehan.TokenStream
+       @return {token}
+    */
+    get : function(){
+      var token = this.peek();
+      if(token){
+	this.pos++;
+      }
+      return token;
+    },
+    /**
+       get stream soruce as text.
+
+       @memberof Nehan.TokenStream
+       @return {String}
+    */
+    getSrc : function(){
+      return this.lexer.getSrc();
+    },
+    /**
+       get current stream position.
+
+       @memberof Nehan.TokenStream
+       @return {int}
+    */
+    getPos : function(){
+      return this.pos;
+    },
+    /**
+       get current token count.
+
+       @memberof Nehan.TokenStream
+       @return {int}
+    */
+    getTokenCount : function(){
+      return this.tokens.length;
+    },
+    /**
+       get all tokens.
+
+       @memberof Nehan.TokenStream
+       @return {Array}
+    */
+    getTokens : function(){
+      return this.tokens;
+    },
+    /**
+       get current token position of source text(not stream position).
+
+       @memberof Nehan.TokenStream
+       @return {int}
+    */
+    getSeekPos : function(){
+      var token = this.tokens[Math.max(0, this.pos)];
+      return token? token.spos : this.tokens[this.tokens.length - 1].spos;
+    },
+    /**
+       get current seek pos as percent.
+
+       @memberof Nehan.TokenStream
+       @return {int}
+    */
+    getSeekPercent : function(){
+      var seek_pos = this.getSeekPos();
+      return this.lexer.getSeekPercent(seek_pos);
+    },
+    /**
+       iterate tokens by [fn].
+
+       @memberof Nehan.TokenStream
+       @param fn {Function}
+    */
+    iterWhile : function(fn){
+      var token;
+      while(this.hasNext()){
+	token = this.get();
+	if(token === null || !fn(token)){
+	  this.prev();
+	  break;
+	}
+      }
+    },
+    /**
+       step stream position while [fn(token)] is true.
+
+       @memberof Nehan.TokenStream
+       @param fn {Function}
+    */
+    skipUntil : function(fn){
+      while(this.hasNext()){
+	var token = this.get();
+	if(token === null){
+	  break;
+	}
+	if(!fn(token)){
+	  this.prev();
+	  break;
+	}
+      }
+    },
+    /**
+       step stream position once if [fn(token)] is true.
+
+       @memberof Nehan.TokenStream
+       @param fn {Function}
+    */
+    skipIf: function(fn){
+      var token = this.peek();
+      return (token && fn(token))? this.get() : null;
+    },
+    /**
+       read whole stream source.
+
+       @memberof Nehan.TokenStream
+       @param filter {Function} - filter function
+       @return {Array.<token>}
+    */
+    _loadTokens : function(filter){
+      var filter_order = 0;
+      while(true){
+	var token = this.lexer.get();
+	if(token === null){
+	  break;
+	}
+	if(token instanceof Nehan.Char && token.isLigature()){
+	  var last = Nehan.List.last(this.tokens);
+	  if(last instanceof Nehan.Char){
+	    last.setLigature(token.data);
+	    continue;
+	  }
+	}
+	if(filter === null){
+	  this.tokens.push(token);
+	} else if(filter && filter(token)){
+	  token.order = filter_order++;
+	  this.tokens.push(token);
+	}
+      }
+      this._setPseudoAttribute(this.tokens);
+    },
+    _setPseudoAttribute : function(tokens){
+      var tags = Nehan.List.filter(tokens, function(token){
+	return (token instanceof Nehan.Tag);
+      });
+      if(tags.length === 0){
+	return;
+      }
+      var type_of_tags = {};
+      Nehan.List.iter(tags, function(tag){
+	var tag_name = tag.getName();
+	if(type_of_tags[tag_name]){
+	  type_of_tags[tag_name].push(tag);
+	} else {
+	  type_of_tags[tag_name] = [tag];
+	}
+      });
+      __set_pseudo(tags);
+      for(var tag_name in type_of_tags){
+	__set_pseudo_of_type(type_of_tags[tag_name]);
+      }
+    },
+    _createLexer : function(src){
+      return new Nehan.HtmlLexer(src);
+    }
+  };
+
+  return TokenStream;
+})();
+
+
+Nehan.RubyTokenStream = (function(){
+  /**
+     token stream of &lt;ruby&gt; tag content.
+
+     @memberof Nehan
+     @class RubyTokenStream
+     @classdesc
+     @constructor
+     @extends {Nehan.TokenStream}
+     @param str {String}
+  */
+  function RubyTokenStream(str){
+    this.tokens = this._parse(new Nehan.TokenStream(str));
+    this.pos = 0;
+  }
+  Nehan.Class.extend(RubyTokenStream, Nehan.TokenStream);
+
+  RubyTokenStream.prototype._parse = function(stream){
+    var tokens = [];
+    while(stream.hasNext()){
+      tokens.push(this._parseRuby(stream));
+    }
+    return tokens;
+  };
+
+  RubyTokenStream.prototype._parseRuby = function(stream){
+    var rbs = [];
+    var rt = null;
+    while(true){
+      var token = stream.get();
+      if(token === null){
+	break;
+      }
+      if(Nehan.Token.isTag(token) && token.getName() === "rt"){
+	rt = token;
+	break;
+      }
+      if(Nehan.Token.isTag(token) && token.getName() === "rb"){
+	rbs = this._parseRb(token.getContent())
+      }
+      if(token instanceof Nehan.Text){
+	rbs = this._parseRb(token.getContent());
+      }
+    }
+    return new Nehan.Ruby(rbs, rt);
+  };
+
+  RubyTokenStream.prototype._parseRb = function(content){
+    return new Nehan.TokenStream(content, {
+      lexer:new Nehan.TextLexer(content)
+    }).getTokens();
+  };
+
+  return RubyTokenStream;
+})();
+
+
 // current engine id
 Nehan.engineId = Nehan.engineId || 0;
 
 // global style
 Nehan.globalStyle = Nehan.globalStyle || {};
-
-// global single tags
-Nehan.singleTagNames = Nehan.singleTagNames || [];
 
 /**
    set global style. see example at setStyle of {@link Nehan.Engine}.
@@ -9182,18 +9938,8 @@ Nehan.setStyles = function(values){
 };
 
 /**
-   set global single tag name. see example at addSingleTagByName of {@link Nehan.LexingRule}.
-
-   @memberof Nehan
-   @param tag_name {String}
-*/
-Nehan.addSingleTagByName = function(tag_name){
-  Nehan.singleTagNames.push(tag_name);
-};
-
-/**
  * This function ends at nehan-setup-end.js(tail part of all source code),<br>
- * to enclose local environment(Style, Display, Config, DocumentContext etc).<br>
+ * to enclose local environment(Style, Selectors, DocumentContext etc).<br>
  * So each engine has it's own environment.<br>
  * This is usefull to show multiple layout(vertical and horizontal) in a single page.<br>
  * Note that Nehan.setup is alias name of Nehan.createEngine.
@@ -9202,8 +9948,6 @@ Nehan.addSingleTagByName = function(tag_name){
    @memberof Nehan
    @method createEngine
    @param engine_args {Object}
-   @param engine_args.config {Nehan.Config} - system config
-   @param engine_args.display {Nehan.Display} - standard page parameters
    @param engine_args.style {Nehan.Style} - engine local style
    @return {Nehan.Engine}
 */
@@ -9217,187 +9961,13 @@ Nehan.engineId++;
 // this function is closed by nehan-setup-end.js
 
 /**
-   system configuration
-   @namespace Nehan.Config
-*/
-var Config = {
-  /**
-     language setting
-     @memberof Nehan.Config
-     @type {string}
-     @default "ja-JP"
-  */
-  lang:"ja-JP",
-
-  /**
-     is debug mode?
-     @memberof Nehan.Config
-     @type {boolean}
-     @default false
-  */
-  debug:false,
-
-  /**
-     is kerning enabled?
-     @memberof Nehan.Config
-     @type {boolean}
-     @default true
-  */
-  kerning:true,
-
-  /**
-     is justify enabled?
-     @memberof Nehan.Config
-     @type {boolean}
-     @default true
-  */
-  justify:true,
-
-  /**
-     is dangling justify enable?
-     Note that this property is enabled only when Config.justify is enabled.
-     @memberof Nehan.Config
-     @type {boolean}
-     @default true
-  */
-  danglingJustify:true,
-
-  /**
-     max rety count when something troubles.
-     @memberof Nehan.Config
-     @type {int}
-     @default 20
-  */
-  maxRollbackCount:20,
-
-  /**
-     max yield count to block infinite loop.
-     @memberof Nehan.Config
-     @type {int}
-     @default 20000
-  */
-  maxYieldCount:20000,
-
-  /**
-     max available page count for each engine.
-     @memberof Nehan.Config
-     @type {int}
-     @default 5000
-  */
-  maxPageCount:5000,
-
-  /**
-     use vertical glyph if browser support 'writing-mode'.
-     @memberof Nehan.Config
-     @type {boolean}
-     @default true
-  */
-  useVerticalGlyphIfEnable:true,
-
-  /**
-     enable ommiting element by start tag.
-     @memberof Nehan.Config
-     @type {boolean}
-     @default false
-  */
-  enableAutoCloseTag:false,
-
-  /**
-     enable capturing text of each page.
-
-     @memberof Nehan.Config
-     @type {string}
-     @default false
-  */
-  capturePageText:false,
-
-  /**
-     allowed inline style properties.
-     allow all properties if not defined or list is empty.
-
-     @memberof Nehan.Config
-     @type {Array.<string>}
-     @default []
-  */
-  allowedInlineStyleProps:[]
-};
-
-/**
-   module of html lexing rule
-
-   @namespace Nehan.LexingRule
-*/
-var LexingRule = (function(){
-  var __single_tag_names__ = [
-    "br",
-    "hr",
-    "img",
-    "input",
-    "link",
-    "meta",
-    "wbr",
-    "?xml",
-    "!doctype",
-    "page-break",
-    "end-page",
-    "pbr"
-  ];
-
-  var __is_single_tag = function(tag_name){
-    return Nehan.List.exists(__single_tag_names__, Nehan.Closure.eq(tag_name));
-  };
-
-  return {
-    /**
-       @memberof Nehan.LexingRule
-       @return {Array.<String>}
-    */
-    getSingleTagNames : function(){
-      return __single_tag_names__;
-    },
-    /**
-       @memberof Nehan.LexingRule
-       @param tag_name {String}
-       @return {boolean}
-       @example
-       * LexingRule.isSingleTag("img"); // true
-       * LexingRule.isSingleTag("br"); // true
-       * LexingRule.isSingleTag("div"); // false
-    */
-    isSingleTag : function(tag_name){
-      return __is_single_tag(tag_name) || false;
-    },
-    /**
-       @memberof Nehan.LexingRule
-       @param tag_name {String}
-       @example
-       * LexingRule.addSingleTagByName("my-custom-single-tag");
-       * LexingRule.isSingleTag("my-custom-single-tag"); // true
-    */
-    addSingleTagByName : function(tag_name){
-      tag_name = tag_name.toLowerCase();
-      if(!__is_single_tag(tag_name)){
-	__single_tag_names__.push(tag_name);
-      }
-    }
-  };
-})();
-
-
-/**
    @namespace Nehan.Style
    @description <pre>
 
   Important notices about style.js
   ================================
 
-  1. camel case property is not allowed
-  -------------------------------------
-
-    OK: {font-size:"16px"}
-    NG: {fontSize:"16px"}
-
-  2. some properties uses 'logical' properties
+  1. some properties uses 'logical' properties
   --------------------------------------------
 
     [examples]
@@ -9407,12 +9977,12 @@ var LexingRule = (function(){
     ex2. {float:"start"} // => {float:"left"}.
     ex3. {measure:"100px", extent:"50px"} // => {width:"100px", height:"50px"}
 
-  3. about functional css value
+  2. about functional css value
   ------------------------------
 
   you can use functional css value in each css property.
 
-  (3.1) callback argument 'context' in functional css value is 'SelectorPropContext'
+  (2.1) callback argument 'context' in functional css value is 'SelectorPropContext'
 
   // [example]
   // change backgroiund-color by child index.
@@ -9422,7 +9992,7 @@ var LexingRule = (function(){
     }
   }
 
-  (3.2) callback argument 'context' in 'onload' is 'SelectorContext'
+  (2.2) callback argument 'context' in 'onload' is 'SelectorContext'
 
   this context is 'extended class' of 'SelectorPropContext', with some extra interfaces
   that can touch css object, because 'onload' is called after all css of matched elements are loaded.
@@ -9440,10 +10010,10 @@ var LexingRule = (function(){
     }
   }
 
- 4. special properties in nehan.js
+ 3. special properties in nehan.js
   ----------------------------------
 
-  (4.1) box-sizing:[content-box | border-box | margin-box(default)]
+  (3.1) box-sizing:[content-box | border-box | margin-box(default)]
 
   In box-sizing, 'margin-box' is special value in nehan.js, and is box-sizing default value.
   In margin-box, even if margin is included in box-size.
@@ -9453,7 +10023,7 @@ var LexingRule = (function(){
   So if you represent margin/border/padding(called in edge in nehan.js),
   the only way is 'eliminating content space'.
 
-  (4.2) flow:[lr-tb | rl-tb | tb-rl | tb-lr | flip]
+  (3.2) flow:[lr-tb | rl-tb | tb-rl | tb-lr | flip]
 
   This property represent document-mode in nehan.js.
 
@@ -10739,253 +11309,6 @@ var Box = (function(){
   return Box;
 })();
 
-var HtmlLexer = (function (){
-  var __rex_tag = /<[a-zA-Z][^>]*>/;
-
-  /*
-  var __close_abbr_tags = [
-    "li",
-    "dt",
-    "dd",
-    "p",
-    "tr",
-    "td",
-    "th",
-    "rt",
-    "rp",
-    "optgroup",
-    "option",
-    "thread",
-    "tfoot"
-  ];*/
-
-  var __find_close_pos = function(buff, tag_name, open_tag_rex, close_tag){
-    var close_pos = buff.indexOf(close_tag);
-    if(close_pos < 0){
-      return -1;
-    }
-    var recur_match = buff.match(open_tag_rex);
-    var recur_pos = recur_match? recur_match.index : -1;
-    if(recur_pos < 0 || close_pos < recur_pos){
-      return close_pos;
-    }
-    var restart_pos = recur_pos + tag_name.length + 2; // 2 = "<>".length
-    var close_pos2 = __find_close_pos(buff.substring(restart_pos), tag_name, open_tag_rex, close_tag);
-    if(close_pos2 < 0){
-      return -1;
-    }
-    var restart_pos2 = restart_pos + close_pos2 + tag_name.length + 3; // 3 = "</>".length
-    return restart_pos2 + __find_close_pos(buff.substring(restart_pos2), tag_name, open_tag_rex, close_tag);
-  };
-
-  /**
-     @memberof Nehan
-     @class HtmlLexer
-     @classdesc lexer of html tag elements.
-     @constructor
-     @param src {String}
-  */
-  function HtmlLexer(src){
-    this.pos = 0;
-    this.buff = this._normalize(src);
-    this.src = this.buff;
-  }
-
-  // discard close tags defined as single tag in LexingRule.
-  var __replace_single_close_tags = function(str){
-    return Nehan.List.fold(LexingRule.getSingleTagNames(), str, function(ret, name){
-      return ret.replace(new RegExp("</" + name + ">", "g"), "");
-    });
-  };
-
-  HtmlLexer.prototype = {
-    _normalize : function(src){
-      var src = src.replace(/(<\/.+?>)/gm, function(str, p1){
-	  return p1.toLowerCase();
-      }); // convert close tag to lower case(for innerHTML of IE)
-      src = __replace_single_close_tags(src);
-      //src = src.replace(/“([^”]+)”/g, "〝$1〟") // convert double quote to double quotation mark
-      return src
-	.replace(/“(.*?)”/g, "”$1”")
-	.replace(/｢/g, "「") // half size left corner bracket -> full size left corner bracket
-	.replace(/｣/g, "」") // half size right corner bracket -> full size right corner bracket
-	.replace(/､/g, "、") // half size ideographic comma -> full size ideographic comma
-	.replace(/｡/g, "。") // half size ideographic full stop -> full size
-	//.replace(/^[\s]+/, "") // shorten head space
-	//.replace(/[\s]+$/, "") // discard tail space
-	.replace(/\r/g, ""); // discard CR
-    },
-    /**
-       @memberof Nehan.HtmlLexer
-       @return {boolean}
-    */
-    isEmpty : function(){
-      return this.src === "";
-    },
-    /**
-       get token and step cusor to next position.
-
-       @memberof Nehan.HtmlLexer
-       @return {Nehan.Token}
-    */
-    get : function(){
-      var token = this._getToken();
-      if(token){
-	token.spos = this.pos;
-      }
-      return token;
-    },
-    /**
-       get lexer source text
-
-       @memberof Nehan.HtmlLexer
-       @return {String}
-    */
-    getSrc : function(){
-      return this.src;
-    },
-    /**
-       get current pos in percentage format.
-
-       @memberof Nehan.HtmlLexer
-       @return {int}
-    */
-    getSeekPercent : function(seek_pos){
-      return Math.round(100 * seek_pos / this.src.length);
-    },
-    /**
-       @memberof Nehan.HtmlLexer
-       @param text {String}
-     */
-    addText : function(text){
-      this.buff = this.buff + this._normalize(text);
-    },
-    _stepBuff : function(count){
-      var part = this.buff.substring(0, count);
-      this.pos += count;
-      this.buff = this.buff.slice(count);
-      return part;
-    },
-    _getToken : function(){
-      if(this.buff === ""){
-	return null;
-      }
-      var match, content;
-      match = this.buff.match(__rex_tag);
-      if(match === null){
-	content = this._stepBuff(this.buff.length);
-	return new Nehan.Text(content);
-      }
-      if(match.index === 0){
-	return this._parseTag(match[0]);
-      }
-      content = this._stepBuff(match.index);
-      return new Nehan.Text(content);
-    },
-    _getTagContent : function(tag_name){
-      // why we added [\\s|>] for open_tag_rex?
-      // if tag_name is "p", 
-      // both "<p>" and "<p class='foo'" also must be matched.
-      var open_tag_rex = new RegExp("<" + tag_name + "[\\s|>]");
-      var close_tag = "</" + tag_name + ">"; // tag name is already lower-cased by preprocessor.
-      var close_pos = __find_close_pos(this.buff, tag_name, open_tag_rex, close_tag);
-
-      if(close_pos >= 0){
-	return {closed:true, content:this.buff.substring(0, close_pos)};
-      }
-
-      // if close pos not found and Config.enableAutoClose is true,
-      // 1. return the text until next same start tag.
-      // 2. or else, return whole rest buff.
-      // (TODO): this is not strict lexing, especially when dt, dd, td, etc.
-      if(Config.enableAutoCloseTag){
-	var next_open_match = this.buff.match(open_tag_rex);
-	if(next_open_match){
-	  return {closed:false, content:this.buff.substring(0, nexd_open_match.index)};
-	}
-      }
-
-      // all other case, return whole rest buffer.
-      return {closed:false, content:this.buff};
-    },
-    _parseTag : function(tagstr){
-      var tag = new Nehan.Tag(tagstr);
-      this._stepBuff(tagstr.length);
-      var tag_name = tag.getName();
-      if(LexingRule.isSingleTag(tag_name)){
-	tag._single = true;
-	return tag;
-      }
-      return this._parseChildContentTag(tag);
-    },
-    _parseChildContentTag : function(tag){
-      var result = this._getTagContent(tag.name);
-      tag.setContent(result.content);
-      if(result.closed){
-	this._stepBuff(result.content.length + tag.name.length + 3); // 3 = "</>".length
-      } else {
-	this._stepBuff(result.content.length);
-      }
-      return tag;
-    }
-  };
-  return HtmlLexer;
-})();
-
-
-
-var TextLexer = (function (){
-  var __rex_tcy = /\d\d|!\?|!!|\?!|\?\?/;
-  var __rex_word = /^[a-zA-Z0-9.!?\/:$#;"',_%]+/;
-  var __rex_char_ref = /^&[^;\s]+;/;
-  var __rex_half_single_tcy = /[a-zA-Z0-9!?]/;
-
-  /**
-     @memberof Nehan
-     @class TextLexer
-     @classdesc lexer of html text elements.
-     @constructor
-     @param src {String}
-  */
-  function TextLexer(src){
-    HtmlLexer.call(this, src);
-  }
-
-  Nehan.Class.extend(TextLexer, HtmlLexer);
-
-  TextLexer.prototype._getToken = function(){
-    if(this.buff === ""){
-      return null;
-    }
-    var str = this._getByRex(__rex_word);
-    if(str){
-      if(str.length === 1){
-	if(__rex_half_single_tcy.test(str)){
-	  return new Nehan.Tcy(this._stepBuff(1));
-	}
-	return new Nehan.Char(this._stepBuff(1), false);
-      } else if(str.length === 2 && str.match(__rex_tcy)){
-	return new Nehan.Tcy(this._stepBuff(str.length));
-      }
-      return new Nehan.Word(this._stepBuff(str.length));
-    }
-    str = this._getByRex(__rex_char_ref);
-    if(str){
-      return new Nehan.Char(this._stepBuff(str.length), true);
-    }
-    str = this.buff.substring(0, 1);
-    return new Nehan.Char(this._stepBuff(1), false);
-  };
-
-  TextLexer.prototype._getByRex = function(rex){
-    var rex_result = this.buff.match(rex);
-    return rex_result? rex_result[0] : null;
-  };
-
-  return TextLexer;
-})();
-
-
 /**
    global context data for all layout engines defined in same browser window.
 
@@ -11161,350 +11484,6 @@ var DocumentContext = (function(){
 })();
 
 
-var TokenStream = (function(){
-  /**
-     @memberof Nehan
-     @class TokenStream
-     @classdesc abstraction of token stream
-     @constructor
-     @param src {String}
-     @param opt {Object}
-     @param opt.lexer {Lexer} - lexer class(optional)
-     @param opt.filter {Function} - token filter function(optional)
-  */
-  function TokenStream(src, opt){
-    opt = opt || {};
-    this.lexer = opt.lexer || this._createLexer(src);
-    this.tokens = opt.tokens || [];
-    this.pos = 0;
-    this._filter = opt.filter || null;
-    if(this.tokens.length === 0){
-      this._loadTokens(this._filter);
-    }
-  }
-
-  var __set_pseudo = function(tags){
-    tags[0].setFirstChild(true);
-    tags[0].setOnlyChild(tags.length === 1);
-    tags[tags.length - 1].setLastChild(true);
-  };
-
-  var __set_pseudo_of_type = function(tags){
-    tags[0].setFirstOfType(true);
-    tags[0].setOnlyOfType(tags.length === 1);
-    tags[tags.length - 1].setLastOfType(true);
-  };
-
-  TokenStream.prototype = {
-    /**
-       @memberof Nehan.TokenStream
-       @return {boolean}
-    */
-    hasNext : function(){
-      return (this.pos < this.tokens.length);
-    },
-    /**
-       @memberof Nehan.TokenStream
-       @return {boolean}
-    */
-    isEmptyLexer : function(){
-      return this.lexer.isEmpty();
-    },
-    /**
-       @memberof Nehan.TokenStream
-       @return {boolean}
-    */
-    isEmptyTokens : function(){
-      return this.tokens.length === 0;
-    },
-    /**
-       @memberof Nehan.TokenStream
-       @return {boolean}
-    */
-    isHead : function(){
-      return this.pos === 0;
-    },
-    /**
-       @memberof Nehan.TokenStream
-       @param text {String}
-    */
-    addText : function(text){
-      if(text !== ""){
-	this.lexer.addText(text);
-	this._loadTokens(this._filter);
-      }
-    },
-    /**
-       step backward current stream position.
-
-       @memberof Nehan.TokenStream
-    */
-    prev : function(){
-      this.pos = Math.max(0, this.pos - 1);
-    },
-    /**
-       set stream position directly.
-
-       @memberof Nehan.TokenStream
-       @param pos {int}
-    */
-    setPos : function(pos){
-      this.pos = pos;
-    },
-    /**
-       set current stream position to the beginning of stream.
-
-       @memberof Nehan.TokenStream
-    */
-    rewind : function(){
-      this.pos = 0;
-    },
-    /**
-       look current token but not step forward current position.
-
-       @memberof Nehan.TokenStream
-       @return {token}
-    */
-    peek : function(off){
-      var offset = off || 0;
-      var index = Math.max(0, this.pos + offset);
-      var token = this.tokens[index];
-      if(token){
-	token.pos = index;
-	return token;
-      }
-      return null;
-    },
-    /**
-       get current stream token and step forward current position.
-
-       @memberof Nehan.TokenStream
-       @return {token}
-    */
-    get : function(){
-      var token = this.peek();
-      if(token){
-	this.pos++;
-      }
-      return token;
-    },
-    /**
-       get stream soruce as text.
-
-       @memberof Nehan.TokenStream
-       @return {String}
-    */
-    getSrc : function(){
-      return this.lexer.getSrc();
-    },
-    /**
-       get current stream position.
-
-       @memberof Nehan.TokenStream
-       @return {int}
-    */
-    getPos : function(){
-      return this.pos;
-    },
-    /**
-       get current token count.
-
-       @memberof Nehan.TokenStream
-       @return {int}
-    */
-    getTokenCount : function(){
-      return this.tokens.length;
-    },
-    /**
-       get all tokens.
-
-       @memberof Nehan.TokenStream
-       @return {Array}
-    */
-    getTokens : function(){
-      return this.tokens;
-    },
-    /**
-       get current token position of source text(not stream position).
-
-       @memberof Nehan.TokenStream
-       @return {int}
-    */
-    getSeekPos : function(){
-      var token = this.tokens[Math.max(0, this.pos)];
-      return token? token.spos : this.tokens[this.tokens.length - 1].spos;
-    },
-    /**
-       get current seek pos as percent.
-
-       @memberof Nehan.TokenStream
-       @return {int}
-    */
-    getSeekPercent : function(){
-      var seek_pos = this.getSeekPos();
-      return this.lexer.getSeekPercent(seek_pos);
-    },
-    /**
-       iterate tokens by [fn].
-
-       @memberof Nehan.TokenStream
-       @param fn {Function}
-    */
-    iterWhile : function(fn){
-      var token;
-      while(this.hasNext()){
-	token = this.get();
-	if(token === null || !fn(token)){
-	  this.prev();
-	  break;
-	}
-      }
-    },
-    /**
-       step stream position while [fn(token)] is true.
-
-       @memberof Nehan.TokenStream
-       @param fn {Function}
-    */
-    skipUntil : function(fn){
-      while(this.hasNext()){
-	var token = this.get();
-	if(token === null){
-	  break;
-	}
-	if(!fn(token)){
-	  this.prev();
-	  break;
-	}
-      }
-    },
-    /**
-       step stream position once if [fn(token)] is true.
-
-       @memberof Nehan.TokenStream
-       @param fn {Function}
-    */
-    skipIf: function(fn){
-      var token = this.peek();
-      return (token && fn(token))? this.get() : null;
-    },
-    /**
-       read whole stream source.
-
-       @memberof Nehan.TokenStream
-       @param filter {Function} - filter function
-       @return {Array.<token>}
-    */
-    _loadTokens : function(filter){
-      var filter_order = 0;
-      while(true){
-	var token = this.lexer.get();
-	if(token === null){
-	  break;
-	}
-	if(token instanceof Nehan.Char && token.isLigature()){
-	  var last = Nehan.List.last(this.tokens);
-	  if(last instanceof Nehan.Char){
-	    last.setLigature(token.data);
-	    continue;
-	  }
-	}
-	if(filter === null){
-	  this.tokens.push(token);
-	} else if(filter && filter(token)){
-	  token.order = filter_order++;
-	  this.tokens.push(token);
-	}
-      }
-      this._setPseudoAttribute(this.tokens);
-    },
-    _setPseudoAttribute : function(tokens){
-      var tags = Nehan.List.filter(tokens, function(token){
-	return (token instanceof Nehan.Tag);
-      });
-      if(tags.length === 0){
-	return;
-      }
-      var type_of_tags = {};
-      Nehan.List.iter(tags, function(tag){
-	var tag_name = tag.getName();
-	if(type_of_tags[tag_name]){
-	  type_of_tags[tag_name].push(tag);
-	} else {
-	  type_of_tags[tag_name] = [tag];
-	}
-      });
-      __set_pseudo(tags);
-      for(var tag_name in type_of_tags){
-	__set_pseudo_of_type(type_of_tags[tag_name]);
-      }
-    },
-    _createLexer : function(src){
-      return new HtmlLexer(src);
-    }
-  };
-
-  return TokenStream;
-})();
-
-
-var RubyTokenStream = (function(){
-  /**
-     token stream of &lt;ruby&gt; tag content.
-
-     @memberof Nehan
-     @class RubyTokenStream
-     @classdesc 
-     @constructor
-     @extends {Nehan.TokenStream}
-     @param str {String}
-  */
-  function RubyTokenStream(str){
-    this.tokens = this._parse(new TokenStream(str));
-    this.pos = 0;
-  }
-  Nehan.Class.extend(RubyTokenStream, TokenStream);
-
-  RubyTokenStream.prototype._parse = function(stream){
-    var tokens = [];
-    while(stream.hasNext()){
-      tokens.push(this._parseRuby(stream));
-    }
-    return tokens;
-  };
-
-  RubyTokenStream.prototype._parseRuby = function(stream){
-    var rbs = [];
-    var rt = null;
-    while(true){
-      var token = stream.get();
-      if(token === null){
-	break;
-      }
-      if(Nehan.Token.isTag(token) && token.getName() === "rt"){
-	rt = token;
-	break;
-      }
-      if(Nehan.Token.isTag(token) && token.getName() === "rb"){
-	rbs = this._parseRb(token.getContent())
-      }
-      if(token instanceof Nehan.Text){
-	rbs = this._parseRb(token.getContent());
-      }
-    }
-    return new Nehan.Ruby(rbs, rt);
-  };
-
-  RubyTokenStream.prototype._parseRb = function(content){
-    return new TokenStream(content, {
-      lexer:new TextLexer(content)
-    }).getTokens();
-  };
-
-  return RubyTokenStream;
-})();
-
-
 var PageEvaluator = (function(){
   /**
      @memberof Nehan
@@ -11532,6 +11511,7 @@ var PageEvaluator = (function(){
     evaluate : function(tree){
       return tree? new Nehan.Page({
 	element:this.evaluator.evaluate(tree),
+	text:tree.text,
 	percent:tree.percent,
 	seekPos:tree.seekPos,
 	pageNo:tree.pageNo,
@@ -12422,7 +12402,7 @@ var StyleContext = (function(){
       var max_marker_html = this.getListMarkerHtml(item_count);
       // create temporary inilne-generator but using clone style, this is because sometimes marker html includes "<span>" element,
       // and we have to avoid 'appendChild' from child-generator of this tmp generator.
-      var tmp_gen = new InlineGenerator(this.clone(), new TokenStream(max_marker_html));
+      var tmp_gen = new InlineGenerator(this.clone(), new Nehan.TokenStream(max_marker_html));
       var line = tmp_gen.yield();
       var marker_measure = line? line.inlineMeasure + Math.floor(this.getFontSize() / 2) : this.getFontSize();
       var marker_extent = line? line.size.getExtent(this.flow) : this.getFontSize();
@@ -13629,7 +13609,7 @@ var StyleContext = (function(){
 	return {};
       }
       var stmts = (style.indexOf(";") >= 0)? style.split(";") : [style];
-      var allowed_props = Config.allowedInlineStyleProps || [];
+      var allowed_props = Nehan.Config.allowedInlineStyleProps || [];
       var values = Nehan.List.fold(stmts, {}, function(ret, stmt){
 	var nv = stmt.split(":");
 	if(nv.length >= 2){
@@ -14359,7 +14339,7 @@ var LayoutGenerator = (function(){
     if(result !== null){
       this._yieldCount++;
     }
-    if(this._yieldCount > Config.maxYieldCount){
+    if(this._yieldCount > Nehan.Config.maxYieldCount){
       console.error("[%s]too many yield! gen:%o, context:%o, stream:%o", this.style.markupName, this, context, this.stream);
       throw "too many yield";
     }
@@ -14465,7 +14445,7 @@ var LayoutGenerator = (function(){
   LayoutGenerator.prototype.pushCache = function(element){
     var cache_count = element.cacheCount || 0;
     if(cache_count > 0){
-      if(cache_count >= Config.maxRollbackCount){
+      if(cache_count >= Nehan.Config.maxRollbackCount){
 	var element_str = (element instanceof Box)? element.toString() : (element.data || "??");
 	console.warn("[%s] too many retry:%o, element:%o(%s)", this.style.getMarkupName(), this.style, element, element_str);
 	// to avoid infinite loop, force child or this generator terminate!
@@ -14553,26 +14533,26 @@ var LayoutGenerator = (function(){
     var markup_name = style.getMarkupName();
     var markup_content = style.getMarkupContent();
     if(style.getTextCombine() === "horizontal" || markup_name === "tcy"){
-      return new TokenStream(markup_content, {
+      return new Nehan.TokenStream(markup_content, {
 	tokens:[new Nehan.Tcy(markup_content)]
       });
     }
     switch(markup_name){
     case "word":
-      return new TokenStream(markup_content, {
+      return new Nehan.TokenStream(markup_content, {
 	tokens:[new Nehan.Word(markup_content)]
       });
     case "ruby":
-      return new RubyTokenStream(markup_content);
+      return new Nehan.RubyTokenStream(markup_content);
     case "tbody": case "thead": case "tfoot":
-      return new TokenStream(style.getContent(), {
+      return new Nehan.TokenStream(style.getContent(), {
 	filter:Nehan.Closure.isTagName(["tr"])
       });
     case "tr":
-      return new TokenStream(style.getContent(), {
+      return new Nehan.TokenStream(style.getContent(), {
 	filter:Nehan.Closure.isTagName(["td", "th"])
       });
-    default: return new TokenStream(style.getContent());
+    default: return new Nehan.TokenStream(style.getContent());
     } 
   };
 
@@ -14669,13 +14649,13 @@ var LayoutGenerator = (function(){
 
   LayoutGenerator.prototype._createTextGenerator = function(style, text){
     if(text instanceof Nehan.Tcy || text instanceof Nehan.Word){
-      return new TextGenerator(this.style, new TokenStream(text.getData(), {
+      return new TextGenerator(this.style, new Nehan.TokenStream(text.getData(), {
 	tokens:[text]
       }));
     }
     var content = text.getContent();
-    return new TextGenerator(this.style, new TokenStream(content, {
-      lexer:new TextLexer(content)
+    return new TextGenerator(this.style, new Nehan.TokenStream(content, {
+      lexer:new Nehan.TextLexer(content)
     }));
   };
 
@@ -15185,7 +15165,7 @@ var TextGenerator = (function(){
     if(!context.hasInlineSpaceFor(1)){
       return null;
     }
-    var next_head = Config.justify? this._peekParentNextToken() : null;
+    var next_head = Nehan.Config.justify? this._peekParentNextToken() : null;
     var next_head_char = next_head? this._peekParentNextHeadChar(next_head) : null;
     var next_head_measure = next_head? this._estimateParentNextHeadMeasure(next_head) : this.style.getFontSize();
     var is_next_head_ng = next_head_char? next_head_char.isHeadNg() : false;
@@ -15210,7 +15190,7 @@ var TextGenerator = (function(){
 	}
       }
       // if token is last one and maybe tail text, check tail/head NG between two inline generators.
-      if(Config.justify && !this.stream.hasNext() && !context.hasInlineSpaceFor(measure + next_head_measure)){
+      if(Nehan.Config.justify && !this.stream.hasNext() && !context.hasInlineSpaceFor(measure + next_head_measure)){
 	// avoid tail/head NG between two generators
 	if(element instanceof Nehan.Char && element.isTailNg() || is_next_head_ng){
 	  context.setLineBreak(true);
@@ -15249,7 +15229,7 @@ var TextGenerator = (function(){
       return null;
     }
     // justify if this line is generated by overflow(not line-break).
-    if(Config.justify && !context.isInlineEmpty() && !context.hasLineBreak()){
+    if(Nehan.Config.justify && !context.isInlineEmpty() && !context.hasLineBreak()){
       this._justifyLine(context);
     }
     var line = this.style.createTextBlock({
@@ -15311,7 +15291,7 @@ var TextGenerator = (function(){
   TextGenerator.prototype._estimateParentNextHeadMeasure = function(token){
     var font_size = this.style.getFontSize();
     if(token instanceof Nehan.Tag && token.name === "ruby"){
-      var ruby = new RubyTokenStream(token.getContent()).get();
+      var ruby = new Nehan.RubyTokenStream(token.getContent()).get();
       var char_count = ruby.getCharCount();
       var rt_char_count = ruby.getRtString().length;
       return Math.max(Math.floor(rt_char_count * font_size / 2), char_count * font_size);
@@ -15328,7 +15308,7 @@ var TextGenerator = (function(){
     // justify by dangling.
     var head_next = this.stream.peek();
     head_next = (head_next && old_head.pos === head_next.pos)? this.stream.peek(1) : head_next;
-    if(Config.danglingJustify && context.justifyDangling(old_head, head_next) === true){
+    if(Nehan.Config.danglingJustify && context.justifyDangling(old_head, head_next) === true){
       this._addElement(context, old_head, 0); // push tail as zero element
       if(head_next){
 	this.stream.setPos(head_next.pos);
@@ -15428,7 +15408,7 @@ var TextGenerator = (function(){
   TextGenerator.prototype._setTextMetrics = function(context, token){
     // if charactor token, set kerning before setting metrics.
     // because some additional space is added if kerning is enabled or not.
-    if(token instanceof Nehan.Char && token.isKerningChar() && Config.kerning){
+    if(token instanceof Nehan.Char && token.isKerningChar() && Nehan.Config.kerning){
       this._setCharKerning(context, token);
     }
     token.setMetrics(this.style.flow, this.style.getFont());
@@ -16010,7 +15990,7 @@ var ListItemGenerator = (function(){
     }, {
       "class":"nehan-li-marker"
     });
-    return new BlockGenerator(marker_style, new TokenStream(marker_text));
+    return new BlockGenerator(marker_style, new Nehan.TokenStream(marker_text));
   };
 
   ListItemGenerator.prototype._createListBodyGenerator = function(style, stream){
@@ -16074,14 +16054,14 @@ var TableGenerator = (function(){
       }
       switch(token.getName()){
       case "tbody": case "thead": case "tfoot":
-	var pset2 = this._createAutoPartition(new TokenStream(token.getContent(), {
+	var pset2 = this._createAutoPartition(new Nehan.TokenStream(token.getContent(), {
 	  filter:Nehan.Closure.isTagName(["tr"])
 	}));
 	pset = pset.union(pset2);
 	break;
 
       case "tr":
-	var cell_tags = new TokenStream(token.getContent(), {
+	var cell_tags = new Nehan.TokenStream(token.getContent(), {
 	  filter:Nehan.Closure.isTagName(["td", "th"])
 	}).getTokens();
 	var cell_count = cell_tags.length;
@@ -16251,7 +16231,7 @@ var BodyGenerator = (function(){
   */
   function BodyGenerator(text){
     var tag = new Nehan.Tag("<body>", text);
-    SectionRootGenerator.call(this, new StyleContext(tag, null), new TokenStream(text));
+    SectionRootGenerator.call(this, new StyleContext(tag, null), new Nehan.TokenStream(text));
   }
   Nehan.Class.extend(BodyGenerator, SectionRootGenerator);
 
@@ -16260,7 +16240,7 @@ var BodyGenerator = (function(){
     block.charPos = DocumentContext.getCharPos();
     block.percent = this.stream.getSeekPercent();
     block.pageNo = DocumentContext.getPageNo();
-    if(Config.capturePageText){
+    if(Nehan.Config.capturePageText){
       block.text = block.toString();
     }
 
@@ -16269,7 +16249,7 @@ var BodyGenerator = (function(){
 
     // sometimes layout engine causes inlinite loop,
     // so terminate generator by restricting page count.
-    if(DocumentContext.getPageNo() >= Config.maxPageCount){
+    if(DocumentContext.getPageNo() >= Nehan.Config.maxPageCount){
       this.setTerminate(true);
     }
   };
@@ -16286,7 +16266,7 @@ var HtmlGenerator = (function(){
      @param text {String}
   */
   function HtmlGenerator(text){
-    this.stream = new TokenStream(text, {
+    this.stream = new Nehan.TokenStream(text, {
       filter:Nehan.Closure.isTagName(["head", "body"])
     });
     if(this.stream.isEmptyTokens()){
@@ -16329,7 +16309,7 @@ var HtmlGenerator = (function(){
 	var tag = this.stream.get();
 	switch(tag.getName()){
 	case "head":
-	  this._parseDocumentHeader(new TokenStream(tag.getContent(), {
+	  this._parseDocumentHeader(new Nehan.TokenStream(tag.getContent(), {
 	    filter:Nehan.Closure.isTagName(["title", "meta", "link", "style", "script"])
 	  }));
 	  break;
@@ -16381,7 +16361,7 @@ var DocumentGenerator = (function(){
      @param text {String} - html source text
   */
   function DocumentGenerator(text){
-    this.stream = new TokenStream(text, {
+    this.stream = new Nehan.TokenStream(text, {
       filter:Nehan.Closure.isTagName(["!doctype", "html"])
     });
     if(this.stream.isEmptyTokens()){
@@ -16688,7 +16668,7 @@ var VertEvaluator = (function(){
   VertEvaluator.prototype._evalRt = function(line, ruby){
     var rt = (new InlineGenerator(
       new StyleContext(ruby.rt, line.style),
-      new TokenStream(ruby.getRtString()),
+      new Nehan.TokenStream(ruby.getRtString()),
       null // outline context
     )).yield();
     Nehan.Args.copy(rt.css, ruby.getCssVertRt(line));
@@ -16778,7 +16758,7 @@ var VertEvaluator = (function(){
   };
 
   VertEvaluator.prototype._evalChar = function(line, chr){
-    var is_vert_glyph_enable = Config.useVerticalGlyphIfEnable && Nehan.Env.isVerticalGlyphEnable;
+    var is_vert_glyph_enable = Nehan.Config.useVerticalGlyphIfEnable && Nehan.Env.isVerticalGlyphEnable;
     if(chr.isImgChar()){
       if(is_vert_glyph_enable){
 	return this._evalVerticalGlyph(line, chr);
@@ -17084,15 +17064,8 @@ var HoriEvaluator = (function(){
 })();
 
 
-// set engine args
-Nehan.Args.copy(Config, __engine_args.config || {});
-Nehan.Args.copy2(Nehan.Display, __engine_args.display || {});
-
 Selectors.setValues(Nehan.globalStyle || {}); // set global style.
 Selectors.setValues(__engine_args.style || {}); // set local style
-
-// register global single tags
-Nehan.List.iter(Nehan.singleTagNames, LexingRule.addSingleTagByName);
 
 /**
    @memberof Nehan
@@ -17100,17 +17073,14 @@ Nehan.List.iter(Nehan.singleTagNames, LexingRule.addSingleTagByName);
    @constructor
    @classdesc this is logical layout engine module, enclosing following environments.<br>
    * <ul>
-   * <li>{@link Nehan.DocumentContext}</li>
-   * <li>{@link Nehan.LexingRule}</li>
    * <li>{@link Nehan.Style}</li>
+   * <li>{@link Nehan.StyleContext}</li>
    * <li>{@link Nehan.Selectors}</li>
-   * <li>{@link Nehan.Display}</li>
-   * <li>{@link Nehan.Config}</li>
+   * <li>{@link Nehan.DocumentContext}</li>
    * </ul>
 */
 function Engine(){
   this.documentContext = DocumentContext;
-  this.lexingRule = LexingRule;
   this.selectors = Selectors;
 }
 
@@ -17142,24 +17112,6 @@ Engine.prototype = {
   */
   getAnchorPageNo : function(anchor_name){
     return this.documentContext.getAnchorPageNo(anchor_name);
-  },
-  /**
-     register engine local single tag by name.
-
-     @memberof Nehan.Engine
-     @param name {String}
-  */
-  addSingleTagByName : function(name){
-    this.lexingRule.addSingleTagByName(name);
-  },
-  /**
-     register engine local single tag by regexp object.
-
-     @memberof Nehan.Engine
-     @param rex {RegExp}
-  */
-  addSingleTagByRex : function(rex){
-    this.lexingRule.addSingleTagRex(name);
   },
   /**
      set engine local style
@@ -17200,8 +17152,6 @@ Nehan.PagedElement = (function(){
      @classdesc DOM element with {@link Nehan.PageStream}
      @constructor
      @param engine_args {Object}
-     @param engine_args.config {Nehan.Config} - system config
-     @param engine_args.display {Nehan.Display} - standard page parameters
      @param engine_args.style {Nehan.Style} - engine local style
   */
   function NehanPagedElement(engine_args){
@@ -17351,12 +17301,12 @@ Nehan.PagedElement = (function(){
        @memberof Nehan.PagedElement
        @param content {String} - html text.
        @param opt {Object} - optinal argument
-       @param opt.onProgress {Function} - fun tree -> ()
-       @param opt.onComplete {Function} - fun time -> ()
+       @param opt.onProgress {Function} - fun tree ctx -> ()
+       @param opt.onComplete {Function} - fun time ctx -> ()
        @param opt.maxPageCount {int} - upper bound of page count
        @example
        * paged_element.setContent("<h1>hello, nehan.js!!</h1>", {
-       *   onProgress:function(tree){
+       *   onProgress:function(tree, ctx){
        *     console.log("page no:%d", tree.pageNo);
        *     console.log("progress:%d", tree.percent);
        *   },
