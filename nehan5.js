@@ -32,7 +32,7 @@
    @namespace Nehan
 */
 var Nehan = Nehan || {};
-Nehan.version = "5.2.0";
+Nehan.version = "5.2.1";
 
 /**
    system configuration
@@ -1681,56 +1681,40 @@ Nehan.TagAttrLexer = (function(){
 })();
 
 
-Nehan.TagAttrParser = (function(){
+/**
+   @memberof Nehan
+   @namespace Nehan.TagAttrParser
+*/
+Nehan.TagAttrParser = {
   /**
-     @memberof Nehan
-     @class TagAttrParser
-     @classdesc tag attribute parser
-     @constructor
-     @param src {String}
+     @memberof Nehan.TagAttrParser
+     @param src {string}
+     @return {Object}
   */
-  function TagAttrParser(src){
-    this._lexer = new Nehan.TagAttrLexer(src);
-    this._attrs = {};
-    this._left = null;
-  }
-
-  TagAttrParser.prototype = {
-    /**
-       @memberof Nehan.TagAttrParser
-       @return {Object}
-    */
-    parse : function(){
-      while(!this._isEnd()){
-	this._parseAttr();
-      }
-      return this._attrs;
-    },
-    _isEnd : function(){
-      return this._left === null && this._lexer.isEnd();
-    },
-    _parseAttr : function(){
-      var token = this._lexer.get();
+  parse : function(src){
+    var lexer = new Nehan.TagAttrLexer(src);
+    var token = null, left = null, attrs = {};
+    while(left !== null || !lexer.isEnd()){
+      token = lexer.get();
       if(token === null){
-	if(this._left){
-	  this._attrs[this._left] = "true";
-	  this._left = null;
+	if(left){
+	  attrs[left] = "true";
+	  left = null;
 	}
-      } else if(token === "=" && this._left){
-	this._attrs[this._left] = this._lexer.get() || "true";
-	this._left = null;
-	return;
-      } else if(this._left){
-	this._attrs[this._left] = "true";
-	this._left = token;
-      } else if(token && token !== "="){ // block invalid left identifier
-	this._left = token;
+      } else if(token === "=" && left){
+	attrs[left] = lexer.get() || "true";
+	left = null;
+      } else if(left){
+	// value without right value like 'checked', 'selected' etc.
+	attrs[left] = "true";
+	left = token;
+      } else if(token && token !== "="){
+	left = token;
       }
     }
-  };
-
-  return TagAttrParser;
-})();
+    return attrs;
+  }
+};
 
 Nehan.TagAttrs = (function(){
   /**
@@ -1741,7 +1725,7 @@ Nehan.TagAttrs = (function(){
      @param src {String}
   */
   function TagAttrs(src){
-    var attrs_raw = src? (new Nehan.TagAttrParser(src)).parse() : {};
+    var attrs_raw = src? Nehan.TagAttrParser.parse(src) : {};
     this.classes = this._parseClasses(attrs_raw);
     this.attrs = this._parseAttrs(attrs_raw, this.classes);
     this.dataset = this._parseDataset(attrs_raw);
@@ -6151,6 +6135,7 @@ Nehan.Page = (function(){
   */
   function Page(opt){
     Nehan.Args.merge(this, {
+      tree:null,
       element:null,
       text:"",
       seekPos:0,
@@ -11510,6 +11495,7 @@ var PageEvaluator = (function(){
     */
     evaluate : function(tree){
       return tree? new Nehan.Page({
+	tree:tree,
 	element:this.evaluator.evaluate(tree),
 	text:tree.text,
 	percent:tree.percent,
@@ -16240,6 +16226,7 @@ var BodyGenerator = (function(){
     block.charPos = DocumentContext.getCharPos();
     block.percent = this.stream.getSeekPercent();
     block.pageNo = DocumentContext.getPageNo();
+
     if(Nehan.Config.capturePageText){
       block.text = block.toString();
     }
