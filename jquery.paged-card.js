@@ -64,7 +64,7 @@
     asyncGet : function(){
       var self = this;
       this.get("stream").asyncGet({
-	onProgress : function(stream, tree){
+	onProgress : function(tree, stream){
 	  self.set("progress", self.get("progress") + 1); // -> change:progress
 	}
       });

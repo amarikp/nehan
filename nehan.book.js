@@ -134,7 +134,7 @@ Nehan.Book.Model.PageStream = Backbone.Model.extend({
   asyncGet : function(callback){
     var self = this;
     this.stream.asyncGet({
-      onProgress : function(stream, tree){
+      onProgress : function(tree, stream){
 	self.incPageCount();
 	self.set("seekPageNo", tree.pageNo);
 	self.set("seekPercent", tree.percent);
@@ -145,10 +145,10 @@ Nehan.Book.Model.PageStream = Backbone.Model.extend({
 	  self.trigger("change:pageNo");
 	}
 	if(callback.onProgress){
-	  callback.onProgress(self);
+	  callback.onProgress(tree, self);
 	}
       },
-      onComplete : function(stream, time){
+      onComplete : function(time, stream){
 	//console.log("stream parsing finished: %f msec", time);
 	self.outlineElement = self.engine.createOutlineElement({
 	  onClickLink : function(toc){
@@ -159,7 +159,7 @@ Nehan.Book.Model.PageStream = Backbone.Model.extend({
 	self.set("pageFinish", true); // -> change:pageFinish
 	self.set("timeElapsed", time);
 	if(callback.onComplete){
-	  callback.onComplete(self, time);
+	  callback.onComplete(time, self);
 	}
       }
     });
