@@ -32,7 +32,7 @@
    @namespace Nehan
 */
 var Nehan = Nehan || {};
-Nehan.version = "5.3.0";
+Nehan.version = "5.3.1";
 
 /**
    system configuration
@@ -510,6 +510,13 @@ Nehan.Client = (function(){
     */
     isSafari : function(){
       return this.name === "safari";
+    },
+    /**
+       @memberof Nehan.Client
+       @return {boolean}
+    */
+    isFirefox : function(){
+      return this.name === "firefox";
     },
     _parseUserAgent : function(user_agent){
       // in latest agent style of MSIE, 'Trident' is specified but 'MSIE' is not.
@@ -2458,8 +2465,8 @@ Nehan.CssParser = (function(){
   };
 
   // values:[0] => [0,0,0,0],
-  // values:[0,1] => [0, 1, 0, 1]
-  // values:[0,2,3] => [0,1,2,1]
+  // values:[0,1] => [0,1,0,1]
+  // values:[0,1,2] => [0,1,2,1]
   // values:[0,1,2,3] => [0,1,2,3]
   var __make_values_4d = function(values){
     var map = __get_map_4d(values.length);
@@ -2528,7 +2535,7 @@ Nehan.CssParser = (function(){
   // all subdivided properties are evaluated as unified value.
   // for example, 'margin-before:1em' => 'margin:1em 0 0 0'.
   // so subdivided properties must be renamed to unified property('margin-before' => 'margin').
-  var __format_prop = function(prop){
+  var __normalize_prop = function(prop){
     prop = Nehan.Utils.camelToChain(prop);
     if(prop.indexOf("margin-") >= 0 || prop.indexOf("padding-") >= 0 || prop.indexOf("border-width-") >= 0){
       return prop.split("-")[0];
@@ -2591,10 +2598,10 @@ Nehan.CssParser = (function(){
        @param prop {String} - css property name
        @return {String} normalized property name
        @example
-       * CssParser.formatProp("margin-start"); // => "margin"
+       * CssParser.normalizeProp("margin-start"); // => "margin"
     */
-    formatProp : function(prop){
-      return __format_prop(prop);
+    normalizeProp : function(prop){
+      return __normalize_prop(prop);
     },
     /**
        @memberof Nehan.CssParser
@@ -2606,7 +2613,7 @@ Nehan.CssParser = (function(){
        * CssParser.formatValue("margin", "1em 1em 0 0"); // => {before:"1em", end:"1em", after:0, start:0}
     */
     formatValue : function(prop, value){
-      return __format_value(prop, value);
+      return __format_value(Nehan.Utils.camelToChain(prop), value);
     }
   };
 })();
@@ -3229,12 +3236,12 @@ Nehan.Selector = (function(){
     updateValue : function(value){
       for(var prop in value){
 	var fmt_value = Nehan.CssParser.formatValue(prop, value[prop]);
-	var fmt_prop = Nehan.CssParser.formatProp(prop);
-	var old_value = this.value[fmt_prop] || null;
+	var norm_prop = Nehan.CssParser.normalizeProp(prop);
+	var old_value = this.value[norm_prop] || null;
 	if(old_value !== null && typeof old_value === "object" && typeof fmt_value === "object"){
 	  Nehan.Args.copy(old_value, fmt_value);
 	} else {
-	  this.value[fmt_prop] = fmt_value; // direct value or function
+	  this.value[norm_prop] = fmt_value; // direct value or function
 	}
       }
     },
@@ -3298,9 +3305,9 @@ Nehan.Selector = (function(){
     _formatValue : function(value){
       var ret = {};
       for(var prop in value){
-	var fmt_prop = Nehan.CssParser.formatProp(prop);
+	var norm_prop = Nehan.CssParser.normalizeProp(prop);
 	var fmt_value = Nehan.CssParser.formatValue(prop, value[prop]);
-	ret[fmt_prop] = fmt_value;
+	ret[norm_prop] = fmt_value;
       }
       return ret;
     }
@@ -11939,6 +11946,24 @@ var SelectorContext = (function(){
 
   /**
      @memberof Nehan.SelectorContext
+     @method getMarkupContent
+     @return {String}
+  */
+  SelectorContext.prototype.getMarkupContent = function(){
+    return this.getMarkup().getContent();
+  };
+
+  /**
+     @memberof Nehan.SelectorContext
+     @method setMarkupContent
+     @param content {String}
+  */
+  SelectorContext.prototype.setMarkupContent = function(content){
+    this.getMarkup().setContent(content);
+  };
+
+  /**
+     @memberof Nehan.SelectorContext
      @method getCssAttr
      @param name {String}
      @param def_value {default_value} - [def_value] is returned if [name] not found.
@@ -12948,7 +12973,7 @@ var StyleContext = (function(){
       if(typeof value === "function"){
 	return Nehan.CssParser.formatValue(name, value(this.selectorPropContext));
       }
-      return value; // already formatted
+      return Nehan.CssParser.formatValue(name, value);
     },
     /**
        @memberof Nehan.StyleContext
@@ -13616,10 +13641,10 @@ var StyleContext = (function(){
 	if(nv.length >= 2){
 	  var prop = Nehan.Utils.trim(nv[0]).toLowerCase();
 	  var value = Nehan.Utils.trim(nv[1]);
-	  var fmt_prop = Nehan.CssParser.formatProp(prop);
+	  var norm_prop = Nehan.CssParser.normalizeProp(prop);
 	  var fmt_value = Nehan.CssParser.formatValue(prop, value);
-	  if(allowed_props.length === 0 || Nehan.List.exists(allowed_props, Nehan.Closure.eq(fmt_prop))){
-	    ret[fmt_prop] = fmt_value;
+	  if(allowed_props.length === 0 || Nehan.List.exists(allowed_props, Nehan.Closure.eq(norm_prop))){
+	    ret[norm_prop] = fmt_value;
 	  }
 	}
 	return ret;
@@ -14590,15 +14615,15 @@ var LayoutGenerator = (function(){
   };
 
   LayoutGenerator.prototype._createChildBlockGenerator = function(style, stream, context){
-    if(style.hasFlipFlow()){
-      return new FlipGenerator(style, stream, context);
-    }
-
     // if child style with 'pasted' attribute, yield block with direct content by LazyGenerator.
     // notice that this is nehan.js original attribute,
     // is required to show some html(like form, input etc) that can't be handled by nehan.js.
     if(style.isPasted()){
       return new LazyGenerator(style, style.createBlock({content:style.getContent()}));
+    }
+
+    if(style.hasFlipFlow()){
+      return new FlipGenerator(style, stream, context);
     }
 
     // switch generator by display
@@ -14672,11 +14697,11 @@ var LayoutGenerator = (function(){
   };
 
   LayoutGenerator.prototype._createChildInlineGenerator = function(style, stream, context){
-    if(style.isInlineBlock()){
-      return new InlineBlockGenerator(style, stream);
-    }
     if(style.isPasted()){
       return new LazyGenerator(style, style.createLine({content:style.getContent()}));
+    }
+    if(style.isInlineBlock()){
+      return new InlineBlockGenerator(style, stream);
     }
     switch(style.getMarkupName()){
     case "ruby":
