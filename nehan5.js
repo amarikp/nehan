@@ -1076,7 +1076,7 @@ Nehan.Obj = (function(){
     /**
        @memberof Nehan.Obj
        @param obj {Object}
-       @return {boolean}
+       @return {bool}
     */
     isEmpty: function(obj){
       for(var name in obj){
@@ -1107,7 +1107,7 @@ Nehan.Obj = (function(){
     /**
        @memberof Nehan.Obj
        @param obj {Object}
-       @param fn {Function} - fun prop -> value -> {boolean}
+       @param fn {Function} - fun prop -> value -> {bool}
     */
     filter : function(obj, fn){
       var ret = {};
@@ -1127,6 +1127,19 @@ Nehan.Obj = (function(){
       for(var prop in obj){
 	fn(prop, obj[prop]);
       }
+    },
+    /**
+       @memberof Nehan.Obj
+       @param obj {Object}
+       @param fn {Function} - fun prop -> value -> {bool}
+    */
+    forall : function(obj, fn){
+      for(var prop in obj){
+	if(!fn(prop, obj[prop])){
+	  return false;
+	}
+      }
+      return true;
     }
   };
 })();
@@ -5678,6 +5691,70 @@ Nehan.DocumentHeader = (function(){
 })();
 
 
+Nehan.Clear = (function(){
+  /**
+   @memberof Nehan
+   @class Clear
+   @classdesc abstraction of logical float clearance.
+   @constructor
+   @param direction {String} - "start" or "end" or "both"
+   */
+  function Clear(direction){
+    this.value = direction;
+    this.status = this._createStatus(direction || "both");
+  }
+
+  Clear.prototype = {
+    _createStatus : function(direction){
+      var status = {};
+      switch(direction){
+      case "start": case "end":
+	status[direction] = false;
+	break;
+      case "both":
+	status.start = status.end = false;
+	break;
+      }
+      return status;
+    },
+    /**
+     @memberof Nehan.Clear
+     @param direction {String}
+     @return {bool}
+     */
+    hasDirection : function(direction){
+      return (typeof this.status[direction]) !== "undefined";
+    },
+    /**
+     @memberof Nehan.Clear
+     @param direction {String}
+     */
+    setDone : function(direction){
+      this.status[direction] = true;
+    },
+    /**
+     @memberof Nehan.Clear
+     @param direction {String}
+     @return {bool}
+     */
+    isDone : function(direction){
+      return this.status[direction];
+    },
+    /**
+     @memberof Nehan.Clear
+     @param direction {String}
+     @return {bool}
+     */
+    isDoneAll : function(){
+      return Nehan.Obj.forall(this.status, function(prop, state){
+	return state === true;
+      });
+    }
+  };
+
+  return Clear;
+})();
+
 Nehan.FloatDirection = (function(){
   /**
      @memberof Nehan
@@ -5706,6 +5783,13 @@ Nehan.FloatDirection = (function(){
 	}
       }
       return css;
+    },
+    /**
+       @memberof Nehan.FloatDirection
+       @return {string}
+    */
+    getName : function(){
+      return this.value;
     },
     /**
        @memberof Nehan.FloatDirection
@@ -5778,9 +5862,33 @@ Nehan.FloatGroup = (function(){
   function FloatGroup(elements, float_direction){
     this.elements = elements || [];
     this.floatDirection = float_direction || Nehan.FloatDirections.get("start");
+    this._last = false;
   }
 
   FloatGroup.prototype = {
+    /**
+     @memberof Nehan.FloatGroup
+     @return {bool}
+     */
+    hasNext : function(){
+      return Nehan.List.exists(this.elements, function(element){
+	return element.hasNext === true;
+      });
+    },
+    /**
+     @memberof Nehan.FloatGroup
+     @return {bool}
+     */
+    isLast : function(){
+      return this._last;
+    },
+    /**
+     @memberof Nehan.FloatGroup
+     @param is_last {bool}
+     */
+    setLast : function(is_last){
+      this._last = is_last;
+    },
     /**
        element is popped from float-stack, but unshifted to elements in float-group to keep original stack order.
      *<pre>
@@ -5836,6 +5944,13 @@ Nehan.FloatGroup = (function(){
       return Nehan.List.fold(this.elements, 0, function(extent, element){
 	return Math.max(extent, element.getLayoutExtent(flow));
       });
+    },
+    /**
+       @memberof Nehan.FloatGroup
+       @return {Nehan.FloatDirection}
+    */
+    getFloatDirection : function(){
+      return this.floatDirection;
     }
   };
 
@@ -5873,9 +5988,14 @@ Nehan.FloatGroupStack = (function(){
     do{
       group = __pop_float_group(flow, float_direction, blocks);
       if(group){
-	ret.push(group);
+	//console.log("add group:%o(extent=%d)", group, group.getExtent(flow));
+	ret.unshift(group);
       }
     } while(group !== null);
+    if(ret.length > 0){
+      ret[0].setLast(true); // first in last out
+      //console.log("last group:%o(extent=%d)", ret[0], ret[0].getExtent(flow));
+    }
     return ret;
   };
 
@@ -5894,35 +6014,46 @@ Nehan.FloatGroupStack = (function(){
     this.stack = start_groups.concat(end_groups).sort(function(g1, g2){
       return g1.getExtent(flow) - g2.getExtent(flow);
     });
-    var max_group = Nehan.List.maxobj(this.stack, function(group){
+    var max_group =  Nehan.List.maxobj(this.stack, function(group){
       return group.getExtent(flow);
     });
+    this.flow = flow;
+    this.lastGroup = null;
     //console.log("max group from %o is %o", this.stack, max_group);
     this.extent = max_group? max_group.getExtent(flow) : 0;
   }
 
   FloatGroupStack.prototype = {
     /**
-       @memberof Nehan.FloatGroupStack
-       @return {boolean}
-    */
+     @memberof Nehan.FloatGroupStack
+     @return {boolean}
+     */
     isEmpty : function(){
       return this.stack.length === 0;
     },
     /**
-       @memberof Nehan.FloatGroupStack
-       @return {int}
-    */
+     @memberof Nehan.FloatGroupStack
+     @return {int}
+     */
     getExtent : function(){
       return this.extent;
     },
     /**
-       pop {@link Nehan.FloatGroup} with larger extent from start or end.
-       @memberof Nehan.FloatGroupStack
-       @return {Nehan.FloatGroup}
-    */
+     @memberof Nehan.FloatGroupStack
+     @return {Nehan.FloatGroup}
+     */
+    getLastGroup : function(){
+      return this.lastGroup;
+    },
+    /**
+     pop {@link Nehan.FloatGroup} with larger extent from start or end.
+
+     @memberof Nehan.FloatGroupStack
+     @return {Nehan.FloatGroup}
+     */
     pop : function(){
-      return this.stack.pop() || null;
+      this.lastGroup = this.stack.pop() || null;
+      return this.lastGroup;
     }
   };
 
@@ -10702,6 +10833,18 @@ var Style = {
     "float":"end"
   },
   //-------------------------------------------------------
+  // float classes
+  //-------------------------------------------------------
+  ".clear-start":{
+    "clear":"start"
+  },
+  ".clear-end":{
+    "clear":"end"
+  },
+  ".clear-both":{
+    "clear":"both"
+  },
+  //-------------------------------------------------------
   // flow classes
   //-------------------------------------------------------
   ".flow-lr-tb":{
@@ -12013,6 +12156,7 @@ var StyleContext = (function(){
     "box-sizing",
     "break-after",
     "break-before",
+    "clear",
     "color",
     "display",
     "extent",
@@ -12181,6 +12325,10 @@ var StyleContext = (function(){
       var float_direction = this._loadFloatDirection();
       if(float_direction){
 	this.floatDirection = float_direction;
+      }
+      var clear = this._loadClear();
+      if(clear){
+	this.clear = clear;
       }
       var break_before = this._loadBreakBefore();
       if(break_before){
@@ -14091,6 +14239,10 @@ var StyleContext = (function(){
       }
       return Nehan.FloatDirections.get(name);
     },
+    _loadClear : function(){
+      var value = this.getCssAttr("clear");
+      return value? new Nehan.Clear(value) : null;
+    },
     _loadBreakBefore : function(){
       var value = this.getCssAttr("break-before");
       return value? Nehan.Breaks.getBefore(value) : null;
@@ -14743,6 +14895,18 @@ var BlockGenerator = (function(){
     if(!context.hasBlockSpaceFor(1, !this.hasNext())){
       return null;
     }
+    var clear = this.style.clear;
+    if(clear && !clear.isDoneAll() && this._parent && this._parent.floatGroup){
+      var float_group = this._parent.floatGroup;
+      var float_direction = float_group.getFloatDirection();
+      if(float_group.isLast() && !float_group.hasNext() && clear.hasDirection(float_direction.getName())){
+	clear.setDone(float_direction.getName());
+	return this._createWhiteSpace(context);
+      }
+      if(!clear.isDoneAll()){
+	return this._createWhiteSpace(context);
+      }
+    }
 
     // if break-before available, page-break but only once.
     if(this.style.isBreakBefore()){
@@ -14879,6 +15043,17 @@ var BlockGenerator = (function(){
   BlockGenerator.prototype._addElement = function(context, element, extent){
     context.addBlockElement(element, extent);
     this._onAddElement(context, element);
+  };
+
+  BlockGenerator.prototype._createWhiteSpace = function(context){
+    return this.style.createBlock({
+      extent:context.getBlockMaxExtent(),
+      elements:[],
+      useBeforeEdge:false,
+      useAfterEdge:false,
+      restMeasure:0,
+      resetExtent:0
+    });
   };
 
   BlockGenerator.prototype._createOutput = function(context){
@@ -15708,7 +15883,7 @@ var FloatGenerator = (function(){
 
     // no more floated layout, just yield rest area.
     if(stack.isEmpty()){
-      return this._yieldFloatSpace(context, rest_measure, rest_extent);
+      return this._yieldFloatSpace(context, stack.getLastGroup(), rest_measure, rest_extent);
     }
     /*
       <------ rest_measure ---->
@@ -15719,7 +15894,8 @@ var FloatGenerator = (function(){
       --------------------------
     */
     var flow = this.style.flow;
-    var group = stack.pop(); // pop float group(notice that this stack is ordered by extent asc, so largest one is first obtained).
+    var prev_group = stack.getLastGroup();
+    var group = stack.pop(flow); // pop float group(notice that this stack is ordered by extent asc, so largest one is first obtained).
     var rest_rest_measure = rest_measure - group.getMeasure(flow); // rest of 'rest measure'
     var rest = this._yieldFloat(context, stack, root_measure, rest_rest_measure, group.getExtent(flow)); // yield rest area of this group in inline-flow(recursive).
     var group_set = this._wrapFloat(group, rest, rest_measure); // wrap these 2 floated layout as one block.
@@ -15768,7 +15944,7 @@ var FloatGenerator = (function(){
       --------------------------
     */
     // if there is space in block-flow direction, yield rest space and wrap tfloated-set and rest-space as one.
-    var space = this._yieldFloatSpace(context, rest_measure, rest_extent_space);
+    var space = this._yieldFloatSpace(context, prev_group, rest_measure, rest_extent_space);
     return this._wrapBlocks([group_set, space]);
   };
   
@@ -15805,9 +15981,10 @@ var FloatGenerator = (function(){
     });
   };
   
-  FloatGenerator.prototype._yieldFloatSpace = function(context, measure, extent){
-    //console.log("yieldFloatSpace(c = %o, m = %d, e = %d)", context, measure, extent);
+  FloatGenerator.prototype._yieldFloatSpace = function(context, float_group, measure, extent){
+    //console.log("yieldFloatSpace(c = %o, m = %d, e = %d), page_no:%d", context, measure, extent, DocumentContext.getPageNo());
     this._child.style.forceUpdateContextSize(measure, extent);
+    this._child.floatGroup = float_group;
     return this.yieldChildLayout();
   };
   
@@ -15816,6 +15993,7 @@ var FloatGenerator = (function(){
     Nehan.List.iter(this.generators, function(gen){
       var block = gen.yield(context);
       if(block){
+	block.hasNext = gen.hasNext();
 	if(gen.style.isFloatStart()){
 	  start_blocks.push(block);
 	} else if(gen.style.isFloatEnd()){
