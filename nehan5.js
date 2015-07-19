@@ -6712,6 +6712,7 @@ Nehan.TextMetrics = (function(){
   var __span = (function(){
     var span = document.createElement("span");
     Nehan.Args.copy(span.style, {
+      display:"inline-block",
       margin:0,
       padding:0,
       border:0,
@@ -6732,6 +6733,7 @@ Nehan.TextMetrics = (function(){
     getMetrics : function(font, text){
       var body = document.body;
       var style = __span.style;
+      body.style.display = "block"; // must be visible
       style.font = font.toString();
       __span.innerHTML = text;
       body.appendChild(__span);
