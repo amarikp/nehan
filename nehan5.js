@@ -64,21 +64,29 @@ Nehan.Config = {
   kerning:true,
 
   /**
-     is justify enabled?
+     is hyphenation enabled?
      @memberof Nehan.Config
      @type {boolean}
      @default true
   */
-  justify:true,
+  hyphenate:true,
 
   /**
-     is dangling justify enable?
-     Note that this property is enabled only when Nehan.Config.justify is enabled.
+     is dangling hyphenate enable?
+     Note that this property is enabled only when Nehan.Config.hyphenate is enabled.
      @memberof Nehan.Config
      @type {boolean}
      @default true
   */
-  danglingJustify:true,
+  danglingHyphenate:true,
+
+  /**
+     force justify line if vertical writing mode.
+     @memberof Nehan.Config
+     @type {boolean}
+     @default false
+  */
+  forceJustifyIfVert:false,
 
   /**
      max rety count when something troubles.
@@ -694,7 +702,9 @@ Nehan.List = {
   */
   iter : function(lst, fn){
     for(var i = 0, len = lst.length; i < len; i++){
-      fn(lst[i], i);
+      if(fn(lst[i], i) === false){
+	break;
+      }
     }
   },
   /**
@@ -704,7 +714,9 @@ Nehan.List = {
   */
   reviter : function(lst, fn){
     for(var i = lst.length - 1; i >= 0; i--){
-      fn(lst[i], i);
+      if(fn(lst[i], i) === false){
+	break;
+      }
     }
   },
   /**
@@ -715,7 +727,7 @@ Nehan.List = {
   */
   forall : function(lst, fn){
     for(var i = 0, len = lst.length; i < len; i++){
-      if(!fn(lst[i], i)){
+      if(fn(lst[i], i) === false){
 	return false;
       }
     }
@@ -6094,6 +6106,9 @@ Nehan.TextAlign = (function(){
     */
     isCenter : function(){
       return this.value === "center";
+    },
+    isJustify : function(){
+      return this.value === "justify";
     }
   };
 
@@ -6110,6 +6125,7 @@ Nehan.TextAligns = {
   start:(new Nehan.TextAlign("start")),
   end:(new Nehan.TextAlign("end")),
   center:(new Nehan.TextAlign("center")),
+  justify:(new Nehan.TextAlign("justify")),
   /**
      @memberof Nehan.TextAligns
      @param value - logical text align direction, "start" or "end" or "center".
@@ -6793,10 +6809,11 @@ Nehan.Char = (function(){
      @param c1 {String}
      @param is_ref {boolean} - is character reference?
   */
-  function Char(c1, is_ref){
+  function Char(c1, opt){
+    opt = opt || {};
     this.data = c1;
     this._type = "char";
-    this.isRef = is_ref || false;
+    this.isRef = opt.isRef || false;
     if(this.isRef){
       this._setupRef(c1);
     } else {
@@ -7614,6 +7631,17 @@ Nehan.Word = (function(){
      */
     getData : function(){
       return this.data;
+    },
+    /**
+       @memberof Nehan.Word
+       @param line {Nehan.Box}
+       @return {Object}
+    */
+    getCssHori : function(line){
+      var css = {};
+      css["padding-left"] = this.paddingStart + "px";
+      css["padding-right"] = this.paddingEnd + "px";
+      return css;
     },
     /**
        @memberof Nehan.Word
@@ -8551,10 +8579,10 @@ Nehan.Spacing = {
     }
   },
   _addWordSpacing : function(cur_word, prev_text, next_text){
-    if(prev_text && prev_text instanceof Nehan.Char && !prev_text.isSpace()){
+    if(prev_text && prev_text instanceof Nehan.Char && !prev_text.isSpace() && (typeof prev_text.spaceRateEnd === "undefined")){
       cur_word.spaceRateStart = 0.25;
     }
-    if(next_text && next_text instanceof Nehan.Char && !next_text.isSpace()){
+    if(next_text && next_text instanceof Nehan.Char && !next_text.isSpace() && !next_text.isKakkoStart() && !(next_text.isKutenTouten() && next_text.isZenkaku())){
       cur_word.spaceRateEnd = 0.25;
     }
   },
@@ -8894,8 +8922,8 @@ Nehan.LayoutContext = (function(){
        @memberof Nehan.LayoutContext
        @return {boolean}
     */
-    isJustified : function(){
-      return this.inline.isJustified();
+    isHyphenated : function(){
+      return this.inline.isHyphenated();
     },
     /**
        @memberof Nehan.LayoutContext
@@ -8942,8 +8970,8 @@ Nehan.LayoutContext = (function(){
        @memberof Nehan.LayoutContext
        @param status {boolean}
     */
-    setJustified : function(status){
-      this.inline.setJustified(status);
+    setHyphenated : function(status){
+      this.inline.setHyphenated(status);
     },
     /**
        @memberof Nehan.LayoutContext
@@ -9025,23 +9053,23 @@ Nehan.LayoutContext = (function(){
       return this.inline.getCharCount();
     },
     /**
-       justify(by sweep) inline element with next head character, return null if nothing happend, or return new tail char if justified.
+       hyphenate(by sweep) inline element with next head character, return null if nothing happend, or return new tail char if hyphenated.
        @memberof Nehan.LayoutContext
        @param head_char {Nehan.Char}
        @return {Nehan.Char | null}
     */
-    justifySweep : function(head_char){
-      return this.inline.justifySweep(head_char);
+    hyphenateSweep : function(head_char){
+      return this.inline.hyphenateSweep(head_char);
     },
     /**
-       justify(by dangling) inline element with next head character, return null if nothing happend, or return true if dangling is ready.
+       hyphenate(by dangling) inline element with next head character, return null if nothing happend, or return true if dangling is ready.
        @memberof Nehan.LayoutContext
        @param head_char {Nehan.Char}
        @param head_next {Nehan.Char}
        @return {Nehan.Char | null}
     */
-    justifyDangling : function(head_char, head_next){
-      return this.inline.justifyDangling(head_char, head_next);
+    hyphenateDangling : function(head_char, head_next){
+      return this.inline.hyphenateDangling(head_char, head_next);
     }
   };
 
@@ -9176,7 +9204,7 @@ Nehan.InlineContext = (function(){
     this.lineBreak = false; // is line-break included in line?
     this.lineOver = false; // is line full-filled?
     this.breakAfter = false; // is break-after incuded in line?
-    this.justified = false; // is line justified?
+    this.hyphenated = false; // is line hyphenated?
   }
 
   InlineContext.prototype = {
@@ -9191,8 +9219,8 @@ Nehan.InlineContext = (function(){
        @memberof Nehan.InlineContext
        @return {boolean}
     */
-    isJustified : function(){
-      return this.justified;
+    isHyphenated : function(){
+      return this.hyphenated;
     },
     /**
        @memberof Nehan.InlineContext
@@ -9234,8 +9262,8 @@ Nehan.InlineContext = (function(){
        @memberof Nehan.InlineContext
        @param status {boolean}
     */
-    setJustified : function(status){
-      this.justified = status;
+    setHyphenated : function(status){
+      this.hyphenated = status;
     },
     /**
        @memberof Nehan.InlineContext
@@ -9290,8 +9318,8 @@ Nehan.InlineContext = (function(){
       if(element.breakAfter){
 	this.breakAfter = true;
       }
-      if(element.justified){
-	this.justified = true;
+      if(element.hyphenated){
+	this.hyphenated = true;
       }
     },
     /**
@@ -9353,13 +9381,13 @@ Nehan.InlineContext = (function(){
       return this.charCount;
     },
     /**
-       justify(by sweep) inline element with next head character, return null if nothing happend, or return new tail char if justified.
+       hyphenate(by sweep) inline element with next head character, return null if nothing happend, or return new tail char if hyphenated.
 
        @memberof Nehan.InlineContext
        @param head {Nehan.Char} - head_char at next line.
        @return {Nehan.Char | null}
     */
-    justifySweep : function(head){
+    hyphenateSweep : function(head){
       var last = this.elements.length - 1;
       var ptr = last;
       var tail = this.elements[ptr] || null;
@@ -9374,12 +9402,12 @@ Nehan.InlineContext = (function(){
 	return null;
       }
 
-      //console.log("start justify:tail:%o(tail NG:%o), head:%o(head NG:%o)", tail, is_tail_ng(tail), head, is_head_ng(head));
+      //console.log("start hyphenate:tail:%o(tail NG:%o), head:%o(head NG:%o)", tail, is_tail_ng(tail), head, is_head_ng(head));
 
       // if [word] is divided into [word1], [word2], then
       //    [char][word]<br>[char(head_ng)]
       // => [char][word1]<br>[word2][char(head_ng)]
-      // so nothing to justify.
+      // so nothing to hyphenate.
       if(tail && tail instanceof Nehan.Word && tail.isDivided()){
 	return null;
       }
@@ -9404,17 +9432,17 @@ Nehan.InlineContext = (function(){
 	});
 	return head; // return new head
       }
-      return null; // justify failed or not required.
+      return null; // hyphenate failed or not required.
     },
     /**
-       justify(by dangling) inline element with next head character, return null if nothing happend, or return true if dangling is ready.
+       hyphenate(by dangling) inline element with next head character, return null if nothing happend, or return true if dangling is ready.
 
        @memberof Nehan.InlineContext
        @param head {Nehan.Char}
        @param head_next {Nehan.Char}
        @return {bool}
     */
-    justifyDangling : function(head, head_next){
+    hyphenateDangling : function(head, head_next){
       if(!(head instanceof Nehan.Char) || !head.isHeadNg()){
 	return false;
       }
@@ -9659,7 +9687,7 @@ Nehan.TextLexer = (function (){
 	if(__rex_half_single_tcy.test(str)){
 	  return new Nehan.Tcy(this._stepBuff(1));
 	}
-	return new Nehan.Char(this._stepBuff(1), false);
+	return new Nehan.Char(this._stepBuff(1));
       } else if(str.length === 2 && str.match(__rex_tcy)){
 	return new Nehan.Tcy(this._stepBuff(str.length));
       }
@@ -9667,10 +9695,10 @@ Nehan.TextLexer = (function (){
     }
     str = this._getByRex(__rex_char_ref);
     if(str){
-      return new Nehan.Char(this._stepBuff(str.length), true);
+      return new Nehan.Char(this._stepBuff(str.length), {isRef:true});
     }
     str = this.buff.substring(0, 1);
-    return new Nehan.Char(this._stepBuff(1), false);
+    return new Nehan.Char(this._stepBuff(1));
   };
 
   TextLexer.prototype._getByRex = function(rex){
@@ -11238,6 +11266,15 @@ var Box = (function(){
       return this.isRootLine || false;
     },
     /**
+       filter text objects.
+
+       @memberof Nehan.Box
+       @return {Array.<Nehan.Char | Nehan.Word | Nehan.Tcy | Nehan.Ruby>}
+    */
+    getTextElements : function(){
+      return __filter_text(this.elements || []);
+    },
+    /**
        filter text object and concat it as string, mainly used for debugging.
 
        @memberof Nehan.Box
@@ -12701,7 +12738,7 @@ var StyleContext = (function(){
        @param opt.elements {Array.<Nehan.Box>}
        @param opt.maxFontSize {int}
        @param opt.maxExtent {int}
-       @param opt.lineBreak {boolean}
+       @param opt.hasLineBreak {boolean}
        @param opt.breakAfter {boolean}
        @return {Nehan.Box}
     */
@@ -12728,7 +12765,7 @@ var StyleContext = (function(){
       line.maxExtent = max_extent;
       line.content = content;
       line.isRootLine = is_root_line;
-      line.lineBreak = opt.lineBreak || false;
+      line.hasLineBreak = opt.hasLineBreak || false;
 
       // edge of top level line is disabled.
       // for example, consider '<p>aaa<span>bbb</span>ccc</p>'.
@@ -12740,18 +12777,22 @@ var StyleContext = (function(){
       if(is_root_line){
 	line.lineNo = opt.lineNo;
 	line.breakAfter = opt.breakAfter || false;
-	line.justified = opt.justified || false;
+	line.hyphenated = opt.hyphenated || false;
 	line.inlineMeasure = opt.measure || this.contentMeasure;
 
-	// if vertical line, needs some position fix for decorated element(ruby, empha) to align baseline.
+	// set baseline
 	if(this.isTextVertical()){
 	  this._setVertBaseline(line);
 	} else {
 	  this._setHoriBaseline(line);
 	}
-	if(this.textAlign && !this.textAlign.isStart()){
+	// set text-align
+	if(this.textAlign && (this.textAlign.isCenter() || this.textAlign.isEnd())){
 	  this._setTextAlign(line, this.textAlign);
+	} else if((Nehan.Config.forceJustifyIfVert && this.isTextVertical()) || (this.textAlign && this.textAlign.isJustify())){
+	  this._setTextJustify(line);
 	}
+	// set edge
 	var edge_size = Math.floor(line.maxFontSize * this.getLineHeight()) - line.maxExtent;
 	if(line.elements.length > 0 && edge_size > 0){
 	  line.edge = new Nehan.BoxEdge();
@@ -12770,7 +12811,7 @@ var StyleContext = (function(){
        @param opt.elements {Array.<Nehan.Char | Nehan.Word | Nehan.Tcy>}
        @param opt.maxFontSize {int}
        @param opt.maxExtent {int}
-       @param opt.lineBreak {boolean}
+       @param opt.hasLineBreak {boolean}
        @param opt.breakAfter {boolean}
        @return {Nehan.Box}
     */
@@ -12800,8 +12841,8 @@ var StyleContext = (function(){
       line.maxFontSize = font_size;
       line.maxExtent = extent;
       line.content = content;
-      line.lineBreak = opt.lineBreak || false;
-      line.justified = opt.justified || false;
+      line.hasLineBreak = opt.hasLineBreak || false;
+      line.hyphenated = opt.hyphenated || false;
       line.lineOver = opt.lineOver || false;
       //console.log("text(%o):%s:(%d,%d)", line, line.toString(), line.size.width, line.size.height);
       return line;
@@ -13708,6 +13749,115 @@ var StyleContext = (function(){
 	ret[prop] = this._computeUnitSize(val[prop], unit_size);
       }
       return ret;
+    },
+    _setTextJustify : function(line){
+      var font_size = this.getFontSize();
+      var half_font_size = Math.floor(font_size / 2);
+      var quat_font_size = Math.floor(half_font_size / 2);
+      var cont_measure = line.getContentMeasure(this.flow);
+      var real_measure = line.inlineMeasure;
+      var ideal_measure = font_size * Math.floor(cont_measure / font_size);
+      var rest_space = ideal_measure - real_measure;
+      var max_thres = this.getFontSize() * 2;
+      var add_space, del_space;
+      if(line.hasLineBreak || rest_space >= max_thres || rest_space === 0){
+	return;
+      }
+      var text_elements = line.getTextElements();
+      if(text_elements.length === 0){
+	return;
+      }
+      var words = Nehan.List.filter(text_elements, function(element){
+	return element instanceof Nehan.Word;
+      });
+      var special_chars = Nehan.List.filter(text_elements, function(element){
+	return element instanceof Nehan.Char && (element.paddingStart || element.paddingEnd);
+      });
+      // shrink first(remove space between word)
+      if(rest_space < 0){
+	//console.warn("[%s]minus space! %dpx", line.toString(), rest_space);
+	del_space = -1 * Math.max(1, Math.floor(rest_space / words.length / 2));
+	Nehan.List.iter(words, function(word){
+	  word.paddingStart = Math.max(0, (word.paddingStart || 0) - del_space);
+	  rest_space += del_space;
+	  //console.log("del space %d from [%s]", del_space, word.data);
+	  if(rest_space >= 0){
+	    return false;
+	  }
+	  word.paddingEnd = Math.max(0, (word.paddingEnd || 0) - del_space);
+	  rest_space += del_space;
+	  //console.log("del space %d from [%s]", del_space, word.data);
+	  if(rest_space >= 0){
+	    return false;
+	  }
+	  return true;
+	});
+	del_space = -1 * Math.max(1, Math.min(half_font_size, Math.floor(rest_space / special_chars.length)));
+	Nehan.List.iter(special_chars, function(chr){
+	  if(chr.paddingEnd){
+	    chr.paddingEnd = Math.max(0, chr.paddingEnd - del_space);
+	    rest_space += del_space;
+	    //console.log("del space %d from [%s]", del_space, chr.data);
+	    if(rest_space >= 0){
+	      return false;
+	    }
+	  }
+	  if(chr.paddingStart){
+	    chr.paddingStart = Math.max(0, chr.paddingStart - del_space);
+	    rest_space += del_space;
+	    //console.log("del space %d from [%s]", del_space, chr.data);
+	    if(rest_space >= 0){
+	      return false;
+	    }
+	  }
+	  return true;
+	});
+	return;
+      }
+      //console.info("[%s]some spacing needed! %dpx", line.toString(), rest_space);
+
+      // rest_space > 0
+      // so space is not enough, add 'more' space to word.
+      if(words.length > 0){
+	add_space = Math.max(1, Math.min(half_font_size, Math.floor(rest_space / words.length / 2)));
+	Nehan.List.iter(words, function(word){
+	  word.paddingStart = (word.paddingStart || 0) + add_space;
+	  rest_space -= add_space;
+	  //console.log("add space %d to [%s]", add_space, word.data);
+	  if(rest_space <= 0){
+	    return false;
+	  }
+	  word.paddingEnd = (word.paddingEnd || 0) + add_space;
+	  rest_space -= add_space;
+	  //console.log("add space %d to [%s]", add_space, word.data);
+	  if(rest_space <= 0){
+	    return false;
+	  }
+	  return true;
+	});
+      }
+      if(rest_space <= 0){
+	return;
+      }
+      var normal_chars = Nehan.List.filter(text_elements, function(element){
+	return element instanceof Nehan.Char && !element.isKerningChar();
+      });
+      // rest_space is still exists.
+      // so add space to characters.
+      if(normal_chars.length > 0){
+	add_space = Math.max(1, Math.min(quat_font_size, Math.floor(rest_space / normal_chars.length)));
+	Nehan.List.iter(normal_chars, function(chr){
+	  if(typeof chr.paddingEnd === "undefined"){
+	    chr.paddingEnd = add_space;
+	    rest_space -= add_space;
+	    //console.log("add space %d to [%s]", add_space, chr.data);
+	    if(rest_space <= 0){
+	      return false;
+	    }
+	  }
+	  return true;
+	});
+      }
     },
     _setTextAlign : function(line, text_align){
       var content_measure  = line.getContentMeasure(this.flow);
@@ -14955,7 +15105,7 @@ var BlockGenerator = (function(){
       }
       // if cache is inline(with no <br>), and measure size is not same as current block measure, reget it.
       // this is caused by float-generator, because in floating layout, inline measure is changed by it's cursor position.
-      if((!cache.lineBreak || (cache.lineBreak && cache.justified)) && cache.getLayoutMeasure(this.style.flow) < this.style.contentMeasure && this._child){
+      if((!cache.hasLineBreak || (cache.hasLineBreak && cache.hyphenated)) && cache.getLayoutMeasure(this.style.flow) < this.style.contentMeasure && this._child){
 	//console.info("inline float fix, line = %o(%s), context = %o, child_gen = %o", cache, cache.toString(), context, this._child);
 
 	// resume inline context
@@ -15159,7 +15309,7 @@ var InlineGenerator = (function(){
       if(!context.hasInlineSpaceFor(1)){
 	context.setLineOver(true);
       }*/
-      if(element.lineBreak){
+      if(element.hasLineBreak){
 	context.setLineBreak(true);
 	break;
       }
@@ -15188,9 +15338,9 @@ var InlineGenerator = (function(){
     }
     var line = this.style.createLine({
       lineNo:context.getBlockLineNo(),
-      lineBreak:context.hasLineBreak(), // is line break included in?
+      hasLineBreak:context.hasLineBreak(), // is line break included in?
       breakAfter:context.hasBreakAfter(), // is break after included in?
-      justified:context.isJustified(), // is line justified?
+      hyphenated:context.isHyphenated(), // is line hyphenated?
       measure:context.getInlineCurMeasure(), // actual measure
       elements:context.getInlineElements(), // all inline-child, not only text, but recursive child box.
       charCount:context.getInlineCharCount(),
@@ -15380,7 +15530,7 @@ var TextGenerator = (function(){
     if(!context.hasInlineSpaceFor(1)){
       return null;
     }
-    var next_head = Nehan.Config.justify? this._peekParentNextToken() : null;
+    var next_head = Nehan.Config.hyphenate? this._peekParentNextToken() : null;
     var next_head_char = next_head? this._peekParentNextHeadChar(next_head) : null;
     var next_head_measure = next_head? this._estimateParentNextHeadMeasure(next_head) : this.style.getFontSize();
     var is_next_head_ng = next_head_char? next_head_char.isHeadNg() : false;
@@ -15405,12 +15555,12 @@ var TextGenerator = (function(){
 	}
       }
       // if token is last one and maybe tail text, check tail/head NG between two inline generators.
-      if(Nehan.Config.justify && !this.stream.hasNext() && !context.hasInlineSpaceFor(measure + next_head_measure)){
+      if(Nehan.Config.hyphenate && !this.stream.hasNext() && !context.hasInlineSpaceFor(measure + next_head_measure)){
 	// avoid tail/head NG between two generators
 	if(element instanceof Nehan.Char && element.isTailNg() || is_next_head_ng){
 	  context.setLineBreak(true);
-	  context.setJustified(true);
-	  //console.log("justified at %o:type:%s", (element.data || ""), (is_next_head_ng? "head" : "tail"));
+	  context.setHyphenated(true);
+	  //console.log("hyphenated at %o:type:%s", (element.data || ""), (is_next_head_ng? "head" : "tail"));
 	  //console.log("next head:%s", (next_head_char? next_head_char.data : ""));
 	  this.pushCache(element);
 	  break;
@@ -15443,15 +15593,15 @@ var TextGenerator = (function(){
     if(context.isInlineEmpty()){
       return null;
     }
-    // justify if this line is generated by overflow(not line-break).
-    if(Nehan.Config.justify && !context.isInlineEmpty() && !context.hasLineBreak()){
-      this._justifyLine(context);
+    // hyphenate if this line is generated by overflow(not line-break).
+    if(Nehan.Config.hyphenate && !context.isInlineEmpty() && !context.hasLineBreak()){
+      this._hyphenateLine(context);
     }
     var line = this.style.createTextBlock({
-      lineBreak:context.hasLineBreak(), // is line break included in?
+      hasLineBreak:context.hasLineBreak(), // is line break included in?
       lineOver:context.isLineOver(), // is line full-filled?
       breakAfter:context.hasBreakAfter(), // is break after included in?
-      justified:context.isJustified(), // is line justified?
+      hyphenated:context.isHyphenated(), // is line hyphenated?
       measure:context.getInlineCurMeasure(), // actual measure
       elements:context.getInlineElements(), // all inline-child, not only text, but recursive child box.
       charCount:context.getInlineCharCount(),
@@ -15514,16 +15664,16 @@ var TextGenerator = (function(){
     return font_size;
   };
 
-  TextGenerator.prototype._justifyLine = function(context){
+  TextGenerator.prototype._hyphenateLine = function(context){
     // by stream.getToken(), stream pos has been moved to next pos already, so cur pos is the next head.
     var old_head = this.peekLastCache() || this.stream.peek();
     if(old_head === null){
       return;
     }
-    // justify by dangling.
+    // hyphenate by dangling.
     var head_next = this.stream.peek();
     head_next = (head_next && old_head.pos === head_next.pos)? this.stream.peek(1) : head_next;
-    if(Nehan.Config.danglingJustify && context.justifyDangling(old_head, head_next) === true){
+    if(Nehan.Config.danglingHyphenate && context.hyphenateDangling(old_head, head_next) === true){
       this._addElement(context, old_head, 0); // push tail as zero element
       if(head_next){
 	this.stream.setPos(head_next.pos);
@@ -15531,20 +15681,20 @@ var TextGenerator = (function(){
 	this.stream.get();
       }
       context.setLineBreak(true);
-      context.setJustified(true);
+      context.setHyphenated(true);
       this.clearCache();
       return;
     }
-    // justify by sweep.
-    var new_head = context.justifySweep(old_head, head_next); // if justified, new_head token is returned.
+    // hyphenate by sweep.
+    var new_head = context.hyphenateSweep(old_head, head_next); // if fixed, new_head token is returned.
     if(new_head){
       //console.log("old_head:%o, new_head:%o", old_head, new_head);
-      var justified_measure = (new_head.pos - old_head.pos) * this.style.getFontSize(); // [FIXME] this is not accurate size.
-      context.addInlineMeasure(justified_measure);
-      //console.log("justify and new head:%o", new_head);
+      var hyphenated_measure = (new_head.pos - old_head.pos) * this.style.getFontSize(); // [FIXME] this is not accurate size.
+      context.addInlineMeasure(hyphenated_measure);
+      //console.log("hyphenate and new head:%o", new_head);
       this.stream.setPos(new_head.pos);
       context.setLineBreak(true);
-      context.setJustified(true);
+      context.setHyphenated(true);
       this.clearCache(); // stream position changed, so disable cache.
     }
   };
@@ -17021,7 +17171,17 @@ var VertEvaluator = (function(){
     if(chr.isHalfKana()){
       return this._evalCharHalfKana(line, chr);
     }
+    if(chr.isPaddingEnable()){
+      return this._evalCharWithSpacing(line, chr);
+    }
     return this._evalCharWithBr(line, chr);
+  };
+
+  VertEvaluator.prototype._evalCharWithSpacing = function(line, chr){
+    return this._createElement("div", {
+      content:chr.getData(line.getFlow()),
+      css:chr.getCssPadding(line)
+    });
   };
 
   // for example, if we use <div> instead, parent bg-color is not inherited.
@@ -17192,7 +17352,10 @@ var HoriEvaluator = (function(){
   };
 
   HoriEvaluator.prototype._evalWord = function(line, word){
-    return document.createTextNode(word.data);
+    return this._createElement("span", {
+      content:word.data,
+      css:word.getCssHori(line)
+    });
   };
 
   HoriEvaluator.prototype._evalTcy = function(line, tcy){
@@ -17215,7 +17378,17 @@ var HoriEvaluator = (function(){
     if(chr.isKerningChar()){
       return this._evalKerningChar(line, chr);
     }
+    if(chr.isPaddingEnable()){
+      return this._evalCharWithSpacing(line, chr);
+    }
     return document.createTextNode(chr.getData(line.getFlow()));
+  };
+
+  HoriEvaluator.prototype._evalCharWithSpacing = function(line, chr){
+    return this._createElement("span", {
+      content:chr.getData(line.getFlow()),
+      css:chr.getCssPadding(line)
+    });
   };
 
   HoriEvaluator.prototype._evalEmpha = function(line, chr){
