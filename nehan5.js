@@ -1120,6 +1120,20 @@ Nehan.Obj = (function(){
        @memberof Nehan.Obj
        @param obj {Object}
        @param fn {Function} - fun prop -> value -> {bool}
+       @return {bool}
+    */
+    exists : function(obj, fn){
+      for(var prop in obj){
+	if(fn(prop, obj[prop])){
+	  return true;
+	}
+      }
+      return false;
+    },
+    /**
+       @memberof Nehan.Obj
+       @param obj {Object}
+       @param fn {Function} - fun prop -> value -> {bool}
     */
     filter : function(obj, fn){
       var ret = {};
@@ -1718,7 +1732,7 @@ Nehan.TagAttrs = (function(){
   function TagAttrs(src){
     var attrs_raw = src? Nehan.TagAttrParser.parse(src) : {};
     this.classes = this._parseClasses(attrs_raw);
-    this.attrs = this._parseAttrs(attrs_raw, this.classes);
+    this.attrs = this._parseAttrs(attrs_raw);
     this.dataset = this._parseDataset(attrs_raw);
   }
 
@@ -1822,7 +1836,7 @@ Nehan.TagAttrs = (function(){
 	return (klass.indexOf("nehan-") === 0)? klass.replace("nehan-", "") : klass;
       }); 
     },
-    _parseAttrs : function(attrs_raw, classes){
+    _parseAttrs : function(attrs_raw){
       var attrs = {};
       Nehan.Obj.iter(attrs_raw, function(name, value){
 	if(name.indexOf("data-") < 0){
@@ -13396,9 +13410,9 @@ var StyleContext = (function(){
     */
     getChildIndex : function(){
       var self = this;
-      return Nehan.List.indexOf(this.getParentChilds(), function(child){
+      return Math.max(0, Nehan.List.indexOf(this.getParentChilds(), function(child){
 	return child === self;
-      });
+      }));
     },
     /**
        @memberof Nehan.StyleContext
@@ -13406,9 +13420,9 @@ var StyleContext = (function(){
     */
     getChildIndexOfType : function(){
       var self = this;
-      return Nehan.List.indexOf(this.getParentChildsOfType(this.getMarkupName()), function(child){
+      return Math.max(0, Nehan.List.indexOf(this.getParentChildsOfType(this.getMarkupName()), function(child){
 	return child === self;
-      });
+      }));
     },
     /**
        @memberof Nehan.StyleContext
@@ -13901,7 +13915,6 @@ var StyleContext = (function(){
 	return pe_values;
 
       default:
-	//return Selectors.getValue(this);
 	var values = Selectors.getValue(this);
 	//console.log("[%s] selector values:%o", this.markup.name, values);
 	return values;
@@ -15860,19 +15873,20 @@ var FirstLineGenerator = (function(){
   Nehan.Class.extend(FirstLineGenerator, BlockGenerator);
 
   FirstLineGenerator.prototype._onAddElement = function(context, element){
+    if(context.getBlockLineNo() !== 1){
+      return;
+    }
     // first-line yieled, so switch style to parent one.
-    if(context.getBlockLineNo() === 1){
-      this.style = this.style.parent;
-      var child = this._child, parent = this;
-      while(child){
-	child.style = parent.style;
-	var cache = child.peekLastCache();
-	if(cache && Nehan.Token.isText(cache) && cache.setMetrics){
-	  cache.setMetrics(child.style.flow, child.style.getFont());
-	}
-	parent = child;
-	child = child._child;
+    this.style = this.style.parent;
+    var child = this._child, parent = this;
+    while(child){
+      child.style = parent.style;
+      var cache = child.peekLastCache();
+      if(cache && child instanceof TextGenerator && cache.setMetrics){
+	cache.setMetrics(child.style.flow, child.style.getFont());
       }
+      parent = child;
+      child = child._child;
     }
   };
 
